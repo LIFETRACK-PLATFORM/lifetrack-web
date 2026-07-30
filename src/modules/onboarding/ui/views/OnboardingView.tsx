@@ -35,7 +35,7 @@ export function OnboardingView({
         <header className="sticky top-0 z-30 flex w-full max-w-md items-center justify-between bg-background/80 px-6 py-4 backdrop-blur-md">
           <div className="flex flex-col">
             <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
-            <p className="font-label text-label-md text-outline">Configuration 1/3</p>
+            <p className="font-label text-label-md text-outline">Configuración 1/3</p>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container">
             <Icon name="settings_account_box" className="text-primary" />
@@ -44,10 +44,10 @@ export function OnboardingView({
 
         <main className="flex w-full max-w-md flex-col gap-6 px-4 pb-10">
           <section className="mt-4">
-            <h2 className="text-headline-lg-mobile text-on-surface">Choose your focus</h2>
+            <h2 className="text-headline-lg-mobile text-on-surface">Elige tu enfoque</h2>
             <p className="mt-2 text-body-md text-on-surface-variant">
-              Select the core modules to personalize your health and productivity
-              sanctuary.
+              Selecciona los módulos principales para personalizar tu
+              santuario de salud y productividad.
             </p>
           </section>
 
@@ -67,7 +67,7 @@ export function OnboardingView({
                 >
                   {mod.recommended && (
                     <div className="absolute right-0 top-0 rounded-bl-xl bg-primary px-4 py-1 font-label text-label-md text-on-primary">
-                      RECOMMENDED
+                      RECOMENDADO
                     </div>
                   )}
                   <div className="flex items-start gap-4">
@@ -130,7 +130,7 @@ export function OnboardingView({
           <div className="relative mt-4 h-32 w-full overflow-hidden rounded-2xl bg-surface-container">
             <div className="absolute inset-0 flex items-center justify-center p-6">
               <p className="text-center font-label text-label-md italic text-primary">
-                &quot;Health is a state of body. Wellness is a state of being.&quot;
+                &quot;La salud es un estado del cuerpo. El bienestar es un estado del ser.&quot;
               </p>
             </div>
           </div>
@@ -147,7 +147,7 @@ export function OnboardingView({
               <Icon name="progress_activity" className="animate-spin" />
             ) : (
               <>
-                <span>Continue</span>
+                <span>Continuar</span>
                 <Icon name="arrow_forward" />
               </>
             )}
@@ -161,11 +161,11 @@ export function OnboardingView({
         <main className="mx-auto flex w-full max-w-app flex-grow flex-col items-center justify-center px-6 py-10">
           <header className="mb-10 max-w-2xl text-center">
             <h1 className="mb-2 text-display text-primary">
-              Welcome to LifeTrack OS
+              Bienvenido a LifeTrack OS
             </h1>
             <p className="text-body-lg text-on-surface-variant">
-              Select the modules to power your sanctuary. Each one is a dedicated
-              tool for your health, wealth, and focus.
+              Selecciona los módulos para impulsar tu santuario. Cada uno es
+              una herramienta dedicada a tu salud, tus finanzas y tu enfoque.
             </p>
           </header>
 
@@ -218,7 +218,7 @@ export function OnboardingView({
                         <Icon name="stabilization" className="text-[32px]" />
                       </div>
                       <span className="rounded-full bg-white/20 px-2 py-1 text-[10px] font-bold uppercase tracking-widest">
-                        Recommended Template
+                        Plantilla recomendada
                       </span>
                     </div>
                     <h3 className="mb-1 text-headline-md">{rehab.titleWeb}</h3>
@@ -229,7 +229,7 @@ export function OnboardingView({
                   <div className="mt-6 flex items-center gap-2">
                     <Icon name="check_circle" filled />
                     <span className="font-label text-label-md font-bold">
-                      Enabled by default
+                      Activado por defecto
                     </span>
                   </div>
                 </div>
@@ -296,11 +296,12 @@ export function OnboardingView({
               disabled={loading}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-primary px-10 py-4 font-label text-label-md text-on-primary shadow-lg transition-all hover:bg-primary/90 active:scale-95 md:w-auto"
             >
-              Continue to Dashboard
+              Continuar al panel
               <Icon name="arrow_forward" />
             </button>
             <p className="font-label text-label-md text-on-surface-variant opacity-60">
-              You can change these settings at any time in the system preferences.
+              Puedes cambiar esta configuración en cualquier momento desde las
+              preferencias del sistema.
             </p>
           </footer>
         </main>

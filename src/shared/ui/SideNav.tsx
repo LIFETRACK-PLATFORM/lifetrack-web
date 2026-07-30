@@ -21,7 +21,7 @@ export function SideNav({ user }: { user: SideNavUser }) {
       <div className="mb-10 px-2">
         <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
         <p className="font-label text-label-md text-on-surface-variant opacity-70">
-          Health & Productivity
+          Salud y productividad
         </p>
       </div>
       <nav className="flex-1 space-y-2">
@@ -30,7 +30,7 @@ export function SideNav({ user }: { user: SideNavUser }) {
           className="flex items-center gap-4 rounded-lg px-4 py-2 text-on-surface-variant transition-colors hover:bg-surface-container-high"
         >
           <Icon name="dashboard" />
-          <span className="text-body-md">Dashboard</span>
+          <span className="text-body-md">Panel</span>
         </Link>
         <Link
           href="/rehab"
@@ -42,7 +42,7 @@ export function SideNav({ user }: { user: SideNavUser }) {
         >
           <Icon name="stabilization" filled={rehabActive} />
           <span className={`text-body-md ${rehabActive ? "font-bold" : ""}`}>
-            Rehab
+            Rehabilitación
           </span>
         </Link>
         <Link
@@ -50,7 +50,7 @@ export function SideNav({ user }: { user: SideNavUser }) {
           className="flex items-center gap-4 rounded-lg px-4 py-2 text-on-surface-variant transition-colors hover:bg-surface-container-high"
         >
           <Icon name="person" />
-          <span className="text-body-md">Profile</span>
+          <span className="text-body-md">Perfil</span>
         </Link>
       </nav>
       <div className="mt-auto flex items-center gap-4 border-t border-outline-variant/20 px-2 pt-4">

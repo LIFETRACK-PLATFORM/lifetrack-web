@@ -65,8 +65,8 @@ export function DashboardView({
   );
   const authUser = useAuthenticatedUser();
   const { dashboard, loading, error, isEmpty } = useDashboard(activeRepository);
-  const [bodyPart, setBodyPart] = useState("Knee");
-  const [injuryType, setInjuryType] = useState("ACL Recovery");
+  const [bodyPart, setBodyPart] = useState("Rodilla");
+  const [injuryType, setInjuryType] = useState("Recuperación de LCA");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
@@ -177,7 +177,7 @@ export function DashboardView({
           <section className="negative-space-pocket">
             <div className="mb-6 flex flex-col gap-2">
               <span className="font-label text-label-md font-bold uppercase tracking-wider text-primary">
-                Today&apos;s Focus
+                Enfoque de hoy
               </span>
               <h2 className="text-headline-lg-mobile text-on-surface">{d.focusTitle}</h2>
             </div>
@@ -189,7 +189,7 @@ export function DashboardView({
                 <div className="flex items-end justify-between">
                   <div>
                     <p className="text-body-md text-on-surface-variant">
-                      Exercise Progress
+                      Progreso de ejercicios
                     </p>
                     <p className="font-metric text-metric-xl text-primary">
                       {d.exerciseProgress.done}{" "}
@@ -204,7 +204,7 @@ export function DashboardView({
                   href={`/rehab/plans/${d.planId}`}
                   className="w-full rounded-lg bg-primary py-4 text-center font-label text-label-md text-on-primary shadow-sm transition-transform active:scale-95"
                 >
-                  Continue Session
+                  Continuar sesión
                 </Link>
               </div>
             </div>
@@ -231,7 +231,7 @@ export function DashboardView({
             <div className="col-span-2 flex flex-col gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
               <div className="flex items-center justify-between">
                 <h3 className="font-label text-label-md text-on-surface-variant">
-                  Weekly Compliance
+                  Cumplimiento semanal
                 </h3>
                 <span className="font-label text-label-md font-bold text-primary">
                   {d.weeklyCompliance}%
@@ -249,13 +249,13 @@ export function DashboardView({
                 ))}
               </div>
               <div className="flex justify-between font-label text-[10px] text-on-surface-variant opacity-60">
-                {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map((d) => (
+                {["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"].map((d) => (
                   <span key={d}>{d}</span>
                 ))}
               </div>
             </div>
             <div className="flex flex-col gap-1 rounded-xl border border-outline-variant bg-surface-container-low p-6">
-              <p className="font-label text-label-md text-on-surface-variant">Recovery</p>
+              <p className="font-label text-label-md text-on-surface-variant">Recuperación</p>
               <p className="text-headline-md text-on-surface">
                 {d.recoveryScore}{" "}
                 <span className="text-body-md font-normal opacity-60">/ 100</span>
@@ -268,7 +268,7 @@ export function DashboardView({
               </div>
             </div>
             <div className="flex flex-col gap-1 rounded-xl border border-outline-variant bg-surface-container-low p-6">
-              <p className="font-label text-label-md text-on-surface-variant">Active Min</p>
+              <p className="font-label text-label-md text-on-surface-variant">Min. activos</p>
               <p className="text-headline-md text-on-surface">
                 {d.activeMinutes}{" "}
                 <span className="text-body-md font-normal opacity-60">min</span>
@@ -282,7 +282,7 @@ export function DashboardView({
 
           <section className="negative-space-pocket">
             <h3 className="mb-4 font-label text-label-md uppercase tracking-wider text-on-surface-variant">
-              Up Next
+              Próximamente
             </h3>
             <div className="space-y-2">
               {d.upNext.map((item) => (
@@ -327,9 +327,9 @@ export function DashboardView({
           <div className="mx-auto max-w-app">
             <header className="mb-10 flex items-end justify-between">
               <div>
-                <h2 className="text-headline-lg text-on-surface">Rehab Dashboard</h2>
+                <h2 className="text-headline-lg text-on-surface">Panel de rehabilitación</h2>
                 <p className="text-body-lg text-on-surface-variant">
-                  Track your recovery journey and daily objectives.
+                  Sigue tu recuperación y tus objetivos diarios.
                 </p>
               </div>
               <div className="flex gap-4">
@@ -353,7 +353,7 @@ export function DashboardView({
                 <section className="relative overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
                   <div className="absolute right-0 top-0 p-6">
                     <span className="rounded-full bg-primary-container px-4 py-1 font-label text-label-md text-on-primary-container">
-                      Current Phase
+                      Fase actual
                     </span>
                   </div>
                   <div className="flex items-start gap-6">
@@ -368,13 +368,13 @@ export function DashboardView({
                           href={`/rehab/plans/${d.planId}`}
                           className="rounded-lg bg-primary px-6 py-2 font-label text-label-md text-on-primary hover:opacity-90"
                         >
-                          View Phase Details
+                          Ver detalles de la fase
                         </Link>
                         <button
                           type="button"
                           className="rounded-lg border border-primary px-6 py-2 font-label text-label-md text-primary hover:bg-primary/5"
                         >
-                          Phase History
+                          Historial de fases
                         </button>
                       </div>
                     </div>
@@ -383,9 +383,9 @@ export function DashboardView({
 
                 <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
                   <div className="mb-6 flex items-center justify-between">
-                    <h3 className="text-headline-md">Today&apos;s Exercises</h3>
+                    <h3 className="text-headline-md">Ejercicios de hoy</h3>
                     <span className="font-label text-label-md text-on-surface-variant">
-                      Tuesday, Oct 24
+                      Martes, 24 oct
                     </span>
                   </div>
                   <div className="space-y-4">
@@ -438,10 +438,10 @@ export function DashboardView({
                           }`}
                         >
                           {ex.status === "completed"
-                            ? "Completed"
+                            ? "Completado"
                             : ex.status === "urgent"
-                              ? "Priority"
-                              : "Pending"}
+                              ? "Prioridad"
+                              : "Pendiente"}
                         </span>
                       </div>
                     ))}
@@ -453,7 +453,7 @@ export function DashboardView({
                 <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
                   <div className="mb-4 flex items-center justify-between">
                     <h3 className="font-label text-label-md text-on-surface-variant">
-                      Weekly Compliance
+                      Cumplimiento semanal
                     </h3>
                     <span className="font-metric text-metric-xl text-primary">
                       {d.weeklyCompliance}%
@@ -486,7 +486,7 @@ export function DashboardView({
                   href={`/rehab/plans/${d.planId}`}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-label text-label-md text-on-primary shadow-lg transition-all hover:opacity-90"
                 >
-                  Open Recovery Plan
+                  Abrir plan de recuperación
                   <Icon name="arrow_forward" />
                 </Link>
               </div>

@@ -63,16 +63,16 @@ export function PlanDetailView({
   const displayName = authUser.email.split("@")[0] ?? authUser.email;
 
   const tabsMobile: { id: Tab; label: string }[] = [
-    { id: "exercises", label: "Exercises" },
-    { id: "appointments", label: "Appointments" },
-    { id: "metrics", label: "Metrics" },
+    { id: "exercises", label: "Ejercicios" },
+    { id: "appointments", label: "Citas" },
+    { id: "metrics", label: "Métricas" },
   ];
 
   const tabsWeb: { id: Tab; label: string }[] = [
-    { id: "exercises", label: "Exercises" },
-    { id: "appointments", label: "Appointments" },
-    { id: "metrics", label: "Measurements" },
-    { id: "photos", label: "Photos" },
+    { id: "exercises", label: "Ejercicios" },
+    { id: "appointments", label: "Citas" },
+    { id: "metrics", label: "Mediciones" },
+    { id: "photos", label: "Fotos" },
   ];
 
   return (
@@ -87,7 +87,7 @@ export function PlanDetailView({
             >
               <Icon name="arrow_back" className="text-primary" />
             </Link>
-            <h1 className="text-headline-md font-bold text-primary">Rehab</h1>
+            <h1 className="text-headline-md font-bold text-primary">Rehabilitación</h1>
           </div>
           <div className="flex gap-2">
             <button
@@ -151,10 +151,10 @@ export function PlanDetailView({
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-headline-md font-semibold text-on-surface">
-                  Today&apos;s Protocol
+                  Protocolo de hoy
                 </h3>
                 <span className="font-label text-label-md text-primary">
-                  {plan.remainingToday} Left
+                  Quedan {plan.remainingToday}
                 </span>
               </div>
               {plan.exercises
@@ -182,7 +182,7 @@ export function PlanDetailView({
                           </p>
                         </div>
                         <span className="font-label text-label-md font-bold text-primary">
-                          COMPLETED
+                          COMPLETADO
                         </span>
                       </div>
                     </div>
@@ -245,7 +245,7 @@ export function PlanDetailView({
           {tab === "appointments" && (
             <div className="space-y-4">
               <h3 className="px-1 text-headline-md font-semibold text-on-surface">
-                Upcoming Sessions
+                Próximas sesiones
               </h3>
               {plan.appointments.map((apt) => (
                 <div
@@ -275,12 +275,12 @@ export function PlanDetailView({
           {tab === "metrics" && (
             <div className="space-y-4">
               <h3 className="px-1 text-headline-md font-semibold text-on-surface">
-                Recovery Markers
+                Indicadores de recuperación
               </h3>
               <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="font-label text-label-md text-on-surface-variant">
-                    Knee Extension Range
+                    Rango de extensión de rodilla
                   </span>
                   <span className="font-bold text-primary">
                     {plan.metrics.kneeExtensionNote}
@@ -296,7 +296,7 @@ export function PlanDetailView({
               <div className="flex items-center justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
                 <div>
                   <span className="font-label text-label-md text-on-surface-variant">
-                    Pain Level (Avg)
+                    Nivel de dolor (prom.)
                   </span>
                   <p className="font-metric text-metric-xl text-secondary">
                     {plan.metrics.painLevel}
@@ -336,7 +336,7 @@ export function PlanDetailView({
                 <Icon name="search" className="mr-2 text-outline-variant" />
                 <input
                   className="w-48 border-none bg-transparent text-body-md focus:outline-none"
-                  placeholder="Search exercises..."
+                  placeholder="Buscar ejercicios..."
                   type="text"
                 />
               </div>
@@ -378,7 +378,7 @@ export function PlanDetailView({
             <section className="flex-1">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-headline-md text-on-surface">
-                  Today&apos;s Protocol
+                  Protocolo de hoy
                 </h3>
                 <div className="flex gap-2">
                   <button
@@ -386,14 +386,14 @@ export function PlanDetailView({
                     className="flex items-center gap-1 rounded-lg bg-surface-container-high px-4 py-2 font-label text-label-md text-on-surface-variant"
                   >
                     <Icon name="filter_list" className="text-[20px]" />
-                    Filter
+                    Filtrar
                   </button>
                   <button
                     type="button"
                     className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 font-label text-label-md text-on-primary transition-all active:scale-95"
                   >
                     <Icon name="play_arrow" className="text-[20px]" />
-                    Start Session
+                    Comenzar sesión
                   </button>
                 </div>
               </div>
@@ -435,11 +435,11 @@ export function PlanDetailView({
                         <div className="flex items-center gap-4 font-label text-label-md text-on-surface-variant">
                           <div className="flex items-center gap-1">
                             <Icon name="repeat" className="text-[16px]" />
-                            {ex.sets} Sets
+                            {ex.sets} series
                           </div>
                           <div className="flex items-center gap-1">
                             <Icon name="history" className="text-[16px]" />
-                            {ex.reps} Reps
+                            {ex.reps} repeticiones
                           </div>
                         </div>
                       </div>
@@ -477,7 +477,7 @@ export function PlanDetailView({
                   <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6">
                     <div className="mb-4 flex justify-between">
                       <span className="font-label text-label-md text-on-surface-variant">
-                        Knee Extension Range
+                        Rango de extensión de rodilla
                       </span>
                       <span className="font-bold text-primary">
                         {plan.metrics.kneeExtensionNote}
@@ -493,7 +493,7 @@ export function PlanDetailView({
                   <div className="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6">
                     <div>
                       <span className="font-label text-label-md text-on-surface-variant">
-                        Pain Level (Avg)
+                        Nivel de dolor (prom.)
                       </span>
                       <p className="font-metric text-metric-xl text-secondary">
                         {plan.metrics.painLevel}
@@ -510,11 +510,11 @@ export function PlanDetailView({
 
             <aside className="w-full space-y-6 lg:w-[320px]">
               <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
-                <h3 className="mb-4 text-headline-md">Session Stats</h3>
+                <h3 className="mb-4 text-headline-md">Estadísticas de sesión</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between">
                     <span className="font-label text-label-md text-on-surface-variant">
-                      Completed today
+                      Completado hoy
                     </span>
                     <span className="font-bold text-primary">1 / 4</span>
                   </div>
@@ -523,7 +523,7 @@ export function PlanDetailView({
                   </div>
                   <div className="flex justify-between">
                     <span className="font-label text-label-md text-on-surface-variant">
-                      Compliance
+                      Cumplimiento
                     </span>
                     <span className="font-bold">92%</span>
                   </div>
@@ -533,7 +533,7 @@ export function PlanDetailView({
                 <div className="mb-2 flex items-center gap-2">
                   <Icon name="calendar_today" filled />
                   <span className="font-label text-label-md font-bold">
-                    Next appointment
+                    Próxima cita
                   </span>
                 </div>
                 <p className="text-body-md">

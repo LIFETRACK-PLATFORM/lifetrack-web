@@ -36,10 +36,10 @@ export function ForgotPasswordView({
             />
           </div>
           <h2 className="text-headline-md font-semibold text-on-surface">
-            Reset your password
+            Restablece tu contraseña
           </h2>
           <p className="mt-1 font-label text-label-md text-on-surface-variant">
-            Enter your email and we&apos;ll send you a link to reset it.
+            Ingresa tu correo y te enviaremos un enlace para restablecerla.
           </p>
         </div>
 
@@ -51,14 +51,14 @@ export function ForgotPasswordView({
               className="text-[48px] text-primary"
             />
             <p className="text-body-md text-on-surface-variant">
-              If an account exists for that email, we&apos;ve sent a link to
-              reset your password.
+              Si existe una cuenta con ese correo, te enviamos un enlace para
+              restablecer tu contraseña.
             </p>
             <Link
               href="/login"
               className="font-label text-label-md font-bold text-primary hover:underline"
             >
-              Back to sign in
+              Volver a iniciar sesión
             </Link>
           </div>
         ) : (
@@ -69,7 +69,7 @@ export function ForgotPasswordView({
                   className="font-label px-1 text-label-md text-on-surface-variant"
                   htmlFor="forgot-password-email"
                 >
-                  Email Address
+                  Correo electrónico
                 </label>
                 <div className="relative">
                   <Icon
@@ -101,18 +101,18 @@ export function ForgotPasswordView({
                 disabled={loading}
                 className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-4 text-headline-md text-on-primary-container shadow-lg transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
               >
-                {loading ? "Sending…" : "Send reset link"}
+                {loading ? "Enviando…" : "Enviar enlace"}
                 <Icon name="arrow_forward" />
               </button>
             </form>
 
             <p className="mt-8 text-center text-body-md text-on-surface-variant">
-              Remembered your password?{" "}
+              ¿Recordaste tu contraseña?{" "}
               <Link
                 href="/login"
                 className="font-bold text-primary hover:underline"
               >
-                Back to sign in
+                Volver a iniciar sesión
               </Link>
             </p>
           </>

@@ -27,7 +27,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
     if (password !== confirmPassword) {
-      setMatchError("Passwords do not match");
+      setMatchError("Las contraseñas no coinciden");
       return;
     }
     setMatchError(null);
@@ -88,7 +88,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
             LifeTrack OS
           </h1>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            Empowering your health & productivity
+            Impulsando tu salud y productividad
           </p>
         </header>
 
@@ -96,10 +96,10 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
           <div className="w-full rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
             <div className="mb-6">
               <h2 className="text-headline-md font-semibold text-on-surface">
-                Create your account
+                Crea tu cuenta
               </h2>
               <p className="font-label text-label-md text-on-surface-variant">
-                Start tracking your progress today
+                Empieza a seguir tu progreso hoy
               </p>
             </div>
             <form className="space-y-4" onSubmit={handleSubmit}>
@@ -108,7 +108,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                   className="font-label px-1 text-label-md text-on-surface-variant"
                   htmlFor="name-mobile"
                 >
-                  Full Name
+                  Nombre completo
                 </label>
                 <div className="relative">
                   <Icon
@@ -120,7 +120,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                     name="name"
                     type="text"
                     required
-                    placeholder="Jane Doe"
+                    placeholder="Juana Pérez"
                     className="w-full border-b border-outline-variant bg-surface-container-low py-4 pl-[48px] pr-4 text-body-md transition-all duration-200 focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
@@ -130,7 +130,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                   className="font-label px-1 text-label-md text-on-surface-variant"
                   htmlFor="email-mobile"
                 >
-                  Email Address
+                  Correo electrónico
                 </label>
                 <div className="relative">
                   <Icon
@@ -152,7 +152,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                   className="font-label px-1 text-label-md text-on-surface-variant"
                   htmlFor="password-mobile"
                 >
-                  Password
+                  Contraseña
                 </label>
                 <div className="relative">
                   <Icon
@@ -182,7 +182,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                   className="font-label px-1 text-label-md text-on-surface-variant"
                   htmlFor="confirm-password-mobile"
                 >
-                  Confirm Password
+                  Confirmar contraseña
                 </label>
                 <div className="relative">
                   <Icon
@@ -213,25 +213,25 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                 disabled={loading}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-4 text-headline-md text-on-primary-container shadow-lg transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
               >
-                {loading ? "Creating account…" : "Create Account"}
+                {loading ? "Creando cuenta…" : "Crear cuenta"}
                 <Icon name="arrow_forward" />
               </button>
             </form>
           </div>
 
           <p className="mt-10 text-center text-body-md text-on-surface-variant">
-            Already have an account?{" "}
+            ¿Ya tienes una cuenta?{" "}
             <Link href="/login" className="font-bold text-primary hover:underline">
-              Sign in
+              Inicia sesión
             </Link>
           </p>
         </section>
 
         <footer className="relative z-10 mt-auto pb-2 pt-6 text-center">
           <div className="flex justify-center gap-4 font-label text-label-md text-outline">
-            <span>Privacy Policy</span>
+            <span>Política de privacidad</span>
             <span>•</span>
-            <span>Terms of Service</span>
+            <span>Términos de servicio</span>
           </div>
           <p className="mt-2 font-label text-label-md text-outline opacity-60">
             © 2026 LifeTrack OS
@@ -253,12 +253,12 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
               </span>
             </div>
             <h1 className="mb-4 text-headline-lg text-on-surface">
-              Master your health & productivity.
+              Domina tu salud y productividad.
             </h1>
             <p className="text-body-lg text-on-surface-variant">
-              Your personal data sanctuary. Synchronize metrics, manage
-              rehabilitation goals, and find your daily flow with medical-grade
-              precision.
+              Tu santuario de datos personal. Sincroniza métricas, gestiona
+              tus metas de rehabilitación y encuentra tu flujo diario con
+              precisión de grado médico.
             </p>
             <div className="mt-10 flex gap-4">
               <div className="flex -space-x-md">
@@ -275,10 +275,10 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
               </div>
               <div className="flex flex-col justify-center">
                 <p className="font-label text-label-md font-bold text-on-surface">
-                  12k+ members
+                  +12 mil miembros
                 </p>
                 <p className="text-[12px] text-on-surface-variant">
-                  Tracking recovery daily
+                  Siguiendo su recuperación a diario
                 </p>
               </div>
             </div>
@@ -288,9 +288,9 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
         <div className="flex w-full items-center justify-center bg-surface px-4 lg:w-1/2">
           <div className="flex w-full max-w-[440px] flex-col">
             <div className="mb-10 flex flex-col">
-              <h2 className="mb-1 text-headline-lg text-on-surface">Create your account</h2>
+              <h2 className="mb-1 text-headline-lg text-on-surface">Crea tu cuenta</h2>
               <p className="text-body-md text-on-surface-variant">
-                Start tracking your health & productivity journey.
+                Empieza tu camino de salud y productividad.
               </p>
             </div>
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -299,14 +299,14 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                   className="font-label text-label-md text-on-surface-variant"
                   htmlFor="name-web"
                 >
-                  Full Name
+                  Nombre completo
                 </label>
                 <input
                   id="name-web"
                   name="name"
                   type="text"
                   required
-                  placeholder="Jane Doe"
+                  placeholder="Juana Pérez"
                   className="w-full border-0 border-b border-outline-variant bg-transparent px-1 py-4 text-body-md transition-all focus:rounded-lg focus:bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
@@ -315,7 +315,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                   className="font-label text-label-md text-on-surface-variant"
                   htmlFor="email-web"
                 >
-                  Email Address
+                  Correo electrónico
                 </label>
                 <input
                   id="email-web"
@@ -331,7 +331,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                   className="font-label text-label-md text-on-surface-variant"
                   htmlFor="password-web"
                 >
-                  Password
+                  Contraseña
                 </label>
                 <div className="relative">
                   <input
@@ -357,7 +357,7 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                   className="font-label text-label-md text-on-surface-variant"
                   htmlFor="confirm-password-web"
                 >
-                  Confirm Password
+                  Confirmar contraseña
                 </label>
                 <input
                   id="confirm-password-web"
@@ -382,14 +382,14 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                 disabled={loading}
                 className="w-full rounded-xl bg-primary-container py-4 text-headline-md font-bold text-on-primary-container card-elevation transition-all hover:brightness-95 active:scale-[0.98]"
               >
-                {loading ? "Creating account…" : "Create account"}
+                {loading ? "Creando cuenta…" : "Crear cuenta"}
               </button>
             </form>
 
             <p className="mt-10 text-center text-body-md text-on-surface-variant">
-              Already have an account?{" "}
+              ¿Ya tienes una cuenta?{" "}
               <Link href="/login" className="font-bold text-primary hover:underline">
-                Sign in
+                Inicia sesión
               </Link>
             </p>
           </div>

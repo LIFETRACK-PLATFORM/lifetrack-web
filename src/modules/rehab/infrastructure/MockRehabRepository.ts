@@ -7,55 +7,55 @@ import { RehabRepository } from "../domain/RehabRepository";
 const dashboard = new DashboardSummary(
   {
     planId: "acl-recovery",
-    focusTitle: "Lower Back Resilience",
+    focusTitle: "Resiliencia lumbar",
     exerciseProgress: { done: 4, total: 6, percent: 66 },
     nextAppointment: {
-      title: "Next Medical Check-up",
-      detail: "Physical Therapy • Tomorrow, 09:30 AM",
+      title: "Próximo chequeo médico",
+      detail: "Fisioterapia • Mañana, 09:30 a. m.",
     },
     weeklyCompliance: 92,
     weeklyBars: [80, 95, 70, 100, 90, 30, 20],
     recoveryScore: 84,
     activeMinutes: 42,
-    activeMinutesDelta: "+12% vs last wk",
+    activeMinutesDelta: "+12% vs. sem. pasada",
     phase: {
-      name: "Phase 2: Strength",
+      name: "Fase 2: Fuerza",
       percent: 75,
       description:
-        "Focusing on eccentric loading and neuromuscular control. You have 12 days left in this phase before evaluation.",
+        "Enfocado en carga excéntrica y control neuromuscular. Te quedan 12 días en esta fase antes de la evaluación.",
     },
     todayExercises: [
       {
         id: "ex-1",
-        name: "Resistance Band Rotations",
-        detail: "3 Sets × 15 Reps",
+        name: "Rotaciones con banda de resistencia",
+        detail: "3 series × 15 repeticiones",
         status: "completed",
       },
       {
         id: "ex-2",
-        name: "Weighted Step-ups",
-        detail: "4 Sets × 10 Reps",
+        name: "Subidas con peso",
+        detail: "4 series × 10 repeticiones",
         status: "pending",
       },
       {
         id: "ex-3",
-        name: "Static Wall Sit",
-        detail: "2 Sets × 45 Seconds",
+        name: "Sentadilla estática en pared",
+        detail: "2 series × 45 segundos",
         status: "urgent",
       },
     ],
     upNext: [
       {
         id: "next-1",
-        name: "Bird-Dog Extension",
-        detail: "3 sets • 12 reps",
+        name: "Extensión Bird-Dog",
+        detail: "3 series • 12 repeticiones",
         icon: "accessibility_new",
         locked: false,
       },
       {
         id: "next-2",
-        name: "Pelvic Tilts",
-        detail: "2 sets • 15 reps",
+        name: "Inclinaciones pélvicas",
+        detail: "2 series • 15 repeticiones",
         icon: "self_improvement",
         locked: true,
       },
@@ -67,23 +67,23 @@ const dashboard = new DashboardSummary(
 const plans: Record<string, RehabPlan> = {
   "acl-recovery": new RehabPlan(
     {
-      titleMobile: "Post-Op ACL Recovery",
-      titleWeb: "Knee ACL Recovery",
-      phaseLabel: "Phase II: Loading",
-      dayProgress: "Day 14/30",
-      weekLabel: "Week 6 of 12 • Phase 2: Mobility & Strengthening",
-      statusMessage: "Progressing according to plan",
+      titleMobile: "Recuperación post-operatoria de LCA",
+      titleWeb: "Recuperación de LCA de rodilla",
+      phaseLabel: "Fase II: Carga",
+      dayProgress: "Día 14/30",
+      weekLabel: "Semana 6 de 12 • Fase 2: Movilidad y fortalecimiento",
+      statusMessage: "Progresando según lo planeado",
       remainingToday: 3,
       exercises: [
         new Exercise(
           {
-            name: "Quad Sets (Isometric)",
-            detail: "Hold 10s • 10 Reps",
+            name: "Contracciones de cuádriceps (isométrico)",
+            detail: "Mantener 10 s • 10 repeticiones",
             icon: "fitness_center",
             current: 8,
             target: 10,
             completed: false,
-            category: "Strength",
+            category: "Fuerza",
             sets: 3,
             reps: 15,
             image:
@@ -93,13 +93,13 @@ const plans: Record<string, RehabPlan> = {
         ),
         new Exercise(
           {
-            name: "Ankle Pumps",
-            detail: "Continuous • 20 Reps",
+            name: "Bombeo de tobillo",
+            detail: "Continuo • 20 repeticiones",
             icon: "directions_walk",
             current: 15,
             target: 20,
             completed: false,
-            category: "Mobility",
+            category: "Movilidad",
             sets: 2,
             reps: 10,
             image:
@@ -109,13 +109,13 @@ const plans: Record<string, RehabPlan> = {
         ),
         new Exercise(
           {
-            name: "Straight Leg Raises",
-            detail: "10 Reps • 3 Sets",
+            name: "Elevaciones de pierna recta",
+            detail: "10 repeticiones • 3 series",
             icon: "check_circle",
             current: 10,
             target: 10,
             completed: true,
-            category: "Core/Stability",
+            category: "Núcleo/Estabilidad",
             sets: 3,
             reps: 12,
             image:
@@ -125,13 +125,13 @@ const plans: Record<string, RehabPlan> = {
         ),
         new Exercise(
           {
-            name: "Glute Squeezes",
-            detail: "Hold 5s • 15 Reps",
+            name: "Contracciones de glúteos",
+            detail: "Mantener 5 s • 15 repeticiones",
             icon: "fitness_center",
             current: 0,
             target: 15,
             completed: false,
-            category: "Isometric",
+            category: "Isométrico",
             sets: 3,
             reps: 15,
             image:
@@ -145,14 +145,14 @@ const plans: Record<string, RehabPlan> = {
           {
             month: "OCT",
             day: "24",
-            title: "Physiotherapy Evaluation",
-            detail: "09:00 AM • Apex Medical Center",
+            title: "Evaluación de fisioterapia",
+            detail: "09:00 a. m. • Centro Médico Apex",
           },
           "apt-1",
         ),
       ],
       metrics: {
-        kneeExtensionNote: "+2° improvement",
+        kneeExtensionNote: "+2° de mejora",
         painLevel: "3/10",
       },
     },
@@ -167,7 +167,7 @@ export class MockRehabRepository implements RehabRepository {
 
   async getPlan(id: string): Promise<RehabPlan> {
     const plan = plans[id];
-    if (!plan) throw new Error(`Plan not found: ${id}`);
+    if (!plan) throw new Error(`Plan no encontrado: ${id}`);
     return plan;
   }
 
