@@ -30,6 +30,10 @@ export class MockAuthRepository implements AuthRepository {
     await new Promise<void>((resolve) => setTimeout(resolve, 800));
   }
 
+  async resendVerification(_email: string): Promise<void> {
+    await new Promise<void>((resolve) => setTimeout(resolve, 800));
+  }
+
   async getCurrentUser(): Promise<CurrentUser> {
     await new Promise<void>((resolve) => setTimeout(resolve, 800));
 
