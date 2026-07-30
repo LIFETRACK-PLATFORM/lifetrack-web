@@ -20,6 +20,9 @@ pipeline {
     }
 
     stage("Build") {
+      environment {
+        NEXT_PUBLIC_API_GATEWAY_URL = "https://api.tracklywork.com"
+      }
       steps {
         sh "pnpm run build"
       }
