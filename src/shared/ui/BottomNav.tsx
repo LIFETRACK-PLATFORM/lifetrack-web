@@ -17,7 +17,7 @@ export function BottomNav({ active = "rehab" }: { active?: "home" | "rehab" | "p
         }`}
       >
         <Icon name="home" />
-        <span className="font-label mt-1 text-label-md">Home</span>
+        <span className="font-label mt-1 text-label-md">Inicio</span>
       </Link>
       <Link
         href="/rehab"
@@ -31,7 +31,7 @@ export function BottomNav({ active = "rehab" }: { active?: "home" | "rehab" | "p
             pathname.startsWith("/rehab") ? "font-bold" : ""
           }`}
         >
-          Rehab
+          Rehabilitación
         </span>
         {pathname.startsWith("/rehab") && (
           <span className="mt-1 h-1 w-1 rounded-full bg-primary" />
@@ -42,11 +42,11 @@ export function BottomNav({ active = "rehab" }: { active?: "home" | "rehab" | "p
         className="flex flex-col items-center justify-center rounded-lg p-2 text-on-surface-variant transition-all active:scale-90"
       >
         <Icon name="person" />
-        <span className="font-label mt-1 text-label-md">Profile</span>
+        <span className="font-label mt-1 text-label-md">Perfil</span>
       </Link>
       <LogoutButton className="flex flex-col items-center justify-center rounded-lg p-2 text-on-surface-variant transition-all active:scale-90">
         <Icon name="logout" />
-        <span className="font-label mt-1 text-label-md">Logout</span>
+        <span className="font-label mt-1 text-label-md">Salir</span>
       </LogoutButton>
     </nav>
   );

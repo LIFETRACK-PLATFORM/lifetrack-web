@@ -30,7 +30,7 @@ export function ResetPasswordView({
     const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
     if (newPassword !== confirmPassword) {
-      setMatchError("Passwords do not match");
+      setMatchError("Las contraseñas no coinciden");
       return;
     }
     setMatchError(null);
@@ -51,10 +51,10 @@ export function ResetPasswordView({
             />
           </div>
           <h2 className="text-headline-md font-semibold text-on-surface">
-            Choose a new password
+            Elige una nueva contraseña
           </h2>
           <p className="mt-1 font-label text-label-md text-on-surface-variant">
-            Enter and confirm your new password below.
+            Ingresa y confirma tu nueva contraseña abajo.
           </p>
         </div>
 
@@ -63,12 +63,12 @@ export function ResetPasswordView({
             role="alert"
             className="rounded-lg bg-error-container px-4 py-3 text-center text-body-md text-on-error-container"
           >
-            This reset link is invalid or has expired. Request a new one from
-            the{" "}
+            Este enlace de restablecimiento no es válido o ya expiró. Solicita
+            uno nuevo desde la página de{" "}
             <Link href="/forgot-password" className="font-bold underline">
-              forgot password
-            </Link>{" "}
-            page.
+              contraseña olvidada
+            </Link>
+            .
           </p>
         ) : success ? (
           <div className="flex flex-col items-center gap-4 text-center">
@@ -78,14 +78,14 @@ export function ResetPasswordView({
               className="text-[48px] text-primary"
             />
             <p className="text-body-md text-on-surface-variant">
-              Your password has been reset. You can now sign in with your new
-              password.
+              Tu contraseña fue restablecida. Ahora puedes iniciar sesión con
+              tu nueva contraseña.
             </p>
             <Link
               href="/login"
               className="font-label text-label-md font-bold text-primary hover:underline"
             >
-              Go to sign in
+              Ir a iniciar sesión
             </Link>
           </div>
         ) : (
@@ -95,7 +95,7 @@ export function ResetPasswordView({
                 className="font-label px-1 text-label-md text-on-surface-variant"
                 htmlFor="reset-new-password"
               >
-                New Password
+                Nueva contraseña
               </label>
               <div className="relative">
                 <Icon
@@ -125,7 +125,7 @@ export function ResetPasswordView({
                 className="font-label px-1 text-label-md text-on-surface-variant"
                 htmlFor="reset-confirm-password"
               >
-                Confirm Password
+                Confirmar contraseña
               </label>
               <div className="relative">
                 <Icon
@@ -157,7 +157,7 @@ export function ResetPasswordView({
               disabled={loading}
               className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-4 text-headline-md text-on-primary-container shadow-lg transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
             >
-              {loading ? "Resetting…" : "Reset password"}
+              {loading ? "Restableciendo…" : "Restablecer contraseña"}
               <Icon name="arrow_forward" />
             </button>
           </form>

@@ -44,7 +44,7 @@ export default function AuthenticatedLayout({
   const navUser = {
     name: user.email.split("@")[0] ?? user.email,
     email: user.email,
-    membership: user.roles.join(", ") || "Member",
+    membership: user.roles.join(", ") || "Miembro",
     avatar: DEFAULT_AVATAR,
   };
 

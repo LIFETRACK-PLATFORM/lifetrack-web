@@ -16,7 +16,7 @@ const geist = Geist({
 
 export const metadata: Metadata = {
   title: "LifeTrack OS",
-  description: "Health & productivity sanctuary — Clinical Vitality design",
+  description: "Santuario de salud y productividad — diseño Clinical Vitality",
 };
 
 export default function RootLayout({

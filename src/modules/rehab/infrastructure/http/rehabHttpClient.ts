@@ -17,7 +17,7 @@ async function rehabFetch<T>(path: string, init?: RequestInit): Promise<T> {
     const body = (await response.json().catch(() => null)) as {
       message?: string;
     } | null;
-    throw new Error(body?.message ?? `Error rehab API (${response.status})`);
+    throw new Error(body?.message ?? `Error en la API de rehabilitación (${response.status})`);
   }
 
   return response.json() as Promise<T>;
@@ -47,7 +47,7 @@ async function rehabFetchStrict<T>(path: string, init?: RequestInit): Promise<T>
       message?: string;
     } | null;
     throw new RehabApiError(
-      body?.message ?? `Error rehab API (${response.status})`,
+      body?.message ?? `Error en la API de rehabilitación (${response.status})`,
       response.status,
     );
   }

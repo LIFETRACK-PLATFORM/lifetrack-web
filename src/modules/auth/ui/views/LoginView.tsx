@@ -55,7 +55,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
             LifeTrack OS
           </h1>
           <p className="mt-1 text-body-md text-on-surface-variant">
-            Empowering your health & productivity
+            Impulsando tu salud y productividad
           </p>
         </header>
 
@@ -63,10 +63,10 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
           <div className="w-full rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
             <div className="mb-6">
               <h2 className="text-headline-md font-semibold text-on-surface">
-                Welcome back
+                Bienvenido de nuevo
               </h2>
               <p className="font-label text-label-md text-on-surface-variant">
-                Sign in to continue your progress
+                Inicia sesión para continuar tu progreso
               </p>
             </div>
             <form className="space-y-4" onSubmit={handleSubmit}>
@@ -75,7 +75,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                   className="font-label px-1 text-label-md text-on-surface-variant"
                   htmlFor="email-mobile"
                 >
-                  Email Address
+                  Correo electrónico
                 </label>
                 <div className="relative">
                   <Icon
@@ -98,13 +98,13 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                     className="font-label text-label-md text-on-surface-variant"
                     htmlFor="password-mobile"
                   >
-                    Password
+                    Contraseña
                   </label>
                   <Link
                     href="/forgot-password"
                     className="font-label text-label-md font-bold text-primary hover:underline"
                   >
-                    Forgot?
+                    ¿Olvidaste?
                   </Link>
                 </div>
                 <div className="relative">
@@ -148,7 +148,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 disabled={loading}
                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-4 text-headline-md text-on-primary-container shadow-lg transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
               >
-                {loading ? "Signing in…" : "Sign In"}
+                {loading ? "Iniciando sesión…" : "Iniciar sesión"}
                 <Icon name="arrow_forward" />
               </button>
             </form>
@@ -159,7 +159,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
               </div>
               <div className="relative flex justify-center">
                 <span className="bg-surface-container-lowest px-4 font-label text-label-md text-on-surface-variant">
-                  Or continue with
+                  O continúa con
                 </span>
               </div>
             </div>
@@ -183,18 +183,18 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
           </div>
 
           <p className="mt-10 text-center text-body-md text-on-surface-variant">
-            Don&apos;t have an account?{" "}
+            ¿No tienes una cuenta?{" "}
             <Link href="/register" className="font-bold text-primary hover:underline">
-              Create one
+              Crea una
             </Link>
           </p>
         </section>
 
         <footer className="relative z-10 mt-auto pb-2 pt-6 text-center">
           <div className="flex justify-center gap-4 font-label text-label-md text-outline">
-            <span>Privacy Policy</span>
+            <span>Política de privacidad</span>
             <span>•</span>
-            <span>Terms of Service</span>
+            <span>Términos de servicio</span>
           </div>
           <p className="mt-2 font-label text-label-md text-outline opacity-60">
             © 2026 LifeTrack OS
@@ -216,12 +216,12 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
               </span>
             </div>
             <h1 className="mb-4 text-headline-lg text-on-surface">
-              Master your health & productivity.
+              Domina tu salud y productividad.
             </h1>
             <p className="text-body-lg text-on-surface-variant">
-              Your personal data sanctuary. Synchronize metrics, manage
-              rehabilitation goals, and find your daily flow with medical-grade
-              precision.
+              Tu santuario de datos personal. Sincroniza métricas, gestiona
+              tus metas de rehabilitación y encuentra tu flujo diario con
+              precisión de grado médico.
             </p>
             <div className="mt-10 flex gap-4">
               <div className="flex -space-x-md">
@@ -238,10 +238,10 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
               </div>
               <div className="flex flex-col justify-center">
                 <p className="font-label text-label-md font-bold text-on-surface">
-                  12k+ members
+                  +12 mil miembros
                 </p>
                 <p className="text-[12px] text-on-surface-variant">
-                  Tracking recovery daily
+                  Siguiendo su recuperación a diario
                 </p>
               </div>
             </div>
@@ -251,9 +251,9 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
         <div className="flex w-full items-center justify-center bg-surface px-4 lg:w-1/2">
           <div className="flex w-full max-w-[440px] flex-col">
             <div className="mb-10 flex flex-col">
-              <h2 className="mb-1 text-headline-lg text-on-surface">Welcome back</h2>
+              <h2 className="mb-1 text-headline-lg text-on-surface">Bienvenido de nuevo</h2>
               <p className="text-body-md text-on-surface-variant">
-                Access your dashboard to continue your journey.
+                Accede a tu panel para continuar tu camino.
               </p>
             </div>
             <form className="space-y-6" onSubmit={handleSubmit}>
@@ -262,7 +262,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                   className="font-label text-label-md text-on-surface-variant"
                   htmlFor="email-web"
                 >
-                  Email Address
+                  Correo electrónico
                 </label>
                 <input
                   id="email-web"
@@ -279,13 +279,13 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                     className="font-label text-label-md text-on-surface-variant"
                     htmlFor="password-web"
                   >
-                    Password
+                    Contraseña
                   </label>
                   <Link
                     href="/forgot-password"
                     className="font-label text-label-md font-bold text-primary hover:underline"
                   >
-                    Forgot password?
+                    ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
                 <div className="relative">
@@ -325,14 +325,14 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 disabled={loading}
                 className="w-full rounded-xl bg-primary-container py-4 text-headline-md font-bold text-on-primary-container card-elevation transition-all hover:brightness-95 active:scale-[0.98]"
               >
-                {loading ? "Signing in…" : "Sign in"}
+                {loading ? "Iniciando sesión…" : "Iniciar sesión"}
               </button>
             </form>
 
             <div className="my-10 flex items-center">
               <div className="h-px flex-grow bg-outline-variant" />
               <span className="px-4 font-label text-label-md text-outline">
-                or continue with
+                o continúa con
               </span>
               <div className="h-px flex-grow bg-outline-variant" />
             </div>
@@ -355,9 +355,9 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
             </div>
 
             <p className="text-center text-body-md text-on-surface-variant">
-              Don&apos;t have an account?{" "}
+              ¿No tienes una cuenta?{" "}
               <Link href="/register" className="font-bold text-primary hover:underline">
-                Create account
+                Crear cuenta
               </Link>
             </p>
           </div>
