@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import { AuthRepository } from "@/modules/auth/domain/AuthRepository";
 import { MockAuthRepository } from "@/modules/auth/infrastructure/MockAuthRepository";
 import { useConfirmEmail } from "@/modules/auth/ui/hooks/useConfirmEmail";
+import { useResendVerification } from "@/modules/auth/ui/hooks/useResendVerification";
 
 export function ConfirmEmailView({
   repository,
@@ -20,6 +21,13 @@ export function ConfirmEmailView({
   );
   const { loading, success, error, confirmEmail } =
     useConfirmEmail(activeRepository);
+  const {
+    loading: resendLoading,
+    success: resendSuccess,
+    error: resendError,
+    resendVerification,
+  } = useResendVerification(activeRepository);
+  const [resendEmail, setResendEmail] = useState("");
   const hasRequested = useRef(false);
 
   useEffect(() => {
@@ -55,6 +63,65 @@ export function ConfirmEmailView({
                   ? "Este enlace de confirmación no es válido."
                   : error}
               </p>
+
+              {resendSuccess ? (
+                <p
+                  role="status"
+                  className="rounded-lg bg-primary-container px-4 py-3 text-body-md text-on-primary-container"
+                >
+                  Si el email existe, te enviamos un nuevo enlace de
+                  confirmación.
+                </p>
+              ) : (
+                <form
+                  className="w-full space-y-3 text-left"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    resendVerification(resendEmail);
+                  }}
+                >
+                  <div className="space-y-1">
+                    <label
+                      className="font-label px-1 text-label-md text-on-surface-variant"
+                      htmlFor="resend-email"
+                    >
+                      Reenviar verificación
+                    </label>
+                    <div className="relative">
+                      <Icon
+                        name="mail"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant"
+                      />
+                      <input
+                        id="resend-email"
+                        name="email"
+                        type="email"
+                        required
+                        placeholder="tu@email.com"
+                        value={resendEmail}
+                        onChange={(e) => setResendEmail(e.target.value)}
+                        className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-3 pl-[48px] pr-4 text-body-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+                  {resendError && (
+                    <p
+                      role="alert"
+                      className="rounded-lg bg-error-container px-4 py-3 text-body-md text-on-error-container"
+                    >
+                      {resendError}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={resendLoading}
+                    className="w-full rounded-xl bg-primary-container py-3 text-label-lg font-bold text-on-primary-container card-elevation transition-all hover:brightness-95 active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {resendLoading ? "Enviando…" : "Reenviar verificación"}
+                  </button>
+                </form>
+              )}
+
               <Link
                 href="/login"
                 className="font-label text-label-md font-bold text-primary hover:underline"

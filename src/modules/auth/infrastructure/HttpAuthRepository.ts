@@ -110,6 +110,26 @@ export class HttpAuthRepository implements AuthRepository {
     }
   }
 
+  async resendVerification(email: string): Promise<void> {
+    const response = await fetch(
+      `${API_GATEWAY_URL}/auth/resend-verification`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorBody = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+      throw new Error(
+        errorBody?.message ?? "No se pudo reenviar el email de verificación",
+      );
+    }
+  }
+
   async getCurrentUser(): Promise<CurrentUser> {
     const response = await fetch(`${API_GATEWAY_URL}/auth/me`, {
       method: "GET",
