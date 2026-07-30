@@ -3,8 +3,10 @@ import { RegisterData } from "../domain/RegisterData";
 import { AuthRepository } from "../domain/AuthRepository";
 import { CurrentUser } from "../domain/CurrentUser";
 
-const API_GATEWAY_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL ?? "http://localhost:3000";
+const API_GATEWAY_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
+if (!API_GATEWAY_URL) {
+  throw new Error("NEXT_PUBLIC_API_GATEWAY_URL no está configurada");
+}
 
 export class HttpAuthRepository implements AuthRepository {
   async login(credentials: Credentials): Promise<void> {

@@ -1,5 +1,7 @@
-const API_GATEWAY_URL =
-  process.env.NEXT_PUBLIC_API_GATEWAY_URL ?? "http://localhost:3000";
+const API_GATEWAY_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
+if (!API_GATEWAY_URL) {
+  throw new Error("NEXT_PUBLIC_API_GATEWAY_URL no está configurada");
+}
 
 async function rehabFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_GATEWAY_URL}${path}`, {
