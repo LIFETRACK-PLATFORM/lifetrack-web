@@ -1,0 +1,70 @@
+pipeline {
+  agent any
+
+  environment {
+    IMAGE    = "ghcr.io/lifetrack-platform/lifetrack-web"
+    VPS      = "95.216.164.54"
+    VPS_USER = "ricardo"
+    API_URL  = "https://api.tracklywork.com"
+  }
+
+  stages {
+    stage("Docker Build") {
+      steps {
+        sh "docker build -t ${IMAGE}:${env.BUILD_NUMBER} --build-arg NEXT_PUBLIC_API_GATEWAY_URL=${API_URL} ."
+      }
+    }
+
+    stage("Docker Push") {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'github-token-userpass', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+          sh "echo ${GH_TOKEN} | docker login ghcr.io -u ${GH_USER} --password-stdin"
+          sh "docker push ${IMAGE}:${env.BUILD_NUMBER}"
+        }
+      }
+    }
+
+    stage("Docker Login (VPS)") {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'github-token-userpass', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
+          sshagent(['vps-ssh']) {
+            sh """
+              ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS} '
+                echo ${GH_TOKEN} | docker login ghcr.io -u ${GH_USER} --password-stdin
+              '
+            """
+          }
+        }
+      }
+    }
+
+    stage("Deploy") {
+      steps {
+        sshagent(['vps-ssh']) {
+          sh """
+            ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS} '
+              docker stop lifetrack-web || true
+              docker rm lifetrack-web || true
+              docker pull ${IMAGE}:${env.BUILD_NUMBER}
+              docker run -d --name lifetrack-web \
+                --network lifetrack-net \
+                --restart unless-stopped \
+                -p 127.0.0.1:3002:3002 \
+                --env-file /home/ricardo/lifetrack-infra/envs/frontend.env \
+                ${IMAGE}:${env.BUILD_NUMBER}
+            '
+          """
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "Deploy OK - frontend #${env.BUILD_NUMBER}"
+    }
+    failure {
+      echo "Deploy FAILED - frontend #${env.BUILD_NUMBER}"
+    }
+  }
+}

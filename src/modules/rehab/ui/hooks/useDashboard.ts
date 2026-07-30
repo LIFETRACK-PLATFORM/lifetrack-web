@@ -12,9 +12,12 @@ export function useDashboard(repository: RehabRepository) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setIsEmpty(false);
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      setError(null);
+      setIsEmpty(false);
+    });
 
     const getDashboard = new GetDashboardUseCase(repository);
     getDashboard

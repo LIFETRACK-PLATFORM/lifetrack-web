@@ -15,9 +15,12 @@ export function usePlan(repository: RehabRepository, planId: string) {
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setNotFound(false);
+    Promise.resolve().then(() => {
+      if (cancelled) return;
+      setLoading(true);
+      setError(null);
+      setNotFound(false);
+    });
 
     const getPlan = new GetPlanUseCase(repository);
     getPlan
