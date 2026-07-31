@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { RehabPlan } from "../../domain/RehabPlan";
-import { RehabRepository } from "../../domain/RehabRepository";
+import { AddExerciseInput, RehabRepository } from "../../domain/RehabRepository";
 import { GetPlanUseCase } from "../../application/GetPlanUseCase";
 import { UpdateExerciseProgressUseCase } from "../../application/UpdateExerciseProgressUseCase";
+import { AddExerciseUseCase } from "../../application/AddExerciseUseCase";
 import { RehabApiError } from "../../infrastructure/http/rehabHttpClient";
 
 export function usePlan(repository: RehabRepository, planId: string) {
@@ -12,6 +13,17 @@ export function usePlan(repository: RehabRepository, planId: string) {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [addExerciseError, setAddExerciseError] = useState<string | null>(null);
+  const [addingExercise, setAddingExercise] = useState(false);
+
+  const applyPlan = useCallback((fetched: RehabPlan) => {
+    setPlan(fetched);
+    const initial: Record<string, number> = {};
+    for (const exercise of fetched.exercises) {
+      initial[exercise.id] = exercise.current;
+    }
+    setCounts(initial);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,12 +39,7 @@ export function usePlan(repository: RehabRepository, planId: string) {
       .execute(planId)
       .then((fetched) => {
         if (cancelled) return;
-        setPlan(fetched);
-        const initial: Record<string, number> = {};
-        for (const exercise of fetched.exercises) {
-          initial[exercise.id] = exercise.current;
-        }
-        setCounts(initial);
+        applyPlan(fetched);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -49,7 +56,7 @@ export function usePlan(repository: RehabRepository, planId: string) {
     return () => {
       cancelled = true;
     };
-  }, [repository, planId]);
+  }, [repository, planId, applyPlan]);
 
   const adjust = useCallback(
     async (exerciseId: string, delta: number, target: number) => {
@@ -72,5 +79,41 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [counts, plan, repository],
   );
 
-  return { plan, counts, adjust, loading, error, notFound, saveError };
+  const addExercise = useCallback(
+    async (input: AddExerciseInput) => {
+      if (!plan) return false;
+      setAddingExercise(true);
+      setAddExerciseError(null);
+
+      try {
+        const useCase = new AddExerciseUseCase(repository);
+        await useCase.execute(plan.id, input);
+        const getPlan = new GetPlanUseCase(repository);
+        const refreshed = await getPlan.execute(plan.id);
+        applyPlan(refreshed);
+        return true;
+      } catch (err) {
+        setAddExerciseError(
+          err instanceof Error ? err.message : "No se pudo agregar el ejercicio",
+        );
+        return false;
+      } finally {
+        setAddingExercise(false);
+      }
+    },
+    [plan, repository, applyPlan],
+  );
+
+  return {
+    plan,
+    counts,
+    adjust,
+    loading,
+    error,
+    notFound,
+    saveError,
+    addExercise,
+    addingExercise,
+    addExerciseError,
+  };
 }

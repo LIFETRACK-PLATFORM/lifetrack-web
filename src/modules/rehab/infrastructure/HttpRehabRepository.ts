@@ -1,6 +1,6 @@
 import { DashboardSummary } from "../domain/DashboardSummary";
 import { RehabPlan } from "../domain/RehabPlan";
-import { RehabRepository } from "../domain/RehabRepository";
+import { AddExerciseInput, RehabRepository } from "../domain/RehabRepository";
 import type {
   RecoveryPlanSummaryDto,
   RecoveryProgressDto,
@@ -68,5 +68,12 @@ export class HttpRehabRepository implements RehabRepository {
       },
     );
     return result.recoveryPlanId;
+  }
+
+  async addExercise(planId: string, input: AddExerciseInput): Promise<void> {
+    await rehabFetchStrict(`/rehab/plans/${planId}/exercises`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
   }
 }
