@@ -2,7 +2,10 @@ import { DashboardSummary } from "../domain/DashboardSummary";
 import { RehabPlan } from "../domain/RehabPlan";
 import { Exercise } from "../domain/Exercise";
 import { Appointment } from "../domain/Appointment";
-import { RehabRepository } from "../domain/RehabRepository";
+import { AddExerciseInput, RehabRepository } from "../domain/RehabRepository";
+
+const MOCK_EXERCISE_IMAGE =
+  "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400";
 
 const dashboard = new DashboardSummary(
   {
@@ -184,5 +187,29 @@ export class MockRehabRepository implements RehabRepository {
   }): Promise<string> {
     void input;
     return "acl-recovery";
+  }
+
+  async addExercise(planId: string, input: AddExerciseInput): Promise<void> {
+    const plan = plans[planId];
+    if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
+
+    const target = input.targetSets * input.targetReps;
+    const exercise = new Exercise(
+      {
+        name: input.name,
+        detail: `${input.targetSets} series × ${input.targetReps} repeticiones`,
+        icon: "fitness_center",
+        current: 0,
+        target,
+        completed: false,
+        category: `phase-${input.phase}`,
+        sets: input.targetSets,
+        reps: input.targetReps,
+        image: MOCK_EXERCISE_IMAGE,
+      },
+      `exercise-${Date.now()}`,
+    );
+
+    plan.exercises.push(exercise);
   }
 }

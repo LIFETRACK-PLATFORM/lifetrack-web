@@ -8,6 +8,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
+import { AddExerciseDialog } from "@/modules/rehab/ui/components/AddExerciseDialog";
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
@@ -22,13 +23,24 @@ export function PlanDetailView({
   planId: string;
 }) {
   const [tab, setTab] = useState<Tab>("exercises");
+  const [isAddExerciseOpen, setIsAddExerciseOpen] = useState(false);
   const activeRepository = useMemo(
     () => repository ?? createRehabRepository(),
     [repository],
   );
   const authUser = useAuthenticatedUser();
-  const { plan, counts, adjust, loading, error, notFound, saveError } =
-    usePlan(activeRepository, planId);
+  const {
+    plan,
+    counts,
+    adjust,
+    loading,
+    error,
+    notFound,
+    saveError,
+    addExercise,
+    addingExercise,
+    addExerciseError,
+  } = usePlan(activeRepository, planId);
 
   if (loading) {
     return (
@@ -157,6 +169,14 @@ export function PlanDetailView({
                   Quedan {plan.remainingToday}
                 </span>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsAddExerciseOpen(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary-container/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
+              >
+                <Icon name="add" className="text-[20px]" />
+                Agregar ejercicio
+              </button>
               {plan.exercises
                 .filter((e) => e.id !== "glute")
                 .map((ex) =>
@@ -388,6 +408,16 @@ export function PlanDetailView({
                     <Icon name="filter_list" className="text-[20px]" />
                     Filtrar
                   </button>
+                  {tab === "exercises" && (
+                    <button
+                      type="button"
+                      onClick={() => setIsAddExerciseOpen(true)}
+                      className="flex items-center gap-1 rounded-lg border border-primary/40 px-4 py-2 font-label text-label-md text-primary transition-all active:scale-95"
+                    >
+                      <Icon name="add" className="text-[20px]" />
+                      Agregar ejercicio
+                    </button>
+                  )}
                   <button
                     type="button"
                     className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 font-label text-label-md text-on-primary transition-all active:scale-95"
@@ -545,6 +575,15 @@ export function PlanDetailView({
           </div>
         </main>
       </div>
+
+      {isAddExerciseOpen && (
+        <AddExerciseDialog
+          onClose={() => setIsAddExerciseOpen(false)}
+          onSubmit={addExercise}
+          submitting={addingExercise}
+          error={addExerciseError}
+        />
+      )}
     </>
   );
 }
