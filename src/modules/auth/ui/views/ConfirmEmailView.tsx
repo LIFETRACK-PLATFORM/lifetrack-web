@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Icon } from "@/shared/ui/Icon";
+import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 import { AuthRepository } from "@/modules/auth/domain/AuthRepository";
 import { MockAuthRepository } from "@/modules/auth/infrastructure/MockAuthRepository";
 import { useConfirmEmail } from "@/modules/auth/ui/hooks/useConfirmEmail";
@@ -40,24 +44,27 @@ export function ConfirmEmailView({
   }, [token]);
 
   return (
-    <main className="flex min-h-dvh w-full items-center justify-center bg-surface px-5 pb-safe pt-10">
-      <div className="w-full max-w-md rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
+    <main className="relative flex min-h-dvh w-full items-center justify-center bg-surface px-5 pb-safe pt-10">
+      <div className="absolute right-5 top-5">
+        <ThemeToggle />
+      </div>
+      <div className="w-full max-w-md rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
         <div className="flex flex-col items-center gap-4 text-center">
           {!token || error ? (
             <>
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-error-container shadow-sm">
+              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-error/10 ">
                 <Icon
                   name="error"
                   filled
-                  className="text-[32px] text-on-error-container"
+                  className="text-[32px] text-error"
                 />
               </div>
-              <h2 className="text-headline-md font-semibold text-on-surface">
+              <h2 className="text-headline-md font-semibold text-text-1">
                 No se pudo confirmar el email
               </h2>
               <p
                 role="alert"
-                className="rounded-lg bg-error-container px-4 py-3 text-body-md text-on-error-container"
+                className="rounded-lg bg-error/10 px-4 py-3 text-body-md text-error"
               >
                 {!token
                   ? "Este enlace de confirmación no es válido."
@@ -67,7 +74,7 @@ export function ConfirmEmailView({
               {resendSuccess ? (
                 <p
                   role="status"
-                  className="rounded-lg bg-primary-container px-4 py-3 text-body-md text-on-primary-container"
+                  className="rounded-lg bg-primary px-4 py-3 text-body-md text-primary-foreground"
                 >
                   Si el email existe, te enviamos un nuevo enlace de
                   confirmación.
@@ -81,18 +88,18 @@ export function ConfirmEmailView({
                   }}
                 >
                   <div className="space-y-1">
-                    <label
-                      className="font-label px-1 text-label-md text-on-surface-variant"
+                    <Label
+                      className="font-label px-1 text-label-md text-text-3"
                       htmlFor="resend-email"
                     >
                       Reenviar verificación
-                    </label>
+                    </Label>
                     <div className="relative">
                       <Icon
                         name="mail"
-                        className="absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 text-text-3"
                       />
-                      <input
+                      <Input
                         id="resend-email"
                         name="email"
                         type="email"
@@ -100,25 +107,25 @@ export function ConfirmEmailView({
                         placeholder="tu@email.com"
                         value={resendEmail}
                         onChange={(e) => setResendEmail(e.target.value)}
-                        className="w-full rounded-lg border border-outline-variant bg-surface-container-low py-3 pl-[48px] pr-4 text-body-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="h-12 pl-12"
                       />
                     </div>
                   </div>
                   {resendError && (
                     <p
                       role="alert"
-                      className="rounded-lg bg-error-container px-4 py-3 text-body-md text-on-error-container"
+                      className="rounded-lg bg-error/10 px-4 py-3 text-body-md text-error"
                     >
                       {resendError}
                     </p>
                   )}
-                  <button
+                  <Button
                     type="submit"
+                    className="mt-2 h-12 w-full"
                     disabled={resendLoading}
-                    className="w-full rounded-xl bg-primary-container py-3 text-label-lg font-bold text-on-primary-container card-elevation transition-all hover:brightness-95 active:scale-[0.98] disabled:opacity-60"
                   >
                     {resendLoading ? "Enviando…" : "Reenviar verificación"}
-                  </button>
+                  </Button>
                 </form>
               )}
 
@@ -136,10 +143,10 @@ export function ConfirmEmailView({
                 filled
                 className="text-[48px] text-primary"
               />
-              <h2 className="text-headline-md font-semibold text-on-surface">
+              <h2 className="text-headline-md font-semibold text-text-1">
                 Email confirmado
               </h2>
-              <p className="text-body-md text-on-surface-variant">
+              <p className="text-body-md text-text-3">
                 Tu cuenta ya está activa. Ahora puedes iniciar sesión.
               </p>
               <Link
@@ -151,17 +158,17 @@ export function ConfirmEmailView({
             </>
           ) : (
             <>
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary-container shadow-sm">
+              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-primary ">
                 <Icon
                   name="mail"
                   filled
-                  className="text-[32px] text-on-primary-container"
+                  className="text-[32px] text-primary-foreground"
                 />
               </div>
-              <h2 className="text-headline-md font-semibold text-on-surface">
+              <h2 className="text-headline-md font-semibold text-text-1">
                 Confirmando tu email…
               </h2>
-              <p className="text-body-md text-on-surface-variant">
+              <p className="text-body-md text-text-3">
                 {loading ? "Un momento por favor." : "Preparando la confirmación."}
               </p>
             </>

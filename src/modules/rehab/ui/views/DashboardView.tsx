@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
+import { StatusBadge } from "@/components/ui/badge";
 import { Icon } from "@/shared/ui/Icon";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { DashboardSummary } from "@/modules/rehab/domain/DashboardSummary";
@@ -40,7 +41,7 @@ function ProgressRing({
     <div className="relative" style={{ width: size, height: size }}>
       <svg className="h-full w-full -rotate-90 transform">
         <circle
-          className="text-surface-container-high"
+          className="text-surface-3"
           cx={size / 2}
           cy={size / 2}
           r={r}
@@ -103,7 +104,7 @@ export function DashboardView({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-on-surface-variant">
+      <div className="flex min-h-screen items-center justify-center text-text-3">
         Cargando recuperación…
       </div>
     );
@@ -116,7 +117,7 @@ export function DashboardView({
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="rounded-xl bg-primary px-4 py-2 text-on-primary"
+          className="rounded-xl bg-primary px-4 py-2 text-primary-foreground"
         >
           Reintentar
         </button>
@@ -127,18 +128,18 @@ export function DashboardView({
   if (isEmpty) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6">
-        <h2 className="text-headline-md text-on-surface">Sin planes de recuperación</h2>
-        <p className="text-center text-on-surface-variant">
+        <h2 className="text-headline-md text-text-1">Sin planes de recuperación</h2>
+        <p className="text-center text-text-3">
           Crea tu primer plan para empezar a registrar progreso.
         </p>
         <input
-          className="w-full max-w-sm rounded-lg border border-outline-variant bg-surface px-3 py-2"
+          className="w-full max-w-sm rounded-lg border border-border bg-surface px-3 py-2"
           value={bodyPart}
           onChange={(e) => setBodyPart(e.target.value)}
           placeholder="Parte del cuerpo"
         />
         <input
-          className="w-full max-w-sm rounded-lg border border-outline-variant bg-surface px-3 py-2"
+          className="w-full max-w-sm rounded-lg border border-border bg-surface px-3 py-2"
           value={injuryType}
           onChange={(e) => setInjuryType(e.target.value)}
           placeholder="Tipo de lesión"
@@ -148,7 +149,7 @@ export function DashboardView({
           type="button"
           disabled={creating}
           onClick={handleCreatePlan}
-          className="rounded-xl bg-primary px-6 py-3 text-on-primary disabled:opacity-50"
+          className="rounded-xl bg-primary px-6 py-3 text-primary-foreground disabled:opacity-50"
         >
           {creating ? "Creando…" : "Crear plan"}
         </button>
@@ -165,15 +166,15 @@ export function DashboardView({
   return (
     <>
       {/* Mobile */}
-      <div className="min-h-screen bg-background pb-32 text-on-surface md:hidden">
+      <div className="min-h-screen bg-background pb-32 text-text-1 md:hidden">
         <header className="fixed left-0 top-0 z-40 w-full bg-surface">
           <div className="mx-auto flex w-full max-w-app items-center justify-between px-6 py-4">
             <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
             <div className="flex items-center gap-4">
-              <button type="button" className="rounded-full p-2 hover:bg-surface-container-high">
-                <Icon name="notifications" className="text-on-surface-variant" />
+              <button type="button" className="rounded-full p-2 hover:bg-surface-3">
+                <Icon name="notifications" className="text-text-3" />
               </button>
-              <div className="h-10 w-10 overflow-hidden rounded-full border border-outline-variant bg-surface-container">
+              <div className="h-10 w-10 overflow-hidden rounded-full border border-border bg-surface-2">
                 <Image
                   src={DEFAULT_AVATAR}
                   alt={displayName}
@@ -194,33 +195,33 @@ export function DashboardView({
 
         <Link
           href={`/rehab/plans/${primaryPlanId}`}
-          className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-container text-on-primary-container shadow-lg transition-transform active:scale-90"
+          className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground  transition-transform active:scale-90"
         >
           <Icon name="add" className="text-[32px]" />
         </Link>
       </div>
 
       {/* Web */}
-      <div className="hidden overflow-hidden bg-background text-on-surface md:block">
+      <div className="hidden overflow-hidden bg-background text-text-1 md:block">
         <main className="h-screen overflow-y-auto bg-background p-10">
           <div className="mx-auto max-w-app">
             <header className="mb-10 flex items-end justify-between">
               <div>
-                <h2 className="text-headline-lg text-on-surface">Panel de rehabilitación</h2>
-                <p className="text-body-lg text-on-surface-variant">
+                <h2 className="text-headline-lg text-text-1">Panel de rehabilitación</h2>
+                <p className="text-body-lg text-text-3">
                   Sigue tu recuperación y tus objetivos diarios — {todayLabel()}.
                 </p>
               </div>
               <div className="flex gap-4">
                 <button
                   type="button"
-                  className="rounded-lg bg-surface-container-highest p-2 text-primary hover:bg-surface-container-high"
+                  className="rounded-lg bg-surface-4 p-2 text-primary hover:bg-surface-3"
                 >
                   <Icon name="notifications" />
                 </button>
                 <button
                   type="button"
-                  className="rounded-lg bg-surface-container-highest p-2 text-primary hover:bg-surface-container-high"
+                  className="rounded-lg bg-surface-4 p-2 text-primary hover:bg-surface-3"
                 >
                   <Icon name="settings" />
                 </button>
@@ -249,7 +250,7 @@ function MobilePlanSection({
   return (
     <div className="space-y-6">
       {showTitle && (
-        <h2 className="text-headline-md font-bold text-on-surface">{d.focusTitle}</h2>
+        <h2 className="text-headline-md font-bold text-text-1">{d.focusTitle}</h2>
       )}
 
       <section className="negative-space-pocket">
@@ -258,22 +259,22 @@ function MobilePlanSection({
             Enfoque de hoy
           </span>
           {!showTitle && (
-            <h2 className="text-headline-lg-mobile text-on-surface">{d.focusTitle}</h2>
+            <h2 className="text-headline-lg-mobile text-text-1">{d.focusTitle}</h2>
           )}
         </div>
-        <div className="relative overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest p-6 card-elevation">
+        <div className="relative overflow-hidden rounded-xl border border-border bg-surface-1 p-6 card-elevation">
           <div className="absolute right-0 top-0 p-6 opacity-10">
             <Icon name="stabilization" filled className="text-[80px]" />
           </div>
           <div className="relative z-10 flex flex-col gap-4">
             <div className="flex items-end justify-between">
               <div>
-                <p className="text-body-md text-on-surface-variant">
+                <p className="text-body-md text-text-3">
                   Progreso de ejercicios de hoy
                 </p>
                 <p className="font-metric text-metric-xl text-primary">
                   {d.exerciseProgress.done}{" "}
-                  <span className="text-headline-md font-normal text-on-surface-variant">
+                  <span className="text-headline-md font-normal text-text-3">
                     / {d.exerciseProgress.total}
                   </span>
                 </p>
@@ -282,7 +283,7 @@ function MobilePlanSection({
             </div>
             <Link
               href={`/rehab/plans/${d.planId}`}
-              className="w-full rounded-lg bg-primary py-4 text-center font-label text-label-md text-on-primary shadow-sm transition-transform active:scale-95"
+              className="w-full rounded-lg bg-primary py-4 text-center font-label text-label-md text-primary-foreground  transition-transform active:scale-95"
             >
               Continuar sesión
             </Link>
@@ -291,8 +292,8 @@ function MobilePlanSection({
       </section>
 
       <section className="negative-space-pocket">
-        <div className="flex items-center gap-6 rounded-xl border border-tertiary/20 bg-tertiary-container p-6 text-on-tertiary-container shadow-md">
-          <div className="animate-float rounded-lg bg-on-tertiary-container/10 p-4">
+        <div className="flex items-center gap-6 rounded-xl border border-border bg-surface-2 p-6 text-text-1">
+          <div className="animate-float rounded-lg bg-primary/10 p-4">
             <Icon name="calendar_today" filled />
           </div>
           <div>
@@ -308,9 +309,9 @@ function MobilePlanSection({
       </section>
 
       <section className="grid grid-cols-2 gap-4 negative-space-pocket">
-        <div className="col-span-2 flex flex-col gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
+        <div className="col-span-2 flex flex-col gap-4 rounded-xl border border-border bg-surface-1 p-6">
           <div className="flex items-center justify-between">
-            <h3 className="font-label text-label-md text-on-surface-variant">
+            <h3 className="font-label text-label-md text-text-3">
               Cumplimiento semanal
             </h3>
             <span className="font-label text-label-md font-bold text-primary">
@@ -326,28 +327,28 @@ function MobilePlanSection({
               />
             ))}
           </div>
-          <div className="flex justify-between font-label text-[10px] text-on-surface-variant opacity-60">
+          <div className="flex justify-between font-label text-[10px] text-text-3 opacity-60">
             {WEEKDAY_LABELS.map((label) => (
               <span key={label}>{label}</span>
             ))}
           </div>
         </div>
-        <div className="flex flex-col gap-1 rounded-xl border border-outline-variant bg-surface-container-low p-6">
-          <p className="font-label text-label-md text-on-surface-variant">Recuperación</p>
-          <p className="text-headline-md text-on-surface">
+        <div className="flex flex-col gap-1 rounded-xl border border-border bg-surface-1 p-6">
+          <p className="font-label text-label-md text-text-3">Recuperación</p>
+          <p className="text-headline-md text-text-1">
             {d.recoveryScore}{" "}
             <span className="text-body-md font-normal opacity-60">/ 100</span>
           </p>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-container-high">
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
             <div
               className="h-full rounded-full bg-primary"
               style={{ width: `${d.recoveryScore}%` }}
             />
           </div>
         </div>
-        <div className="flex flex-col gap-1 rounded-xl border border-outline-variant bg-surface-container-low p-6">
-          <p className="font-label text-label-md text-on-surface-variant">Racha</p>
-          <p className="text-headline-md text-on-surface">
+        <div className="flex flex-col gap-1 rounded-xl border border-border bg-surface-1 p-6">
+          <p className="font-label text-label-md text-text-3">Racha</p>
+          <p className="text-headline-md text-text-1">
             {d.streakDays}{" "}
             <span className="text-body-md font-normal opacity-60">días</span>
           </p>
@@ -355,31 +356,31 @@ function MobilePlanSection({
       </section>
 
       <section className="negative-space-pocket">
-        <h3 className="mb-4 font-label text-label-md uppercase tracking-wider text-on-surface-variant">
+        <h3 className="mb-4 font-label text-label-md uppercase tracking-wider text-text-3">
           Próximamente
         </h3>
         <div className="space-y-2">
           {d.upNext.map((item) => (
             <div
               key={item.id}
-              className="flex items-center gap-4 rounded-lg border border-outline-variant bg-surface-container-lowest p-4 transition-all active:bg-surface-container"
+              className="flex items-center gap-4 rounded-lg border border-border bg-surface-1 p-4 transition-all active:bg-surface-2"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-container text-primary">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-2 text-primary">
                 <Icon name={item.icon} />
               </div>
               <div className="flex-1">
-                <p className="text-body-md font-semibold text-on-surface">
+                <p className="text-body-md font-semibold text-text-1">
                   {item.name}
                 </p>
-                <p className="font-label text-label-md text-on-surface-variant">
+                <p className="font-label text-label-md text-text-3">
                   {item.detail}
                 </p>
               </div>
-              <Icon name="play_circle" className="text-outline-variant" />
+              <Icon name="play_circle" className="text-text-3" />
             </div>
           ))}
           {d.upNext.length === 0 && (
-            <p className="text-body-md text-on-surface-variant">
+            <p className="text-body-md text-text-3">
               No quedan ejercicios pendientes por hoy.
             </p>
           )}
@@ -399,12 +400,12 @@ function WebPlanSection({
   return (
     <div className="grid grid-cols-12 gap-6">
       {showTitle && (
-        <h3 className="col-span-12 text-headline-md text-on-surface">{d.focusTitle}</h3>
+        <h3 className="col-span-12 text-headline-md text-text-1">{d.focusTitle}</h3>
       )}
       <div className="col-span-12 space-y-6 lg:col-span-7">
-        <section className="relative overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
+        <section className="relative overflow-hidden rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
           <div className="absolute right-0 top-0 p-6">
-            <span className="rounded-full bg-primary-container px-4 py-1 font-label text-label-md text-on-primary-container">
+            <span className="rounded-full bg-primary px-4 py-1 font-label text-label-md text-primary-foreground">
               Fase actual
             </span>
           </div>
@@ -412,13 +413,13 @@ function WebPlanSection({
             <ProgressRing percent={d.phase.percent} size={80} />
             <div>
               <h3 className="mb-1 text-headline-md">{d.phase.name}</h3>
-              <p className="mb-4 text-body-md text-on-surface-variant">
+              <p className="mb-4 text-body-md text-text-3">
                 {d.phase.description}
               </p>
               <div className="flex gap-4">
                 <Link
                   href={`/rehab/plans/${d.planId}`}
-                  className="rounded-lg bg-primary px-6 py-2 font-label text-label-md text-on-primary hover:opacity-90"
+                  className="rounded-lg bg-primary px-6 py-2 font-label text-label-md text-primary-foreground hover:opacity-90"
                 >
                   Ver detalles de la fase
                 </Link>
@@ -427,10 +428,10 @@ function WebPlanSection({
           </div>
         </section>
 
-        <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
+        <section className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
           <div className="mb-6 flex items-center justify-between">
             <h3 className="text-headline-md">Ejercicios de hoy</h3>
-            <span className="font-label text-label-md text-on-surface-variant capitalize">
+            <span className="font-label text-label-md text-text-3 capitalize">
               {todayLabel()}
             </span>
           </div>
@@ -440,53 +441,58 @@ function WebPlanSection({
                 key={ex.id}
                 className={`flex items-center justify-between rounded-lg p-4 transition-all ${
                   ex.status === "completed"
-                    ? "border border-transparent bg-surface-container-low"
+                    ? "border border-transparent bg-surface-1"
                     : ex.status === "urgent"
-                      ? "border border-secondary-container/30 bg-secondary-container/10"
-                      : "cursor-pointer border border-outline-variant/30 bg-white hover:border-primary"
+                      ? "border border-error/30 bg-error/10"
+                      : "cursor-pointer border border-border/30 bg-white hover:border-primary"
                 }`}
               >
                 <div className="flex items-center gap-4">
                   {ex.status === "completed" ? (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-on-primary">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
                       <Icon name="check" className="text-[18px]" />
                     </div>
                   ) : ex.status === "urgent" ? (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-secondary">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-error">
                       <Icon
                         name="priority_high"
-                        className="text-[18px] text-secondary"
+                        className="text-[18px] text-error"
                       />
                     </div>
                   ) : (
-                    <div className="h-6 w-6 rounded-full border-2 border-outline-variant" />
+                    <div className="h-6 w-6 rounded-full border-2 border-border" />
                   )}
                   <div>
                     <p
                       className={`font-bold ${
-                        ex.status === "urgent" ? "text-secondary" : "text-on-surface"
+                        ex.status === "urgent" ? "text-error" : "text-text-1"
                       }`}
                     >
                       {ex.name}
                     </p>
-                    <p className="text-[12px] text-on-surface-variant">{ex.detail}</p>
+                    <p className="text-[12px] text-text-3">{ex.detail}</p>
                   </div>
                 </div>
-                <span
-                  className={`font-label text-label-md ${
-                    ex.status === "completed" ? "text-primary" : "text-on-surface-variant"
-                  }`}
-                >
-                  {ex.status === "completed"
-                    ? "Completado"
-                    : ex.status === "urgent"
-                      ? "Atrasado"
-                      : "Pendiente"}
-                </span>
+                <StatusBadge
+                  status={
+                    ex.status === "completed"
+                      ? "completed"
+                      : ex.status === "urgent"
+                        ? "overdue"
+                        : "pending"
+                  }
+                  label={
+                    ex.status === "completed"
+                      ? "Completado"
+                      : ex.status === "urgent"
+                        ? "Vencido"
+                        : "Pendiente"
+                  }
+                />
               </div>
             ))}
             {d.todayExercises.length === 0 && (
-              <p className="text-body-md text-on-surface-variant">
+              <p className="text-body-md text-text-3">
                 No tenés ejercicios agendados para hoy.
               </p>
             )}
@@ -495,9 +501,9 @@ function WebPlanSection({
       </div>
 
       <div className="col-span-12 space-y-6 lg:col-span-5">
-        <section className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
+        <section className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
           <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-label text-label-md text-on-surface-variant">
+            <h3 className="font-label text-label-md text-text-3">
               Cumplimiento semanal
             </h3>
             <span className="font-metric text-metric-xl text-primary">
@@ -513,12 +519,12 @@ function WebPlanSection({
               />
             ))}
           </div>
-          <p className="mt-4 font-label text-label-md text-on-surface-variant">
+          <p className="mt-4 font-label text-label-md text-text-3">
             Racha actual: <span className="font-bold text-primary">{d.streakDays} días</span>
           </p>
         </section>
 
-        <section className="rounded-xl border border-tertiary/20 bg-tertiary-container p-6 text-on-tertiary-container">
+        <section className="rounded-xl border border-border bg-surface-2 p-6 text-text-1">
           <div className="mb-2 flex items-center gap-2">
             <Icon name="calendar_today" filled />
             <h3 className="font-label text-label-md font-bold">
@@ -530,7 +536,7 @@ function WebPlanSection({
 
         <Link
           href={`/rehab/plans/${d.planId}`}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-label text-label-md text-on-primary shadow-lg transition-all hover:opacity-90"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-label text-label-md text-primary-foreground  transition-all hover:opacity-90"
         >
           Abrir plan de recuperación
           <Icon name="arrow_forward" />

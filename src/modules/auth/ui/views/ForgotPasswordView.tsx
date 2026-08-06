@@ -2,7 +2,11 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Icon } from "@/shared/ui/Icon";
+import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 import { AuthRepository } from "@/modules/auth/domain/AuthRepository";
 import { MockAuthRepository } from "@/modules/auth/infrastructure/MockAuthRepository";
 import { useForgotPassword } from "@/modules/auth/ui/hooks/useForgotPassword";
@@ -25,20 +29,23 @@ export function ForgotPasswordView({
   }
 
   return (
-    <main className="flex min-h-dvh w-full items-center justify-center bg-surface px-5 pb-safe pt-10">
-      <div className="w-full max-w-md rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
+    <main className="relative flex min-h-dvh w-full items-center justify-center bg-surface px-5 pb-safe pt-10">
+      <div className="absolute right-5 top-5">
+        <ThemeToggle />
+      </div>
+      <div className="w-full max-w-md rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
         <div className="mb-6 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary-container shadow-sm">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary ">
             <Icon
               name="mail"
               filled
-              className="text-[32px] text-on-primary-container"
+              className="text-[32px] text-primary-foreground"
             />
           </div>
-          <h2 className="text-headline-md font-semibold text-on-surface">
+          <h2 className="text-headline-md font-semibold text-text-1">
             Restablece tu contraseña
           </h2>
-          <p className="mt-1 font-label text-label-md text-on-surface-variant">
+          <p className="mt-1 font-label text-label-md text-text-3">
             Ingresa tu correo y te enviaremos un enlace para restablecerla.
           </p>
         </div>
@@ -50,7 +57,7 @@ export function ForgotPasswordView({
               filled
               className="text-[48px] text-primary"
             />
-            <p className="text-body-md text-on-surface-variant">
+            <p className="text-body-md text-text-3">
               Si existe una cuenta con ese correo, te enviamos un enlace para
               restablecer tu contraseña.
             </p>
@@ -65,24 +72,24 @@ export function ForgotPasswordView({
           <>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-1">
-                <label
-                  className="font-label px-1 text-label-md text-on-surface-variant"
+                <Label
+                  className="font-label px-1 text-label-md text-text-3"
                   htmlFor="forgot-password-email"
                 >
                   Correo electrónico
-                </label>
+                </Label>
                 <div className="relative">
                   <Icon
                     name="mail"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-text-3"
                   />
-                  <input
+                  <Input
                     id="forgot-password-email"
                     name="email"
                     type="email"
                     required
                     placeholder="name@example.com"
-                    className="w-full border-b border-outline-variant bg-surface-container-low py-4 pl-[48px] pr-4 text-body-md transition-all duration-200 focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="h-12 pl-12"
                   />
                 </div>
               </div>
@@ -90,23 +97,23 @@ export function ForgotPasswordView({
               {error && (
                 <p
                   role="alert"
-                  className="rounded-lg bg-error-container px-4 py-3 text-body-md text-on-error-container"
+                  className="rounded-lg bg-error/10 px-4 py-3 text-body-md text-error"
                 >
                   {error}
                 </p>
               )}
 
-              <button
+              <Button
                 type="submit"
+                className="mt-2 h-12 w-full"
                 disabled={loading}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-4 text-headline-md text-on-primary-container shadow-lg transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
               >
                 {loading ? "Enviando…" : "Enviar enlace"}
                 <Icon name="arrow_forward" />
-              </button>
+              </Button>
             </form>
 
-            <p className="mt-8 text-center text-body-md text-on-surface-variant">
+            <p className="mt-8 text-center text-body-md text-text-3">
               ¿Recordaste tu contraseña?{" "}
               <Link
                 href="/login"

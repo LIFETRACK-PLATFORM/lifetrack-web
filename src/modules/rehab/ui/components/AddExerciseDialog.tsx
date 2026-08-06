@@ -78,16 +78,16 @@ export function AddExerciseDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-inverse-surface/40 p-4">
-      <div className="w-full max-w-md rounded-xl bg-surface-container-lowest p-6 shadow-[0px_8px_30px_rgba(0,0,0,0.15)]">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 p-4">
+      <div className="w-full max-w-md rounded-xl border border-border bg-surface-1 p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-headline-md font-semibold text-on-surface">
+          <h3 className="text-headline-md font-semibold text-text-1">
             Agregar ejercicio
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-container-high"
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-3"
           >
             <Icon name="close" />
           </button>
@@ -95,21 +95,21 @@ export function AddExerciseDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block font-label text-label-md text-on-surface-variant">
+            <label className="mb-1 block font-label text-label-md text-text-3">
               Nombre
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
+              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
               placeholder="Ej. Elevaciones de talón"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1 block font-label text-label-md text-on-surface-variant">
+              <label className="mb-1 block font-label text-label-md text-text-3">
                 Sets objetivo
               </label>
               <input
@@ -117,11 +117,11 @@ export function AddExerciseDialog({
                 min={1}
                 value={targetSets}
                 onChange={(e) => setTargetSets(e.target.value)}
-                className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
               />
             </div>
             <div>
-              <label className="mb-1 block font-label text-label-md text-on-surface-variant">
+              <label className="mb-1 block font-label text-label-md text-text-3">
                 Reps objetivo
               </label>
               <input
@@ -129,13 +129,13 @@ export function AddExerciseDialog({
                 min={1}
                 value={targetReps}
                 onChange={(e) => setTargetReps(e.target.value)}
-                className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
+                className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block font-label text-label-md text-on-surface-variant">
+            <label className="mb-1 block font-label text-label-md text-text-3">
               Fase
             </label>
             <input
@@ -143,12 +143,12 @@ export function AddExerciseDialog({
               min={1}
               value={phase}
               onChange={(e) => setPhase(e.target.value)}
-              className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
+              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
             />
           </div>
 
           <div>
-            <label className="mb-1 block font-label text-label-md text-on-surface-variant">
+            <label className="mb-1 block font-label text-label-md text-text-3">
               Días de la semana (opcional — vacío = todos los días)
             </label>
             <div className="flex gap-2">
@@ -159,8 +159,8 @@ export function AddExerciseDialog({
                   onClick={() => toggleDay(day.value)}
                   className={`flex h-9 w-9 items-center justify-center rounded-full font-label text-label-md transition-all ${
                     daysOfWeek.includes(day.value)
-                      ? "bg-primary text-on-primary"
-                      : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-surface-3 text-text-3 hover:bg-surface-4"
                   }`}
                 >
                   {day.label}
@@ -177,14 +177,14 @@ export function AddExerciseDialog({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg px-4 py-2 font-label text-label-md text-on-surface-variant hover:bg-surface-container-high"
+              className="rounded-lg px-4 py-2 font-label text-label-md text-text-3 hover:bg-surface-3"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-on-primary transition-all active:scale-95 disabled:opacity-60"
+              className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
             >
               {submitting ? "Guardando…" : "Agregar"}
             </button>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/shared/ui/Icon";
 import { LogoutButton } from "@/shared/ui/LogoutButton";
+import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 
 interface SideNavUser {
   name: string;
@@ -17,44 +18,49 @@ export function SideNav({ user }: { user: SideNavUser }) {
   const rehabActive = pathname.startsWith("/rehab");
 
   return (
-    <aside className="fixed left-0 top-0 z-50 hidden h-full w-[280px] flex-col border-r border-outline-variant/30 bg-surface-container-lowest px-4 py-6 glass-nav md:flex">
-      <div className="mb-10 px-2">
-        <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
-        <p className="font-label text-label-md text-on-surface-variant opacity-70">
-          Salud y productividad
-        </p>
+    <aside className="fixed left-0 top-0 z-50 hidden h-full w-[280px] flex-col border-r border-border bg-surface-1 px-4 py-6 md:flex">
+      <div className="mb-10 flex items-start justify-between gap-2 px-2">
+        <div>
+          <h1 className="font-heading text-heading-4 font-bold text-primary">
+            LifeTrack OS
+          </h1>
+          <p className="font-label text-label-md text-text-3">
+            Precisión silenciosa
+          </p>
+        </div>
+        <ThemeToggle />
       </div>
-      <nav className="flex-1 space-y-2">
+      <nav className="flex-1 space-y-1">
         <Link
           href="/rehab"
-          className="flex items-center gap-4 rounded-lg px-4 py-2 text-on-surface-variant transition-colors hover:bg-surface-container-high"
+          className="flex items-center gap-4 rounded-[10px] px-4 py-2.5 text-text-3 transition-colors hover:bg-surface-3 hover:text-text-1"
         >
-          <Icon name="dashboard" />
+          <Icon name="dashboard" className="text-[20px]" />
           <span className="text-body-md">Panel</span>
         </Link>
         <Link
           href="/rehab"
-          className={`flex items-center gap-4 rounded-lg px-4 py-2 transition-colors ${
+          className={`flex items-center gap-4 rounded-[10px] px-4 py-2.5 transition-colors ${
             rehabActive
-              ? "border-r-4 border-primary bg-surface-container-low text-primary"
-              : "text-on-surface-variant hover:bg-surface-container-high"
+              ? "bg-surface-2 text-primary"
+              : "text-text-3 hover:bg-surface-3 hover:text-text-1"
           }`}
         >
-          <Icon name="stabilization" filled={rehabActive} />
-          <span className={`text-body-md ${rehabActive ? "font-bold" : ""}`}>
+          <Icon name="stabilization" className="text-[20px]" />
+          <span className={`text-body-md ${rehabActive ? "font-semibold" : ""}`}>
             Rehabilitación
           </span>
         </Link>
         <Link
           href="/rehab"
-          className="flex items-center gap-4 rounded-lg px-4 py-2 text-on-surface-variant transition-colors hover:bg-surface-container-high"
+          className="flex items-center gap-4 rounded-[10px] px-4 py-2.5 text-text-3 transition-colors hover:bg-surface-3 hover:text-text-1"
         >
-          <Icon name="person" />
+          <Icon name="person" className="text-[20px]" />
           <span className="text-body-md">Perfil</span>
         </Link>
       </nav>
-      <div className="mt-auto flex items-center gap-4 border-t border-outline-variant/20 px-2 pt-4">
-        <div className="h-10 w-10 overflow-hidden rounded-full bg-surface-container-highest">
+      <div className="mt-auto flex items-center gap-3 border-t border-border px-2 pt-4">
+        <div className="h-10 w-10 overflow-hidden rounded-full bg-surface-3">
           <Image
             src={user.avatar}
             alt={user.name}
@@ -63,12 +69,14 @@ export function SideNav({ user }: { user: SideNavUser }) {
             className="h-full w-full object-cover"
           />
         </div>
-        <div className="flex-1">
-          <p className="font-label text-label-md font-bold">{user.name}</p>
-          <p className="text-[12px] text-on-surface-variant">{user.membership}</p>
+        <div className="min-w-0 flex-1">
+          <p className="font-label truncate text-label-md font-semibold text-text-1">
+            {user.name}
+          </p>
+          <p className="truncate text-[12px] text-text-3">{user.membership}</p>
         </div>
-        <LogoutButton className="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-error">
-          <Icon name="logout" />
+        <LogoutButton className="rounded-[10px] p-2 text-text-3 transition-colors hover:bg-surface-3 hover:text-error">
+          <Icon name="logout" className="text-[20px]" />
         </LogoutButton>
       </div>
     </aside>

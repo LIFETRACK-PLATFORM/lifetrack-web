@@ -4,7 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Icon } from "@/shared/ui/Icon";
+import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 import { loginAvatars, loginHeroImage } from "@/modules/auth/infrastructure/content/loginContent";
 import { AuthRepository } from "@/modules/auth/domain/AuthRepository";
 import { MockAuthRepository } from "@/modules/auth/infrastructure/MockAuthRepository";
@@ -40,66 +44,69 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
       <main className="relative z-10 flex min-h-dvh flex-col overflow-x-hidden px-5 pb-safe pt-10 lg:hidden">
         <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
           <div className="absolute -right-24 -top-24 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -left-24 top-1/2 h-64 w-64 rounded-full bg-tertiary/5 blur-3xl" />
+          <div className="absolute -left-24 top-1/2 h-64 w-64 rounded-full bg-accent-tint/5 blur-3xl" />
         </div>
 
         <header className="relative z-10 mb-8 flex shrink-0 flex-col items-center text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary-container shadow-sm">
+          <div className="absolute right-0 top-0">
+            <ThemeToggle />
+          </div>
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-xl bg-primary">
             <Icon
               name="stabilization"
               filled
-              className="text-[32px] text-on-primary-container"
+              className="text-[32px] text-primary-foreground"
             />
           </div>
           <h1 className="text-headline-lg-mobile font-bold tracking-tight text-primary">
             LifeTrack OS
           </h1>
-          <p className="mt-1 text-body-md text-on-surface-variant">
+          <p className="mt-1 text-body-md text-text-3">
             Impulsando tu salud y productividad
           </p>
         </header>
 
         <section className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
-          <div className="w-full rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
+          <div className="w-full rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
             <div className="mb-6">
-              <h2 className="text-headline-md font-semibold text-on-surface">
+              <h2 className="text-headline-md font-semibold text-text-1">
                 Bienvenido de nuevo
               </h2>
-              <p className="font-label text-label-md text-on-surface-variant">
+              <p className="font-label text-label-md text-text-3">
                 Inicia sesión para continuar tu progreso
               </p>
             </div>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-1">
-                <label
-                  className="font-label px-1 text-label-md text-on-surface-variant"
+                <Label
+                  className="font-label px-1 text-label-md text-text-3"
                   htmlFor="email-mobile"
                 >
                   Correo electrónico
-                </label>
+                </Label>
                 <div className="relative">
                   <Icon
                     name="mail"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-text-3"
                   />
-                  <input
+                  <Input
                     id="email-mobile"
                     name="email"
                     type="email"
                     required
                     placeholder="name@example.com"
-                    className="w-full border-b border-outline-variant bg-surface-container-low py-4 pl-[48px] pr-4 text-body-md transition-all duration-200 focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="h-12 pl-12"
                   />
                 </div>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center justify-between px-1">
-                  <label
-                    className="font-label text-label-md text-on-surface-variant"
+                  <Label
+                    className="font-label text-label-md text-text-3"
                     htmlFor="password-mobile"
                   >
                     Contraseña
-                  </label>
+                  </Label>
                   <Link
                     href="/forgot-password"
                     className="font-label text-label-md font-bold text-primary hover:underline"
@@ -110,29 +117,31 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 <div className="relative">
                   <Icon
                     name="lock"
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-outline-variant"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-text-3"
                   />
-                  <input
+                  <Input
                     id="password-mobile"
                     name="password"
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
-                    className="w-full border-b border-outline-variant bg-surface-container-low py-4 pl-[48px] pr-4 text-body-md transition-all duration-200 focus:rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="h-12 pl-12"
                   />
-                  <button
+                  <Button
                     type="button"
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-text-3"
                     onClick={() => setShowPassword((v) => !v)}
                   >
                     <Icon name={showPassword ? "visibility_off" : "visibility"} />
-                  </button>
+                  </Button>
                 </div>
               </div>
               {error && (
                 <p
                   role="alert"
-                  className="rounded-lg bg-error-container px-4 py-3 text-body-md text-on-error-container"
+                  className="rounded-lg bg-error/10 px-4 py-3 text-body-md text-error"
                 >
                   {error}
                   {isEmailNotVerified && (
@@ -143,46 +152,48 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                   )}
                 </p>
               )}
-              <button
+              <Button
                 type="submit"
+                className="mt-2 h-12 w-full"
                 disabled={loading}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-primary-container py-4 text-headline-md text-on-primary-container shadow-lg transition-all duration-150 hover:brightness-110 active:scale-[0.98]"
               >
                 {loading ? "Iniciando sesión…" : "Iniciar sesión"}
                 <Icon name="arrow_forward" />
-              </button>
+              </Button>
             </form>
 
             <div className="relative my-10">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-outline-variant/30" />
+                <div className="w-full border-t border-border/30" />
               </div>
               <div className="relative flex justify-center">
-                <span className="bg-surface-container-lowest px-4 font-label text-label-md text-on-surface-variant">
+                <span className="bg-surface-1 px-4 font-label text-label-md text-text-3">
                   O continúa con
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                className="h-12 w-full"
                 onClick={() => router.push("/onboarding")}
-                className="flex items-center justify-center gap-2 rounded-xl border border-outline-variant/50 px-4 py-4 transition-colors hover:bg-surface-container-high active:scale-95"
               >
                 <span className="font-label text-label-md font-semibold">Google</span>
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                className="h-12 w-full"
                 onClick={() => router.push("/onboarding")}
-                className="flex items-center justify-center gap-2 rounded-xl border border-outline-variant/50 px-4 py-4 transition-colors hover:bg-surface-container-high active:scale-95"
               >
                 <span className="font-label text-label-md font-semibold">Apple</span>
-              </button>
+              </Button>
             </div>
           </div>
 
-          <p className="mt-10 text-center text-body-md text-on-surface-variant">
+          <p className="mt-10 text-center text-body-md text-text-3">
             ¿No tienes una cuenta?{" "}
             <Link href="/register" className="font-bold text-primary hover:underline">
               Crea una
@@ -191,12 +202,12 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
         </section>
 
         <footer className="relative z-10 mt-auto pb-2 pt-6 text-center">
-          <div className="flex justify-center gap-4 font-label text-label-md text-outline">
+          <div className="flex justify-center gap-4 font-label text-label-md text-text-3">
             <span>Política de privacidad</span>
             <span>•</span>
             <span>Términos de servicio</span>
           </div>
-          <p className="mt-2 font-label text-label-md text-outline opacity-60">
+          <p className="mt-2 font-label text-label-md text-text-3 opacity-60">
             © 2026 LifeTrack OS
           </p>
         </footer>
@@ -204,7 +215,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
 
       {/* Desktop / Web layout */}
       <main className="hidden min-h-screen w-full lg:flex">
-        <div className="relative hidden w-1/2 items-center justify-center overflow-hidden bg-surface-container-low lg:flex">
+        <div className="relative hidden w-1/2 items-center justify-center overflow-hidden bg-surface-1 lg:flex">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-80"
             style={{ backgroundImage: `url('${loginHeroImage}')` }}
@@ -215,10 +226,10 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 LifeTrack OS
               </span>
             </div>
-            <h1 className="mb-4 text-headline-lg text-on-surface">
+            <h1 className="mb-4 text-headline-lg text-text-1">
               Domina tu salud y productividad.
             </h1>
-            <p className="text-body-lg text-on-surface-variant">
+            <p className="text-body-lg text-text-3">
               Tu santuario de datos personal. Sincroniza métricas, gestiona
               tus metas de rehabilitación y encuentra tu flujo diario con
               precisión de grado médico.
@@ -237,10 +248,10 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 ))}
               </div>
               <div className="flex flex-col justify-center">
-                <p className="font-label text-label-md font-bold text-on-surface">
+                <p className="font-label text-label-md font-bold text-text-1">
                   +12 mil miembros
                 </p>
-                <p className="text-[12px] text-on-surface-variant">
+                <p className="text-[12px] text-text-3">
                   Siguiendo su recuperación a diario
                 </p>
               </div>
@@ -250,37 +261,39 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
 
         <div className="flex w-full items-center justify-center bg-surface px-4 lg:w-1/2">
           <div className="flex w-full max-w-[440px] flex-col">
-            <div className="mb-10 flex flex-col">
-              <h2 className="mb-1 text-headline-lg text-on-surface">Bienvenido de nuevo</h2>
-              <p className="text-body-md text-on-surface-variant">
-                Accede a tu panel para continuar tu camino.
-              </p>
+            <div className="mb-10 flex items-start justify-between">
+              <div className="flex flex-col">
+                <h2 className="mb-1 text-headline-lg text-text-1">Bienvenido de nuevo</h2>
+                <p className="text-body-md text-text-3">
+                  Accede a tu panel para continuar tu camino.
+                </p>
+              </div>
+              <ThemeToggle />
             </div>
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="flex flex-col gap-1">
-                <label
-                  className="font-label text-label-md text-on-surface-variant"
+                <Label
+                  className="font-label px-1 text-label-md text-text-3"
                   htmlFor="email-web"
                 >
                   Correo electrónico
-                </label>
-                <input
+                </Label>
+                <Input
                   id="email-web"
                   name="email"
                   type="email"
                   required
                   placeholder="name@example.com"
-                  className="w-full border-0 border-b border-outline-variant bg-transparent px-1 py-4 text-body-md transition-all focus:rounded-lg focus:bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <label
-                    className="font-label text-label-md text-on-surface-variant"
+                  <Label
+                    className="font-label px-1 text-label-md text-text-3"
                     htmlFor="password-web"
                   >
                     Contraseña
-                  </label>
+                  </Label>
                   <Link
                     href="/forgot-password"
                     className="font-label text-label-md font-bold text-primary hover:underline"
@@ -289,27 +302,28 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                   </Link>
                 </div>
                 <div className="relative">
-                  <input
+                  <Input
                     id="password-web"
                     name="password"
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
-                    className="w-full border-0 border-b border-outline-variant bg-transparent px-1 py-4 text-body-md transition-all focus:rounded-lg focus:bg-surface-container-low focus:outline-none focus:ring-2 focus:ring-primary"
                   />
-                  <button
+                  <Button
                     type="button"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 text-outline-variant"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 text-text-3"
                     onClick={() => setShowPassword((v) => !v)}
                   >
                     <Icon name={showPassword ? "visibility_off" : "visibility"} />
-                  </button>
+                  </Button>
                 </div>
               </div>
               {error && (
                 <p
                   role="alert"
-                  className="rounded-lg bg-error-container px-4 py-3 text-body-md text-on-error-container"
+                  className="rounded-lg bg-error/10 px-4 py-3 text-body-md text-error"
                 >
                   {error}
                   {isEmailNotVerified && (
@@ -320,41 +334,43 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                   )}
                 </p>
               )}
-              <button
+              <Button
                 type="submit"
+                className="mt-2 h-12 w-full"
                 disabled={loading}
-                className="w-full rounded-xl bg-primary-container py-4 text-headline-md font-bold text-on-primary-container card-elevation transition-all hover:brightness-95 active:scale-[0.98]"
               >
                 {loading ? "Iniciando sesión…" : "Iniciar sesión"}
-              </button>
+              </Button>
             </form>
 
             <div className="my-10 flex items-center">
-              <div className="h-px flex-grow bg-outline-variant" />
-              <span className="px-4 font-label text-label-md text-outline">
+              <div className="h-px flex-grow bg-border" />
+              <span className="px-4 font-label text-label-md text-text-3">
                 o continúa con
               </span>
-              <div className="h-px flex-grow bg-outline-variant" />
+              <div className="h-px flex-grow bg-border" />
             </div>
 
             <div className="mb-10 grid grid-cols-2 gap-4">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                className="h-12 w-full"
                 onClick={() => router.push("/onboarding")}
-                className="flex items-center justify-center gap-2 rounded-xl border border-outline-variant py-4 font-label text-label-md text-on-surface-variant transition-all hover:bg-surface-container-low"
               >
                 Google
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="outline"
+                className="h-12 w-full"
                 onClick={() => router.push("/onboarding")}
-                className="flex items-center justify-center gap-2 rounded-xl border border-outline-variant py-4 font-label text-label-md text-on-surface-variant transition-all hover:bg-surface-container-low"
               >
                 GitHub
-              </button>
+              </Button>
             </div>
 
-            <p className="text-center text-body-md text-on-surface-variant">
+            <p className="text-center text-body-md text-text-3">
               ¿No tienes una cuenta?{" "}
               <Link href="/register" className="font-bold text-primary hover:underline">
                 Crear cuenta
@@ -365,8 +381,8 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
       </main>
 
       {success && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-surface-container/60 glass-nav">
-          <div className="flex flex-col items-center rounded-full bg-surface-container-lowest p-10 shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-surface-2/60 ">
+          <div className="flex flex-col items-center rounded-full bg-surface-1 p-10 ">
             <Icon
               name="check_circle"
               filled
