@@ -1,22 +1,31 @@
 import type { Metadata } from "next";
-import { Geist, Inter } from "next/font/google";
+import { Space_Grotesk, Manrope, JetBrains_Mono } from "next/font/google";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/shared/ui/theme-provider";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["600", "700"],
 });
 
-const geist = Geist({
-  variable: "--font-geist",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["600", "700"],
 });
 
 export const metadata: Metadata = {
   title: "LifeTrack OS",
-  description: "Santuario de salud y productividad — diseño Clinical Vitality",
+  description: "Tu vida, bajo control — diseño Nightframe",
 };
 
 export default function RootLayout({
@@ -27,22 +36,14 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${inter.variable} ${geist.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${spaceGrotesk.variable} ${manrope.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="flex min-h-full flex-col bg-background text-on-surface">
-        {children}
+      <body className="flex min-h-full flex-col bg-background text-foreground">
+        <ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

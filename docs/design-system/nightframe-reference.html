@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  body{margin:0;}
+  *{box-sizing:border-box;}
+  ::selection{background:#7C5CFF;color:#fff;}
+</style>
+</helmet>
+
+<div style="{{ styles.page }}">
+
+  <div style="{{ styles.topBar }}">
+    <div style="{{ styles.topBarLeft }}">
+      <div style="{{ styles.wordmarkDot }}"></div>
+      <div>
+        <div style="{{ styles.wordmark }}">LifeTrack OS</div>
+        <div style="{{ styles.wordmarkSub }}">Nightframe Design System</div>
+      </div>
+    </div>
+    <div style="{{ styles.modeSwitchWrap }}">
+      <span style="{{ styles.modeLabel }}">Light</span>
+      <button onClick="{{ toggleMode }}" style="{{ styles.modeTrack }}" style-hover="{{ styles.modeTrackHover }}">
+        <div style="{{ styles.modeThumb }}"></div>
+      </button>
+      <span style="{{ styles.modeLabelActive }}">Dark</span>
+    </div>
+  </div>
+
+  <div style="{{ styles.container }}">
+
+    <!-- ============ 1. FUNDAMENTOS ============ -->
+    <section style="{{ styles.section }}">
+      <div style="{{ styles.sectionLabel }}">01 — Fundamentos</div>
+      <h2 style="{{ styles.h2 }}">Paleta &amp; superficies</h2>
+      <p style="{{ styles.bodyMuted }}">Fondo oscuro, superficies planas por contraste, sin sombra dura.</p>
+
+      <div style="{{ styles.swatchGroupLabel }}">Superficies</div>
+      <div style="{{ styles.swatchRow }}">
+        <sc-for list="{{ surfaceSwatches }}" as="sw" hint-placeholder-count="6">
+          <div style="{{ styles.swatchCol }}">
+            <div style="{{ sw.boxStyle }}"></div>
+            <div style="{{ styles.swatchName }}">{{ sw.name }}</div>
+            <div style="{{ styles.swatchHex }}">{{ sw.hex }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="{{ styles.swatchGroupLabel }}">Marca &amp; estados</div>
+      <div style="{{ styles.swatchRow }}">
+        <sc-for list="{{ brandSwatches }}" as="sw" hint-placeholder-count="7">
+          <div style="{{ styles.swatchCol }}">
+            <div style="{{ sw.boxStyle }}"></div>
+            <div style="{{ styles.swatchName }}">{{ sw.name }}</div>
+            <div style="{{ styles.swatchHex }}">{{ sw.hex }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="{{ styles.swatchGroupLabel }}">Semánticos</div>
+      <div style="{{ styles.swatchRow }}">
+        <sc-for list="{{ semanticSwatches }}" as="sw" hint-placeholder-count="3">
+          <div style="{{ styles.swatchCol }}">
+            <div style="{{ sw.boxStyle }}"></div>
+            <div style="{{ styles.swatchName }}">{{ sw.name }}</div>
+            <div style="{{ styles.swatchHex }}">{{ sw.hex }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Tipografía</h2>
+      <div style="{{ styles.typeTable }}">
+        <sc-for list="{{ typeScale }}" as="t" hint-placeholder-count="10">
+          <div style="{{ styles.typeRow }}">
+            <div style="{{ t.sampleStyle }}">{{ t.sample }}</div>
+            <div style="{{ styles.typeSpec }}">{{ t.spec }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ============ 2. ICONOGRAFÍA ============ -->
+    <section style="{{ styles.section }}">
+      <div style="{{ styles.sectionLabel }}">02 — Iconografía</div>
+      <h2 style="{{ styles.h2 }}">Set de iconos</h2>
+      <p style="{{ styles.bodyMuted }}">Stroke 1.75px, esquinas redondeadas, estilo lucide, coherente con Nightframe.</p>
+      <div style="{{ styles.iconGrid }}">
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect></svg><span style="{{ styles.iconLabel }}">dashboard</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><rect x="3.5" y="4" width="17" height="16" rx="2"></rect><path d="M8 11l2 2 4-4"></path><line x1="8" y1="16" x2="16" y2="16"></line></svg><span style="{{ styles.iconLabel }}">tareas</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><line x1="5" y1="19" x2="5" y2="13"></line><line x1="12" y1="19" x2="12" y2="8"></line><line x1="19" y1="19" x2="19" y2="4"></line></svg><span style="{{ styles.iconLabel }}">finanzas</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 018 0v4"></path><circle cx="12" cy="15.5" r="1.3"></circle></svg><span style="{{ styles.iconLabel }}">vault</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><path d="M3 12h4l2-5 3 10 2-7 2 2h5"></path></svg><span style="{{ styles.iconLabel }}">rehab</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"></path><line x1="3" y1="12" x2="21" y2="12"></line></svg><span style="{{ styles.iconLabel }}">carrera</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><rect x="3" y="5" width="18" height="16" rx="2"></rect><line x1="3" y1="9.5" x2="21" y2="9.5"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg><span style="{{ styles.iconLabel }}">calendario</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><path d="M6 8a6 6 0 0112 0c0 4 2 5 2 6H4c0-1 2-2 2-6z"></path><path d="M9.5 19a2.5 2.5 0 005 0"></path></svg><span style="{{ styles.iconLabel }}">notificación</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg><span style="{{ styles.iconLabel }}">búsqueda</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"></path></svg><span style="{{ styles.iconLabel }}">usuario</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><path d="M4 12.5l5 5 11-11"></path></svg><span style="{{ styles.iconLabel }}">check</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><path d="M12 3.5l9 15.5H3z"></path><line x1="12" y1="10" x2="12" y2="14.5"></line><circle cx="12" cy="17.2" r="0.9" fill="currentColor" stroke="none"></circle></svg><span style="{{ styles.iconLabel }}">alerta</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v3M12 18v3M3 12h3M18 12h3M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"></path></svg><span style="{{ styles.iconLabel }}">config</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><path d="M6 9l6 6 6-6"></path></svg><span style="{{ styles.iconLabel }}">chevron</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg><span style="{{ styles.iconLabel }}">cerrar</span></div>
+
+        <div style="{{ styles.iconTile }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span style="{{ styles.iconLabel }}">agregar</span></div>
+
+      </div>
+    </section>
+
+    <!-- ============ 3. COMPONENTES ============ -->
+    <section style="{{ styles.section }}">
+      <div style="{{ styles.sectionLabel }}">03 — Componentes</div>
+      <h2 style="{{ styles.h2 }}">Botones</h2>
+      <div style="{{ styles.compBlockLabel }}">Variantes × tamaños</div>
+      <div style="{{ styles.buttonMatrixRow }}">
+        <sc-for list="{{ buttonVariants }}" as="v" hint-placeholder-count="5">
+          <div style="{{ styles.buttonMatrixCol }}">
+            <div style="{{ styles.buttonMatrixHead }}">{{ v.name }}</div>
+            <button style="{{ v.lg }}" style-hover="{{ v.lgHover }}">{{ v.label }}</button>
+            <button style="{{ v.md }}" style-hover="{{ v.mdHover }}">{{ v.label }}</button>
+            <button style="{{ v.sm }}" style-hover="{{ v.smHover }}">{{ v.label }}</button>
+          </div>
+        </sc-for>
+        <div style="{{ styles.buttonMatrixCol }}">
+          <div style="{{ styles.buttonMatrixHead }}">icon-button</div>
+          <button style="{{ styles.iconBtnLg }}" style-hover="{{ styles.iconBtnLgHover }}">＋</button>
+          <button style="{{ styles.iconBtnMd }}" style-hover="{{ styles.iconBtnMdHover }}">＋</button>
+          <button style="{{ styles.iconBtnSm }}" style-hover="{{ styles.iconBtnSmHover }}">＋</button>
+        </div>
+      </div>
+
+      <div style="{{ styles.compBlockLabel }}">Estados — primary / md</div>
+      <div style="{{ styles.stateRow }}">
+        <sc-for list="{{ buttonStates }}" as="bs" hint-placeholder-count="4">
+          <div style="{{ styles.stateCol }}">
+            <button style="{{ bs.style }}" disabled="{{ bs.disabled }}">Continuar</button>
+            <div style="{{ styles.stateTag }}">{{ bs.name }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Inputs &amp; selección</h2>
+      <div style="{{ styles.formGrid }}">
+        <div style="{{ styles.formCol }}">
+          <label style="{{ styles.fieldLabel }}">Text input — default</label>
+          <input style="{{ styles.input }}" style-focus="{{ styles.inputFocus }}" placeholder="nombre@lifetrack.os"/>
+          <label style="{{ styles.fieldLabel }}">Text input — error</label>
+          <input style="{{ styles.inputError }}" placeholder="monto inválido"/>
+          <div style="{{ styles.errorHint }}">Ingresá un monto válido.</div>
+          <label style="{{ styles.fieldLabel }}">Text input — disabled</label>
+          <input style="{{ styles.inputDisabled }}" placeholder="bloqueado" disabled="{{ true }}"/>
+          <label style="{{ styles.fieldLabel }}">Textarea</label>
+          <textarea style="{{ styles.textarea }}" style-focus="{{ styles.inputFocus }}" placeholder="Notas sobre el plan de rehabilitación..."></textarea>
+        </div>
+        <div style="{{ styles.formCol }}">
+          <label style="{{ styles.fieldLabel }}">Select / dropdown</label>
+          <div style="{{ styles.selectClosed }}"><span>Etapa: Tratamiento</span><span style="{{ styles.selectChevron }}">⌄</span></div>
+          <label style="{{ styles.fieldLabel }}">Combobox con búsqueda (abierto)</label>
+          <div style="{{ styles.comboWrap }}">
+            <div style="{{ styles.comboInput }}"><span style="{{ styles.comboSearchIcon }}">⌕</span><span>Sof...</span></div>
+            <div style="{{ styles.comboList }}">
+              <div style="{{ styles.comboItemActive }}">Sofía Ramos</div>
+              <div style="{{ styles.comboItem }}">Sofía Beltrán</div>
+              <div style="{{ styles.comboItem }}">Sofía Ianni</div>
+            </div>
+          </div>
+          <label style="{{ styles.fieldLabel }}">Checkbox / Radio / Switch</label>
+          <div style="{{ styles.controlsRow }}">
+            <div style="{{ styles.checkboxOn }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5 11-11"></path></svg></div>
+            <div style="{{ styles.checkboxOff }}"></div>
+            <div style="{{ styles.checkboxDisabled }}"></div>
+            <div style="{{ styles.radioOn }}"><div style="{{ styles.radioDot }}"></div></div>
+            <div style="{{ styles.radioOff }}"></div>
+            <div style="{{ styles.switchOn }}"><div style="{{ styles.switchThumbOn }}"></div></div>
+            <div style="{{ styles.switchOff }}"><div style="{{ styles.switchThumbOff }}"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Calendario</h2>
+      <div style="{{ styles.calendarCard }}">
+        <div style="{{ styles.calendarHead }}"><span style="{{ styles.calendarChevron }}">‹</span><span style="{{ styles.calendarMonth }}">Agosto 2026</span><span style="{{ styles.calendarChevron }}">›</span></div>
+        <div style="{{ styles.calendarGrid }}">
+          <sc-for list="{{ calendarDow }}" as="d" hint-placeholder-count="7">
+            <div style="{{ styles.calendarDow }}">{{ d }}</div>
+          </sc-for>
+          <sc-for list="{{ calendarDays }}" as="day" hint-placeholder-count="35">
+            <div style="{{ day.style }}">{{ day.n }}</div>
+          </sc-for>
+        </div>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Badges de estado</h2>
+      <div style="{{ styles.badgeRow }}">
+        <sc-for list="{{ badges }}" as="b" hint-placeholder-count="4">
+          <span style="{{ b.style }}"><span style="{{ b.dotStyle }}"></span>{{ b.label }}</span>
+        </sc-for>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Tabs · Breadcrumbs · Paginación</h2>
+      <div style="{{ styles.tabsRow }}">
+        <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="4">
+          <div style="{{ tb.style }}">{{ tb.label }}</div>
+        </sc-for>
+      </div>
+      <div style="{{ styles.breadcrumbRow }}">
+        <span style="{{ styles.breadcrumbMuted }}">Rehab</span><span style="{{ styles.breadcrumbSep }}">/</span><span style="{{ styles.breadcrumbMuted }}">Planes</span><span style="{{ styles.breadcrumbSep }}">/</span><span style="{{ styles.breadcrumbActive }}">Sofía Ramos</span>
+      </div>
+      <div style="{{ styles.paginationRow }}">
+        <div style="{{ styles.pageBtn }}">‹</div>
+        <div style="{{ styles.pageBtnActive }}">1</div>
+        <div style="{{ styles.pageBtn }}">2</div>
+        <div style="{{ styles.pageBtn }}">3</div>
+        <div style="{{ styles.pageBtnDots }}">···</div>
+        <div style="{{ styles.pageBtn }}">12</div>
+        <div style="{{ styles.pageBtn }}">›</div>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Cards &amp; tabla</h2>
+      <div style="{{ styles.cardsRow }}">
+        <div style="{{ styles.cardSimple }}">
+          <div style="{{ styles.cardTitle }}">Sin header/footer</div>
+          <div style="{{ styles.bodyMuted }}">Contenedor base para agrupar contenido relacionado.</div>
+        </div>
+        <div style="{{ styles.cardFull }}">
+          <div style="{{ styles.cardFullHeader }}"><span style="{{ styles.cardTitle }}">Plan de rehabilitación</span><span style="{{ styles.badgeSuccessSm }}">Activo</span></div>
+          <div style="{{ styles.cardFullBody }}"><span style="{{ styles.bodyMuted }}">Etapa actual: Tratamiento · 3 de 4 sesiones completadas.</span></div>
+          <div style="{{ styles.cardFullFooter }}"><span style="{{ styles.captionMuted }}">Actualizado hace 2h</span><span style="{{ styles.linkText }}">Ver detalle →</span></div>
+        </div>
+      </div>
+
+      <div style="{{ styles.tableCard }}">
+        <div style="{{ styles.tableHeadRow }}">
+          <div style="{{ styles.tableHeadCellSort }}">Paciente <span style="{{ styles.sortIcon }}">↑</span></div>
+          <div style="{{ styles.tableHeadCell }}">Etapa</div>
+          <div style="{{ styles.tableHeadCell }}">Progreso</div>
+          <div style="{{ styles.tableHeadCell }}">Estado</div>
+        </div>
+        <sc-for list="{{ tableRows }}" as="r" hint-placeholder-count="4">
+          <div style="{{ styles.tableRow }}">
+            <div style="{{ styles.tableCellName }}"><div style="{{ r.avatarStyle }}">{{ r.initials }}</div>{{ r.name }}</div>
+            <div style="{{ styles.tableCell }}">{{ r.stage }}</div>
+            <div style="{{ styles.tableCell }}">
+              <div style="{{ styles.progressBarTrackSm }}"><div style="{{ r.progressFillStyle }}"></div></div>
+            </div>
+            <div style="{{ styles.tableCell }}"><span style="{{ r.badgeStyle }}">{{ r.status }}</span></div>
+          </div>
+        </sc-for>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Overlays</h2>
+      <div style="{{ styles.overlayShowcase }}">
+        <div style="{{ styles.modalBackdrop }}">
+          <div style="{{ styles.modalCard }}">
+            <div style="{{ styles.modalTitle }}">Confirmar alta médica</div>
+            <div style="{{ styles.bodyMuted }}">Esta acción cerrará el plan activo de Sofía Ramos.</div>
+            <div style="{{ styles.modalActions }}"><button style="{{ styles.btnGhostSm }}">Cancelar</button><button style="{{ styles.btnPrimarySm }}">Confirmar</button></div>
+          </div>
+        </div>
+        <div style="{{ styles.toastCol }}">
+          <div style="{{ styles.toastSuccess }}">Plan actualizado correctamente.</div>
+          <div style="{{ styles.toastError }}">No se pudo guardar el cambio.</div>
+          <div style="{{ styles.tooltipDemo }}">Botón<div style="{{ styles.tooltip }}">Editar plan</div></div>
+        </div>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Progreso &amp; avatares</h2>
+      <div style="{{ styles.progressRow }}">
+        <div style="{{ styles.progressLinearCol }}">
+          <div style="{{ styles.progressLabelRow }}"><span style="{{ styles.captionMuted }}">Sesiones completadas</span><span style="{{ styles.metricSm }}">72%</span></div>
+          <div style="{{ styles.progressBarTrack }}"><div style="{{ styles.progressBarFill72 }}"></div></div>
+        </div>
+        <div style="{{ styles.progressRingCol }}">
+          <svg width="88" height="88" viewBox="0 0 88 88">
+            <circle cx="44" cy="44" r="36" fill="none" stroke="{{ c.s3 }}" stroke-width="8"></circle>
+            <circle cx="44" cy="44" r="36" fill="none" stroke="{{ c.primary }}" stroke-width="8" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="63" transform="rotate(-90 44 44)"></circle>
+          </svg>
+          <div style="{{ styles.ringLabel }}"><div style="{{ styles.metricMd }}">72%</div><div style="{{ styles.captionMuted }}">Recuperación</div></div>
+        </div>
+        <div style="{{ styles.avatarCol }}">
+          <div style="{{ styles.avatarRow }}">
+            <div style="{{ styles.avatarSm }}">SR</div>
+            <div style="{{ styles.avatarMd }}">JC</div>
+            <div style="{{ styles.avatarLg }}">MP</div>
+          </div>
+          <div style="{{ styles.avatarGroup }}">
+            <div style="{{ styles.avatarGroupItem }}">SR</div>
+            <div style="{{ styles.avatarGroupItem }}">JC</div>
+            <div style="{{ styles.avatarGroupItem }}">MP</div>
+            <div style="{{ styles.avatarGroupMore }}">+3</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 4. DASHBOARD ============ -->
+    <section style="{{ styles.section }}">
+      <div style="{{ styles.sectionLabel }}">04 — Aplicación</div>
+      <h2 style="{{ styles.h2 }}">Dashboard</h2>
+      <div style="{{ styles.dashboardFrame }}">
+        <div style="{{ styles.dashSidebar }}">
+          <div style="{{ styles.dashLogoRow }}"><div style="{{ styles.wordmarkDotSm }}"></div><span style="{{ styles.dashLogoText }}">LifeTrack</span></div>
+          <div style="{{ styles.dashNav }}">
+            <div style="{{ styles.navItemActive }}" style-hover="{{ styles.navItemActiveHover }}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect></svg>
+              <span>Dashboard</span>
+            </div>
+            <div style="{{ styles.navItem }}" style-hover="{{ styles.navItemHover }}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"></rect><path d="M8 11l2 2 4-4"></path><line x1="8" y1="16" x2="16" y2="16"></line></svg>
+              <span>Tareas</span>
+            </div>
+            <div style="{{ styles.navItem }}" style-hover="{{ styles.navItemHover }}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="5" y2="13"></line><line x1="12" y1="19" x2="12" y2="8"></line><line x1="19" y1="19" x2="19" y2="4"></line></svg>
+              <span>Finanzas</span>
+            </div>
+            <div style="{{ styles.navItem }}" style-hover="{{ styles.navItemHover }}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 018 0v4"></path><circle cx="12" cy="15.5" r="1.3"></circle></svg>
+              <span>Vault</span>
+            </div>
+            <div style="{{ styles.navItem }}" style-hover="{{ styles.navItemHover }}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 3 10 2-7 2 2h5"></path></svg>
+              <span>Rehab</span>
+            </div>
+            <div style="{{ styles.navItem }}" style-hover="{{ styles.navItemHover }}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"></path><line x1="3" y1="12" x2="21" y2="12"></line></svg>
+              <span>Carrera</span>
+            </div>
+            <div style="{{ styles.navItem }}" style-hover="{{ styles.navItemHover }}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><line x1="3" y1="9.5" x2="21" y2="9.5"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg>
+              <span>Calendario</span>
+            </div>
+          </div>
+          <div style="{{ styles.dashSidebarFooter }}">
+            <div style="{{ styles.avatarSm }}">MO</div>
+            <div><div style="{{ styles.dashUserName }}">Martina Ortega</div><div style="{{ styles.captionMuted }}">Plan Familiar</div></div>
+          </div>
+        </div>
+        <div style="{{ styles.dashMain }}">
+          <div style="{{ styles.dashTopbar }}">
+            <div style="{{ styles.dashSearch }}"><span style="{{ styles.comboSearchIcon }}">⌕</span><span style="{{ styles.captionMuted }}">Buscar tareas, personas, movimientos...</span></div>
+            <div style="{{ styles.dashTopbarRight }}">
+              <div style="{{ styles.dashBellWrap }}"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="{{ styles.iconSvg }}"><path d="M6 8a6 6 0 0112 0c0 4 2 5 2 6H4c0-1 2-2 2-6z"></path><path d="M9.5 19a2.5 2.5 0 005 0"></path></svg><div style="{{ styles.bellDot }}"></div></div>
+              <div style="{{ styles.avatarSm }}">MO</div>
+            </div>
+          </div>
+
+          <div style="{{ styles.kpiRow }}">
+            <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+              <div style="{{ styles.kpiCard }}">
+                <div style="{{ styles.kpiTop }}"><span style="{{ styles.captionMuted }}">{{ k.label }}</span><span style="{{ k.deltaStyle }}">{{ k.delta }}</span></div>
+                <div style="{{ styles.metricLg }}">{{ k.value }}</div>
+                <svg width="100%" height="32" viewBox="0 0 100 32" preserveAspectRatio="none" style="{{ styles.sparkline }}"><polyline points="{{ k.points }}" fill="none" stroke="{{ k.color }}" stroke-width="2"></polyline></svg>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="{{ styles.dashLowerRow }}">
+            <div style="{{ styles.dashActivityCard }}">
+              <div style="{{ styles.cardTitle }}">Próximas actividades</div>
+
+              <div style="{{ styles.activityRow }}">
+                <div style="{{ styles.iconWrapAccent }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 3 10 2-7 2 2h5"></path></svg></div>
+                <div style="{{ styles.activityBody }}">
+                  <div style="{{ styles.activityTitle }}">Sesión de kinesiología</div>
+                  <div style="{{ styles.captionMuted }}">Hoy · 10:30</div>
+                </div>
+                <span style="{{ styles.badgeSuccessSm }}">Confirmado</span>
+              </div>
+
+              <div style="{{ styles.activityRow }}">
+                <div style="{{ styles.iconWrapWarning }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="19" x2="5" y2="13"></line><line x1="12" y1="19" x2="12" y2="8"></line><line x1="19" y1="19" x2="19" y2="4"></line></svg></div>
+                <div style="{{ styles.activityBody }}">
+                  <div style="{{ styles.activityTitle }}">Pago tarjeta familiar</div>
+                  <div style="{{ styles.captionMuted }}">Hoy · 18:00</div>
+                </div>
+                <span style="{{ styles.badgeWarningSm }}">Pendiente</span>
+              </div>
+
+              <div style="{{ styles.activityRow }}">
+                <div style="{{ styles.iconWrapNeutral }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><line x1="3" y1="9.5" x2="21" y2="9.5"></line><line x1="8" y1="3" x2="8" y2="7"></line><line x1="16" y1="3" x2="16" y2="7"></line></svg></div>
+                <div style="{{ styles.activityBody }}">
+                  <div style="{{ styles.activityTitle }}">Control médico — Julián</div>
+                  <div style="{{ styles.captionMuted }}">Mañana · 09:00</div>
+                </div>
+                <span style="{{ styles.badgePrimarySm }}">Agendado</span>
+              </div>
+
+              <div style="{{ styles.activityRow }}">
+                <div style="{{ styles.iconWrapError }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2"></rect><path d="M8 11l2 2 4-4"></path><line x1="8" y1="16" x2="16" y2="16"></line></svg></div>
+                <div style="{{ styles.activityBody }}">
+                  <div style="{{ styles.activityTitle }}">Entrega informe mensual</div>
+                  <div style="{{ styles.captionMuted }}">Vie 8 · 12:00</div>
+                </div>
+                <span style="{{ styles.badgeErrorSm }}">Vencido</span>
+              </div>
+
+              <div style="{{ styles.activityRowLast }}">
+                <div style="{{ styles.iconWrapNeutral }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"></path><line x1="3" y1="12" x2="21" y2="12"></line></svg></div>
+                <div style="{{ styles.activityBody }}">
+                  <div style="{{ styles.activityTitle }}">Entrevista laboral</div>
+                  <div style="{{ styles.captionMuted }}">Lun 11 · 15:30</div>
+                </div>
+                <span style="{{ styles.badgePrimarySm }}">Agendado</span>
+              </div>
+            </div>
+
+            <div style="{{ styles.dashPipelineCard }}">
+              <div style="{{ styles.cardTitle }}">Pipeline de rehabilitación</div>
+              <div style="{{ styles.stepperRow }}">
+                <sc-for list="{{ pipelineStages }}" as="st" hint-placeholder-count="4">
+                  <div style="{{ styles.stepperCol }}">
+                    <div style="{{ st.dotStyle }}"></div>
+                    <div style="{{ styles.stepperLabel }}">{{ st.label }}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <sc-for list="{{ pipelinePatients }}" as="p" hint-placeholder-count="3">
+                <div style="{{ styles.pipelinePatientRow }}">
+                  <div style="{{ styles.avatarSm }}">{{ p.initials }}</div>
+                  <div style="{{ styles.pipelinePatientInfo }}">
+                    <div style="{{ styles.activityTitle }}">{{ p.name }}</div>
+                    <div style="{{ styles.progressBarTrackSm }}"><div style="{{ p.fillStyle }}"></div></div>
+                  </div>
+                  <div style="{{ styles.captionMuted }}">{{ p.stage }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div style="{{ styles.footer }}">LifeTrack OS · Nightframe Design System · v1.0</div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { mode: 'dark' };
+  toggleMode = () => this.setState(s => ({ mode: s.mode === 'dark' ? 'light' : 'dark' }));
+
+  renderVals() {
+    const dark = this.state.mode === 'dark';
+    const c = dark ? {
+      bg:'#0A0A0C', s1:'#111114', s2:'#1B1B1F', s3:'#242429', s4:'#2D2D34', s5:'#3A3A42',
+      border:'#2A2A30', borderStrong:'#38383F',
+      text1:'#F2F2F4', text2:'#A6A6AE', text3:'#6E6E76',
+      primary:'#7C5CFF', primaryHover:'#8D71FF', primaryActive:'#6A4AE8', onPrimary:'#FFFFFF',
+      accentTint:'#B9ACFF', accentTintBg:'rgba(185,172,255,0.14)',
+      success:'#3FCB8C', successBg:'rgba(63,203,140,0.14)',
+      warning:'#F5A623', warningBg:'rgba(245,166,35,0.16)',
+      error:'#F2555A', errorBg:'rgba(242,85,90,0.14)',
+      overlay:'rgba(6,6,8,0.72)',
+    } : {
+      bg:'#F6F6F7', s1:'#FFFFFF', s2:'#F0F0F2', s3:'#E7E7EA', s4:'#DBDBDF', s5:'#C8C8CE',
+      border:'#E1E1E5', borderStrong:'#D0D0D6',
+      text1:'#14141A', text2:'#55555F', text3:'#8A8A92',
+      primary:'#7C5CFF', primaryHover:'#6A4AE8', primaryActive:'#5B3ED6', onPrimary:'#FFFFFF',
+      accentTint:'#7C5CFF', accentTintBg:'#EDE9FF',
+      success:'#2CA876', successBg:'#E3F7EE',
+      warning:'#B96F09', warningBg:'#FDF1DE',
+      error:'#D8383F', errorBg:'#FCE7E8',
+      overlay:'rgba(20,20,26,0.5)',
+    };
+    const fDisplay = "'Space Grotesk',sans-serif", fBody = "'Manrope',sans-serif", fMono = "'JetBrains Mono',monospace";
+
+    const swatch = (bg, border) => ({ width:64, height:64, borderRadius:12, background:bg, border:'1px solid '+(border||c.border) });
+
+    const surfaceSwatches = [
+      {name:'bg', hex:c.bg, boxStyle:swatch(c.bg)},
+      {name:'surface-1', hex:c.s1, boxStyle:swatch(c.s1)},
+      {name:'surface-2', hex:c.s2, boxStyle:swatch(c.s2)},
+      {name:'surface-3', hex:c.s3, boxStyle:swatch(c.s3)},
+      {name:'surface-4', hex:c.s4, boxStyle:swatch(c.s4)},
+      {name:'surface-5', hex:c.s5, boxStyle:swatch(c.s5)},
+    ];
+    const brandSwatches = [
+      {name:'primary', hex:c.primary, boxStyle:swatch(c.primary)},
+      {name:'primary-hover', hex:c.primaryHover, boxStyle:swatch(c.primaryHover)},
+      {name:'primary-active', hex:c.primaryActive, boxStyle:swatch(c.primaryActive)},
+      {name:'accent-tint', hex:c.accentTint, boxStyle:swatch(c.accentTint)},
+      {name:'border', hex:c.border, boxStyle:swatch(c.s1)},
+      {name:'text-1', hex:c.text1, boxStyle:swatch(c.text1)},
+      {name:'text-3', hex:c.text3, boxStyle:swatch(c.text3)},
+    ];
+    const semanticSwatches = [
+      {name:'success', hex:c.success, boxStyle:swatch(c.success)},
+      {name:'warning', hex:c.warning, boxStyle:swatch(c.warning)},
+      {name:'error', hex:c.error, boxStyle:swatch(c.error)},
+    ];
+
+    const typeSample = (text, font, size, weight, lh, spec) => ({
+      sample:text, spec,
+      sampleStyle:{fontFamily:font, fontSize:size, fontWeight:weight, lineHeight:lh, color:c.text1, margin:0}
+    });
+    const typeScale = [
+      typeSample('Display', fDisplay, 56, 700, 1.05, 'Space Grotesk / 56 / 700'),
+      typeSample('Heading 1', fDisplay, 40, 700, 1.1, 'Space Grotesk / 40 / 700'),
+      typeSample('Heading 2', fDisplay, 32, 600, 1.15, 'Space Grotesk / 32 / 600'),
+      typeSample('Heading 3', fDisplay, 24, 600, 1.2, 'Space Grotesk / 24 / 600'),
+      typeSample('Heading 4', fDisplay, 18, 600, 1.3, 'Space Grotesk / 18 / 600'),
+      typeSample('Body large', fBody, 16, 400, 1.5, 'Manrope / 16 / 400'),
+      typeSample('Body', fBody, 14, 400, 1.5, 'Manrope / 14 / 400'),
+      typeSample('Caption', fBody, 12, 500, 1.4, 'Manrope / 12 / 500'),
+      {sample:'1,284.20', spec:'JetBrains Mono / 28 / 700 — métrica', sampleStyle:{fontFamily:fMono,fontSize:28,fontWeight:700,color:c.text1}},
+      {sample:'72%', spec:'JetBrains Mono / 16 / 600 — métrica sm', sampleStyle:{fontFamily:fMono,fontSize:16,fontWeight:600,color:c.text1}},
+    ];
+
+    const font = fBody;
+    const styles = {
+      page:{minHeight:'100vh', background:c.bg, color:c.text1, fontFamily:font, transition:'background 0.2s,color 0.2s'},
+      topBar:{position:'sticky', top:0, zIndex:5, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 40px', background:c.bg+'', borderBottom:'1px solid '+c.border, backdropFilter:'blur(6px)'},
+      topBarLeft:{display:'flex', alignItems:'center', gap:12},
+      wordmarkDot:{width:32, height:32, borderRadius:9, background:c.primary},
+      wordmarkDotSm:{width:22, height:22, borderRadius:7, background:c.primary},
+      wordmark:{fontFamily:fDisplay, fontWeight:700, fontSize:16, color:c.text1},
+      wordmarkSub:{fontFamily:fMono, fontSize:11, color:c.text3, marginTop:2},
+      modeSwitchWrap:{display:'flex', alignItems:'center', gap:10},
+      modeLabel:{fontSize:12, color:c.text3, fontFamily:fMono},
+      modeLabelActive:{fontSize:12, color:c.text1, fontFamily:fMono, fontWeight:600},
+      modeTrack:{width:44, height:24, borderRadius:12, background: dark ? c.primary : c.s3, border:'1px solid '+c.border, position:'relative', cursor:'pointer', padding:0},
+      modeTrackHover:{filter:'brightness(1.08)'},
+      modeThumb:{width:18, height:18, borderRadius:9, background:'#fff', position:'absolute', top:2, left: dark ? 23 : 2, transition:'left 0.15s'},
+
+      container:{maxWidth:1360, margin:'0 auto', padding:'48px 40px 80px'},
+      section:{marginBottom:72},
+      sectionLabel:{fontFamily:fMono, fontSize:12, letterSpacing:'0.06em', color:c.primary, marginBottom:10, textTransform:'uppercase'},
+      h2:{fontFamily:fDisplay, fontSize:28, fontWeight:600, margin:'0 0 8px', color:c.text1},
+      bodyMuted:{fontFamily:fBody, fontSize:14, color:c.text2, margin:'0 0 24px', maxWidth:640, lineHeight:1.6},
+      captionMuted:{fontFamily:fBody, fontSize:12, color:c.text3},
+      linkText:{fontFamily:fBody, fontSize:13, color:c.primary, fontWeight:600, cursor:'pointer'},
+
+      swatchGroupLabel:{fontSize:12, fontFamily:fMono, color:c.text3, margin:'20px 0 12px', textTransform:'uppercase', letterSpacing:'0.04em'},
+      swatchRow:{display:'flex', gap:24, flexWrap:'wrap'},
+      swatchCol:{display:'flex', flexDirection:'column', alignItems:'flex-start', gap:8, width:80},
+      swatchName:{fontSize:12, fontWeight:600, color:c.text1, fontFamily:fBody},
+      swatchHex:{fontSize:11, color:c.text3, fontFamily:fMono},
+
+      typeTable:{border:'1px solid '+c.border, borderRadius:12, overflow:'hidden', marginTop:16},
+      typeRow:{display:'flex', alignItems:'baseline', justifyContent:'space-between', padding:'18px 20px', borderBottom:'1px solid '+c.border, background:c.s1},
+      typeSpec:{fontFamily:fMono, fontSize:11, color:c.text3, whiteSpace:'nowrap', marginLeft:20},
+
+      iconGrid:{display:'grid', gridTemplateColumns:'repeat(8, 1fr)', gap:14},
+      iconTile:{display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'18px 8px', background:c.s2, border:'1px solid '+c.border, borderRadius:12},
+      iconSvg:{color:c.text1},
+      iconLabel:{fontSize:10.5, color:c.text3, fontFamily:fMono, textAlign:'center'},
+
+      compBlockLabel:{fontSize:12, fontFamily:fMono, color:c.text3, margin:'8px 0 14px', textTransform:'uppercase', letterSpacing:'0.04em'},
+      buttonMatrixRow:{display:'flex', gap:28, flexWrap:'wrap', marginBottom:32},
+      buttonMatrixCol:{display:'flex', flexDirection:'column', gap:10, alignItems:'flex-start'},
+      buttonMatrixHead:{fontSize:11, fontFamily:fMono, color:c.text3, marginBottom:4, textTransform:'uppercase'},
+
+      stateRow:{display:'flex', gap:20, marginBottom:40},
+      stateCol:{display:'flex', flexDirection:'column', alignItems:'center', gap:8},
+      stateTag:{fontSize:11, fontFamily:fMono, color:c.text3},
+
+      formGrid:{display:'grid', gridTemplateColumns:'1fr 1fr', gap:40, marginBottom:8},
+      formCol:{display:'flex', flexDirection:'column', gap:6},
+      fieldLabel:{fontSize:12, color:c.text2, fontFamily:fBody, fontWeight:600, marginTop:14, marginBottom:2},
+      input:{height:40, borderRadius:10, border:'1px solid '+c.border, background:c.s1, color:c.text1, padding:'0 14px', fontSize:14, fontFamily:fBody, outline:'none'},
+      inputFocus:{border:'1px solid '+c.primary, boxShadow:'0 0 0 3px '+c.accentTintBg},
+      inputError:{height:40, borderRadius:10, border:'1px solid '+c.error, background:c.s1, color:c.text1, padding:'0 14px', fontSize:14, fontFamily:fBody, outline:'none'},
+      errorHint:{fontSize:11.5, color:c.error, fontFamily:fBody, marginTop:2},
+      inputDisabled:{height:40, borderRadius:10, border:'1px solid '+c.border, background:c.s2, color:c.text3, padding:'0 14px', fontSize:14, fontFamily:fBody, cursor:'not-allowed'},
+      textarea:{minHeight:88, borderRadius:10, border:'1px solid '+c.border, background:c.s1, color:c.text1, padding:'10px 14px', fontSize:14, fontFamily:fBody, outline:'none', resize:'vertical'},
+
+      selectClosed:{height:40, borderRadius:10, border:'1px solid '+c.border, background:c.s1, color:c.text1, padding:'0 14px', fontSize:14, fontFamily:fBody, display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer'},
+      selectChevron:{color:c.text3},
+      comboWrap:{border:'1px solid '+c.primary, borderRadius:10, background:c.s1, boxShadow:'0 0 0 3px '+c.accentTintBg, overflow:'hidden'},
+      comboInput:{height:40, display:'flex', alignItems:'center', gap:8, padding:'0 14px', fontSize:14, color:c.text1, fontFamily:fBody},
+      comboSearchIcon:{color:c.text3, fontSize:14},
+      comboList:{borderTop:'1px solid '+c.border},
+      comboItemActive:{padding:'10px 14px', fontSize:13.5, background:c.accentTintBg, color:c.text1, fontFamily:fBody},
+      comboItem:{padding:'10px 14px', fontSize:13.5, color:c.text2, fontFamily:fBody},
+
+      controlsRow:{display:'flex', alignItems:'center', gap:16, marginTop:6},
+      checkboxOn:{width:20, height:20, borderRadius:6, background:c.primary, display:'flex', alignItems:'center', justifyContent:'center'},
+      checkboxOff:{width:20, height:20, borderRadius:6, border:'1.5px solid '+c.borderStrong, background:c.s1},
+      checkboxDisabled:{width:20, height:20, borderRadius:6, border:'1.5px solid '+c.border, background:c.s2},
+      radioOn:{width:20, height:20, borderRadius:10, border:'1.5px solid '+c.primary, display:'flex', alignItems:'center', justifyContent:'center'},
+      radioDot:{width:9, height:9, borderRadius:5, background:c.primary},
+      radioOff:{width:20, height:20, borderRadius:10, border:'1.5px solid '+c.borderStrong},
+      switchOn:{width:38, height:22, borderRadius:11, background:c.primary, position:'relative'},
+      switchThumbOn:{width:16, height:16, borderRadius:8, background:'#fff', position:'absolute', top:3, left:19},
+      switchOff:{width:38, height:22, borderRadius:11, background:c.s4, position:'relative', border:'1px solid '+c.border},
+      switchThumbOff:{width:16, height:16, borderRadius:8, background:c.text3, position:'absolute', top:2, left:2},
+
+      calendarCard:{width:320, background:c.s1, border:'1px solid '+c.border, borderRadius:14, padding:18},
+      calendarHead:{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14},
+      calendarChevron:{color:c.text3, cursor:'pointer', fontSize:16, width:24, textAlign:'center'},
+      calendarMonth:{fontFamily:fDisplay, fontWeight:600, fontSize:15, color:c.text1},
+      calendarGrid:{display:'grid', gridTemplateColumns:'repeat(7, 1fr)', gap:4},
+      calendarDow:{fontSize:10.5, color:c.text3, fontFamily:fMono, textAlign:'center', padding:'4px 0'},
+
+      badgeRow:{display:'flex', gap:12, flexWrap:'wrap', marginBottom:8},
+      tabsRow:{display:'flex', gap:4, borderBottom:'1px solid '+c.border, marginBottom:20},
+      breadcrumbRow:{display:'flex', alignItems:'center', gap:8, marginBottom:24},
+      breadcrumbMuted:{fontSize:13, color:c.text3, fontFamily:fBody},
+      breadcrumbActive:{fontSize:13, color:c.text1, fontFamily:fBody, fontWeight:600},
+      breadcrumbSep:{fontSize:13, color:c.text3},
+      paginationRow:{display:'flex', gap:6, marginBottom:8},
+      pageBtn:{width:32, height:32, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:c.text2, border:'1px solid '+c.border, background:c.s1, cursor:'pointer'},
+      pageBtnActive:{width:32, height:32, borderRadius:8, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:c.onPrimary, background:c.primary, fontWeight:600},
+      pageBtnDots:{width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, color:c.text3},
+
+      cardsRow:{display:'flex', gap:20, marginBottom:32, flexWrap:'wrap'},
+      cardSimple:{width:320, background:c.s1, border:'1px solid '+c.border, borderRadius:12, padding:20},
+      cardTitle:{fontFamily:fDisplay, fontWeight:600, fontSize:15, color:c.text1},
+      cardFull:{width:340, background:c.s1, border:'1px solid '+c.border, borderRadius:12, overflow:'hidden'},
+      cardFullHeader:{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', borderBottom:'1px solid '+c.border},
+      cardFullBody:{padding:'16px 20px'},
+      cardFullFooter:{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 20px', borderTop:'1px solid '+c.border, background:c.s2},
+
+      tableCard:{border:'1px solid '+c.border, borderRadius:12, overflow:'hidden', marginBottom:8},
+      tableHeadRow:{display:'grid', gridTemplateColumns:'2fr 1fr 1.2fr 1fr', padding:'12px 18px', background:c.s2, borderBottom:'1px solid '+c.border},
+      tableHeadCell:{fontSize:11.5, fontFamily:fMono, color:c.text3, textTransform:'uppercase'},
+      tableHeadCellSort:{fontSize:11.5, fontFamily:fMono, color:c.text1, textTransform:'uppercase', display:'flex', alignItems:'center', gap:4},
+      sortIcon:{color:c.primary},
+      tableRow:{display:'grid', gridTemplateColumns:'2fr 1fr 1.2fr 1fr', padding:'14px 18px', alignItems:'center', borderBottom:'1px solid '+c.border, background:c.s1},
+      tableCell:{fontSize:13.5, color:c.text2, fontFamily:fBody},
+      tableCellName:{fontSize:13.5, color:c.text1, fontFamily:fBody, fontWeight:600, display:'flex', alignItems:'center', gap:10},
+
+      overlayShowcase:{display:'flex', gap:24, alignItems:'flex-start', flexWrap:'wrap', marginBottom:8},
+      modalBackdrop:{width:400, height:220, background:c.overlay, borderRadius:14, display:'flex', alignItems:'center', justifyContent:'center'},
+      modalCard:{width:320, background:c.s1, border:'1px solid '+c.borderStrong, borderRadius:14, padding:22},
+      modalTitle:{fontFamily:fDisplay, fontWeight:600, fontSize:16, color:c.text1, marginBottom:8},
+      modalActions:{display:'flex', justifyContent:'flex-end', gap:10, marginTop:18},
+      toastCol:{display:'flex', flexDirection:'column', gap:12, width:300},
+      toastSuccess:{padding:'12px 16px', borderRadius:10, background:c.s1, border:'1px solid '+c.success, color:c.text1, fontSize:13, borderLeft:'3px solid '+c.success},
+      toastError:{padding:'12px 16px', borderRadius:10, background:c.s1, border:'1px solid '+c.error, color:c.text1, fontSize:13, borderLeft:'3px solid '+c.error},
+      tooltipDemo:{position:'relative', width:80, padding:'8px 14px', borderRadius:8, background:c.s3, color:c.text1, fontSize:13, textAlign:'center', marginTop:20},
+      tooltip:{position:'absolute', top:-38, left:0, background:c.s5, color:c.text1, fontSize:11.5, padding:'6px 10px', borderRadius:6, whiteSpace:'nowrap'},
+
+      progressRow:{display:'flex', gap:40, alignItems:'center', flexWrap:'wrap', marginBottom:8},
+      progressLinearCol:{width:260, display:'flex', flexDirection:'column', gap:8},
+      progressLabelRow:{display:'flex', justifyContent:'space-between', alignItems:'baseline'},
+      metricSm:{fontFamily:fMono, fontSize:14, fontWeight:600, color:c.text1},
+      metricMd:{fontFamily:fMono, fontSize:20, fontWeight:700, color:c.text1},
+      metricLg:{fontFamily:fMono, fontSize:30, fontWeight:700, color:c.text1, margin:'6px 0'},
+      progressBarTrack:{height:8, borderRadius:5, background:c.s3, overflow:'hidden'},
+      progressBarFill72:{height:8, width:'72%', borderRadius:5, background:c.primary},
+      progressBarTrackSm:{height:6, width:90, borderRadius:4, background:c.s3, overflow:'hidden'},
+      progressRingCol:{display:'flex', alignItems:'center', gap:14, position:'relative'},
+      ringLabel:{display:'flex', flexDirection:'column'},
+      avatarCol:{display:'flex', flexDirection:'column', gap:14},
+      avatarRow:{display:'flex', alignItems:'center', gap:10},
+      avatarSm:{width:28, height:28, borderRadius:14, background:c.accentTintBg, color:c.primary, fontFamily:fMono, fontSize:11, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0},
+      avatarMd:{width:36, height:36, borderRadius:18, background:c.accentTintBg, color:c.primary, fontFamily:fMono, fontSize:13, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center'},
+      avatarLg:{width:48, height:48, borderRadius:24, background:c.accentTintBg, color:c.primary, fontFamily:fMono, fontSize:15, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center'},
+      avatarGroup:{display:'flex'},
+      avatarGroupItem:{width:32, height:32, borderRadius:16, background:c.s3, color:c.text1, fontFamily:fMono, fontSize:11, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid '+c.bg, marginLeft:-8},
+      avatarGroupMore:{width:32, height:32, borderRadius:16, background:c.s4, color:c.text2, fontFamily:fMono, fontSize:10.5, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid '+c.bg, marginLeft:-8},
+
+      dashboardFrame:{display:'flex', border:'1px solid '+c.border, borderRadius:16, overflow:'hidden', height:640, background:c.s1},
+      dashSidebar:{width:220, background:c.s1, borderRight:'1px solid '+c.border, display:'flex', flexDirection:'column', padding:'18px 14px'},
+      dashLogoRow:{display:'flex', alignItems:'center', gap:8, padding:'4px 8px 20px'},
+      dashLogoText:{fontFamily:fDisplay, fontWeight:700, fontSize:14, color:c.text1},
+      dashNav:{display:'flex', flexDirection:'column', gap:2, flex:1},
+      dashSidebarFooter:{display:'flex', alignItems:'center', gap:10, padding:'12px 8px', borderTop:'1px solid '+c.border, marginTop:8},
+      dashUserName:{fontSize:12.5, color:c.text1, fontWeight:600, fontFamily:fBody},
+
+      dashMain:{flex:1, background:c.bg, display:'flex', flexDirection:'column', overflow:'auto'},
+      dashTopbar:{display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 24px', borderBottom:'1px solid '+c.border},
+      dashSearch:{display:'flex', alignItems:'center', gap:8, background:c.s2, border:'1px solid '+c.border, borderRadius:10, padding:'8px 14px', width:320},
+      dashTopbarRight:{display:'flex', alignItems:'center', gap:16},
+      dashBellWrap:{position:'relative', color:c.text2},
+      bellDot:{width:7, height:7, borderRadius:4, background:c.error, position:'absolute', top:-1, right:-1, border:'1.5px solid '+c.bg},
+
+      kpiRow:{display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:16, padding:'20px 24px 4px'},
+      kpiCard:{background:c.s1, border:'1px solid '+c.border, borderRadius:12, padding:16},
+      kpiTop:{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6},
+      sparkline:{marginTop:6, display:'block'},
+
+      dashLowerRow:{display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:16, padding:'16px 24px 24px', flex:1},
+      dashActivityCard:{background:c.s1, border:'1px solid '+c.border, borderRadius:12, padding:18},
+      activityRow:{display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'1px solid '+c.border},
+      activityBody:{flex:1},
+      activityTitle:{fontSize:13, color:c.text1, fontWeight:600, fontFamily:fBody},
+
+      dashPipelineCard:{background:c.s1, border:'1px solid '+c.border, borderRadius:12, padding:18},
+      stepperRow:{display:'flex', justifyContent:'space-between', margin:'16px 0 18px'},
+      stepperCol:{display:'flex', flexDirection:'column', alignItems:'center', gap:6, flex:1},
+      stepperLabel:{fontSize:10, fontFamily:fMono, color:c.text3, textAlign:'center'},
+      pipelinePatientRow:{display:'flex', alignItems:'center', gap:10, padding:'10px 0', borderTop:'1px solid '+c.border},
+      pipelinePatientInfo:{flex:1, display:'flex', flexDirection:'column', gap:4},
+
+      footer:{textAlign:'center', fontFamily:fMono, fontSize:11, color:c.text3, marginTop:40},
+      badgeSuccessSm:{fontSize:11, fontFamily:fBody, fontWeight:600, color:c.success, background:c.successBg, padding:'3px 8px', borderRadius:6},
+      badgeWarningSm:{fontSize:11, fontFamily:fBody, fontWeight:600, color:c.warning, background:c.warningBg, padding:'3px 8px', borderRadius:6},
+      badgeErrorSm:{fontSize:11, fontFamily:fBody, fontWeight:600, color:c.error, background:c.errorBg, padding:'3px 8px', borderRadius:6},
+      badgePrimarySm:{fontSize:11, fontFamily:fBody, fontWeight:600, color:c.primary, background:c.accentTintBg, padding:'3px 8px', borderRadius:6},
+      btnGhostSm:{height:34, padding:'0 14px', borderRadius:10, background:'transparent', color:c.text2, border:'1px solid '+c.border, fontSize:13, fontFamily:fBody, fontWeight:600, cursor:'pointer'},
+      btnPrimarySm:{height:34, padding:'0 14px', borderRadius:10, background:c.primary, color:c.onPrimary, border:'1px solid '+c.primary, fontSize:13, fontFamily:fBody, fontWeight:600, cursor:'pointer'},
+      navItem:{display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:10, fontSize:13.5, fontFamily:fBody, fontWeight:600, color:c.text2, background:'transparent', cursor:'pointer'},
+      navItemHover:{background:c.s2},
+      navItemActive:{display:'flex', alignItems:'center', gap:12, padding:'10px 12px', borderRadius:10, fontSize:13.5, fontFamily:fBody, fontWeight:600, color:c.primary, background:c.accentTintBg, cursor:'pointer'},
+      navItemActiveHover:{background:c.accentTintBg},
+      activityRow:{display:'flex', alignItems:'center', gap:12, padding:'10px 0', borderBottom:'1px solid '+c.border},
+      activityRowLast:{display:'flex', alignItems:'center', gap:12, padding:'10px 0'},
+      iconWrapAccent:{width:32, height:32, borderRadius:9, background:c.accentTintBg, color:c.primary, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0},
+      iconWrapWarning:{width:32, height:32, borderRadius:9, background:c.warningBg, color:c.warning, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0},
+      iconWrapError:{width:32, height:32, borderRadius:9, background:c.errorBg, color:c.error, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0},
+      iconWrapNeutral:{width:32, height:32, borderRadius:9, background:c.s3, color:c.text2, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0},
+    };
+
+    const btnBase = (h, pad, fs) => ({height:h, padding:'0 '+pad+'px', fontSize:fs, borderRadius:10, fontFamily:fBody, fontWeight:600, cursor:'pointer', display:'inline-flex', alignItems:'center', justifyContent:'center'});
+    const buttonVariants = [
+      {name:'primary', label:'Guardar',
+        lg:{...btnBase(48,22,15), background:c.primary, color:c.onPrimary, border:'1px solid '+c.primary},
+        lgHover:{background:c.primaryHover},
+        md:{...btnBase(40,18,14), background:c.primary, color:c.onPrimary, border:'1px solid '+c.primary},
+        mdHover:{background:c.primaryHover},
+        sm:{...btnBase(32,14,13), background:c.primary, color:c.onPrimary, border:'1px solid '+c.primary},
+        smHover:{background:c.primaryHover}},
+      {name:'secondary', label:'Guardar',
+        lg:{...btnBase(48,22,15), background:c.s3, color:c.text1, border:'1px solid '+c.border},
+        lgHover:{background:c.s4},
+        md:{...btnBase(40,18,14), background:c.s3, color:c.text1, border:'1px solid '+c.border},
+        mdHover:{background:c.s4},
+        sm:{...btnBase(32,14,13), background:c.s3, color:c.text1, border:'1px solid '+c.border},
+        smHover:{background:c.s4}},
+      {name:'ghost', label:'Guardar',
+        lg:{...btnBase(48,22,15), background:'transparent', color:c.text2, border:'1px solid transparent'},
+        lgHover:{background:c.s2},
+        md:{...btnBase(40,18,14), background:'transparent', color:c.text2, border:'1px solid transparent'},
+        mdHover:{background:c.s2},
+        sm:{...btnBase(32,14,13), background:'transparent', color:c.text2, border:'1px solid transparent'},
+        smHover:{background:c.s2}},
+      {name:'destructive', label:'Eliminar',
+        lg:{...btnBase(48,22,15), background:c.error, color:'#fff', border:'1px solid '+c.error},
+        lgHover:{filter:'brightness(1.08)'},
+        md:{...btnBase(40,18,14), background:c.error, color:'#fff', border:'1px solid '+c.error},
+        mdHover:{filter:'brightness(1.08)'},
+        sm:{...btnBase(32,14,13), background:c.error, color:'#fff', border:'1px solid '+c.error},
+        smHover:{filter:'brightness(1.08)'}},
+    ];
+    styles.iconBtnLg = {width:48, height:48, borderRadius:10, background:c.s3, color:c.text1, border:'1px solid '+c.border, fontSize:18, cursor:'pointer'};
+    styles.iconBtnLgHover = {background:c.s4};
+    styles.iconBtnMd = {width:40, height:40, borderRadius:10, background:c.s3, color:c.text1, border:'1px solid '+c.border, fontSize:16, cursor:'pointer'};
+    styles.iconBtnMdHover = {background:c.s4};
+    styles.iconBtnSm = {width:32, height:32, borderRadius:10, background:c.s3, color:c.text1, border:'1px solid '+c.border, fontSize:14, cursor:'pointer'};
+    styles.iconBtnSmHover = {background:c.s4};
+
+    const primaryMd = {...btnBase(40,18,14), background:c.primary, color:c.onPrimary, border:'1px solid '+c.primary};
+    const buttonStates = [
+      {name:'default', style:primaryMd, disabled:false},
+      {name:'hover', style:{...primaryMd, background:c.primaryHover}, disabled:false},
+      {name:'focus', style:{...primaryMd, boxShadow:'0 0 0 3px '+c.accentTintBg}, disabled:false},
+      {name:'disabled', style:{...primaryMd, background:c.s3, color:c.text3, border:'1px solid '+c.border, cursor:'not-allowed'}, disabled:true},
+    ];
+
+    const calendarDow = ['L','M','M','J','V','S','D'];
+    const dayBase = {height:34, display:'flex', alignItems:'center', justifyContent:'center', borderRadius:8, fontSize:12.5, fontFamily:fBody, color:c.text2};
+    const calendarDays = [];
+    for (let i=1;i<=3;i++) calendarDays.push({n:'', style:{...dayBase, color:'transparent'}});
+    for (let d=1; d<=31; d++) {
+      let style = {...dayBase};
+      if (d===6) style = {...dayBase, background:c.primary, color:c.onPrimary, fontWeight:700};
+      else if (d>=10 && d<=14) style = {...dayBase, background:c.accentTintBg, color:c.text1};
+      else if (d===20) style = {...dayBase, border:'1px solid '+c.primary, color:c.text1};
+      calendarDays.push({n:d, style});
+    }
+
+    const badgeStyle = (color, bg) => ({display:'inline-flex', alignItems:'center', gap:6, fontSize:12, fontWeight:600, fontFamily:fBody, color, background:bg, padding:'5px 12px', borderRadius:8});
+    const dot = (color) => ({width:6, height:6, borderRadius:3, background:color});
+    const badges = [
+      {label:'Activo', style:badgeStyle(c.success, c.successBg), dotStyle:dot(c.success)},
+      {label:'Pendiente', style:badgeStyle(c.warning, c.warningBg), dotStyle:dot(c.warning)},
+      {label:'Vencido', style:badgeStyle(c.error, c.errorBg), dotStyle:dot(c.error)},
+      {label:'Completado', style:badgeStyle(c.primary, c.accentTintBg), dotStyle:dot(c.primary)},
+    ];
+
+    const tabs = [
+      {label:'Resumen', style:{padding:'10px 4px', marginRight:24, fontSize:13.5, fontFamily:fBody, fontWeight:600, color:c.text1, borderBottom:'2px solid '+c.primary}},
+      {label:'Actividades', style:{padding:'10px 4px', marginRight:24, fontSize:13.5, fontFamily:fBody, color:c.text3, borderBottom:'2px solid transparent'}},
+      {label:'Documentos', style:{padding:'10px 4px', marginRight:24, fontSize:13.5, fontFamily:fBody, color:c.text3, borderBottom:'2px solid transparent'}},
+      {label:'Configuración', style:{padding:'10px 4px', fontSize:13.5, fontFamily:fBody, color:c.text3, borderBottom:'2px solid transparent'}},
+    ];
+
+    const av = (initials, bgc, colr) => ({width:32, height:32, borderRadius:16, background:bgc||c.accentTintBg, color:colr||c.primary, fontFamily:fMono, fontSize:11.5, fontWeight:600, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0});
+    const tableRows = [
+      {name:'Sofía Ramos', initials:'SR', stage:'Tratamiento', status:'Activo', avatarStyle:av('SR'), progressFillStyle:{height:6, width:'72%', borderRadius:4, background:c.primary}, badgeStyle:badgeStyle(c.success, c.successBg)},
+      {name:'Julián Castro', initials:'JC', stage:'Evaluación', status:'Pendiente', avatarStyle:av('JC'), progressFillStyle:{height:6, width:'20%', borderRadius:4, background:c.warning}, badgeStyle:badgeStyle(c.warning, c.warningBg)},
+      {name:'Mora Peralta', initials:'MP', stage:'Seguimiento', status:'Activo', avatarStyle:av('MP'), progressFillStyle:{height:6, width:'85%', borderRadius:4, background:c.primary}, badgeStyle:badgeStyle(c.success, c.successBg)},
+      {name:'Ezequiel Vidal', initials:'EV', stage:'Alta', status:'Completado', avatarStyle:av('EV'), progressFillStyle:{height:6, width:'100%', borderRadius:4, background:c.success}, badgeStyle:badgeStyle(c.primary, c.accentTintBg)},
+    ];
+
+    const kpis = [
+      {label:'Balance total', value:'$18,420', delta:'+4.2%', deltaStyle:{fontFamily:fMono,fontSize:11,color:c.success}, color:c.success, points:'0,26 15,22 30,24 45,14 60,17 75,8 100,4'},
+      {label:'Tareas completadas', value:'86%', delta:'+6', deltaStyle:{fontFamily:fMono,fontSize:11,color:c.success}, color:c.primary, points:'0,20 15,18 30,16 45,18 60,10 75,12 100,3'},
+      {label:'Sesiones de rehab', value:'12/16', delta:'-1', deltaStyle:{fontFamily:fMono,fontSize:11,color:c.warning}, color:c.warning, points:'0,10 15,12 30,8 45,16 60,14 75,20 100,17'},
+      {label:'Próx. vencimiento', value:'3 días', delta:'urgente', deltaStyle:{fontFamily:fMono,fontSize:11,color:c.error}, color:c.error, points:'0,6 15,10 30,9 45,16 60,20 75,22 100,26'},
+    ];
+
+    const stageDot = (state) => ({width:16, height:16, borderRadius:8,
+      background: state==='done' ? c.primary : state==='active' ? c.s1 : c.s3,
+      border: state==='active' ? '3px solid '+c.primary : '1px solid '+c.border});
+    const pipelineStages = [
+      {label:'Evaluación', dotStyle:stageDot('done')},
+      {label:'Tratamiento', dotStyle:stageDot('active')},
+      {label:'Seguimiento', dotStyle:stageDot('todo')},
+      {label:'Alta', dotStyle:stageDot('todo')},
+    ];
+    const fillStyle = (pct, colr) => ({height:6, width:pct+'%', borderRadius:4, background:colr});
+    const pipelinePatients = [
+      {name:'Sofía Ramos', initials:'SR', stage:'Tratamiento', fillStyle:fillStyle(72, c.primary)},
+      {name:'Julián Castro', initials:'JC', stage:'Evaluación', fillStyle:fillStyle(20, c.warning)},
+      {name:'Mora Peralta', initials:'MP', stage:'Seguimiento', fillStyle:fillStyle(85, c.primary)},
+    ];
+
+    return {
+      mode: this.state.mode, toggleMode: this.toggleMode, c, styles,
+      surfaceSwatches, brandSwatches, semanticSwatches, typeScale,
+      buttonVariants, buttonStates, calendarDow, calendarDays, badges, tabs, tableRows,
+      kpis, pipelineStages, pipelinePatients,
+    };
+  }
+}
+</script>
+</body>
+</html>

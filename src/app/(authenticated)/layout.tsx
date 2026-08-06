@@ -31,8 +31,8 @@ export default function AuthenticatedLayout({
 
   if (loading) {
     return (
-      <div className="flex min-h-full flex-1 items-center justify-center bg-background text-on-surface">
-        <p className="text-sm text-on-surface-variant">Verificando sesión…</p>
+      <div className="flex min-h-full flex-1 items-center justify-center bg-background text-text-1">
+        <p className="text-sm text-text-3">Verificando sesión…</p>
       </div>
     );
   }

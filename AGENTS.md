@@ -5,5 +5,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Design system
 
-Before writing or editing any UI (components, styles, layout, colors, typography), read `frontend/DESIGN.md` first — it's the "Clinical Vitality" design system exported from Stitch (colors, typography scale, spacing, roundness, elevation, component rules). Match it instead of guessing values.
+Before writing or editing any UI (components, styles, layout, colors, typography), read `frontend/DESIGN.md` first — it's the **Nightframe** design system (colors, typography scale, spacing, roundness, elevation, component rules). Match it instead of guessing values. Visual reference: `frontend/docs/design-system/nightframe-reference.html`. Use lucide-react for icons; support dark and light via next-themes (`class="dark"` on `<html>`).
 <!-- END:nextjs-agent-rules -->

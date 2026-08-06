@@ -4,48 +4,54 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/shared/ui/Icon";
 import { LogoutButton } from "@/shared/ui/LogoutButton";
+import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 
 export function BottomNav({ active = "rehab" }: { active?: "home" | "rehab" | "profile" }) {
   const pathname = usePathname();
+  const rehabActive = pathname.startsWith("/rehab");
 
   return (
-    <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around rounded-t-xl bg-surface-container/80 px-5 py-2 pb-safe shadow-lg glass-nav md:hidden">
+    <nav className="fixed bottom-0 left-0 z-50 flex w-full items-center justify-around border-t border-border bg-surface-1/95 px-3 py-2 pb-safe md:hidden">
       <Link
         href="/rehab"
-        className={`flex flex-col items-center justify-center rounded-lg p-2 transition-all active:scale-90 ${
-          active === "home" ? "text-primary" : "text-on-surface-variant"
+        className={`flex flex-col items-center justify-center rounded-[10px] p-2 transition-colors active:scale-95 ${
+          active === "home" ? "text-primary" : "text-text-3"
         }`}
       >
-        <Icon name="home" />
+        <Icon name="home" className="text-[22px]" />
         <span className="font-label mt-1 text-label-md">Inicio</span>
       </Link>
       <Link
         href="/rehab"
-        className={`relative flex flex-col items-center justify-center rounded-lg p-2 transition-all active:scale-90 ${
-          pathname.startsWith("/rehab") ? "text-primary" : "text-on-surface-variant"
+        className={`relative flex flex-col items-center justify-center rounded-[10px] p-2 transition-colors active:scale-95 ${
+          rehabActive ? "text-primary" : "text-text-3"
         }`}
       >
-        <Icon name="stabilization" filled={pathname.startsWith("/rehab")} />
+        <Icon name="stabilization" className="text-[22px]" />
         <span
           className={`font-label mt-1 text-label-md ${
-            pathname.startsWith("/rehab") ? "font-bold" : ""
+            rehabActive ? "font-semibold" : ""
           }`}
         >
-          Rehabilitación
+          Rehab
         </span>
-        {pathname.startsWith("/rehab") && (
+        {rehabActive && (
           <span className="mt-1 h-1 w-1 rounded-full bg-primary" />
         )}
       </Link>
+      <div className="flex flex-col items-center justify-center rounded-[10px] p-2 text-text-3">
+        <ThemeToggle size="icon-sm" className="h-auto w-auto p-0" />
+        <span className="font-label mt-1 text-label-md">Tema</span>
+      </div>
       <Link
         href="/rehab"
-        className="flex flex-col items-center justify-center rounded-lg p-2 text-on-surface-variant transition-all active:scale-90"
+        className="flex flex-col items-center justify-center rounded-[10px] p-2 text-text-3 transition-colors active:scale-95"
       >
-        <Icon name="person" />
+        <Icon name="person" className="text-[22px]" />
         <span className="font-label mt-1 text-label-md">Perfil</span>
       </Link>
-      <LogoutButton className="flex flex-col items-center justify-center rounded-lg p-2 text-on-surface-variant transition-all active:scale-90">
-        <Icon name="logout" />
+      <LogoutButton className="flex flex-col items-center justify-center rounded-[10px] p-2 text-text-3 transition-colors active:scale-95">
+        <Icon name="logout" className="text-[22px]" />
         <span className="font-label mt-1 text-label-md">Salir</span>
       </LogoutButton>
     </nav>

@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Nightframe visual reference (bundled HTML/JS, not app code)
+    "docs/**",
   ]),
 ]);
 

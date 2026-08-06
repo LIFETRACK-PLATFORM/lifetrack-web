@@ -1,104 +1,89 @@
 ---
-name: Clinical Vitality
+name: Nightframe
 colors:
-  surface: '#f8f9ff'
-  surface-dim: '#cbdbf5'
-  surface-bright: '#f8f9ff'
-  surface-container-lowest: '#ffffff'
-  surface-container-low: '#eff4ff'
-  surface-container: '#e5eeff'
-  surface-container-high: '#dce9ff'
-  surface-container-highest: '#d3e4fe'
-  on-surface: '#0b1c30'
-  on-surface-variant: '#3d4947'
-  inverse-surface: '#213145'
-  inverse-on-surface: '#eaf1ff'
-  outline: '#6d7a77'
-  outline-variant: '#bcc9c6'
-  surface-tint: '#006a61'
-  primary: '#00685f'
-  on-primary: '#ffffff'
-  primary-container: '#008378'
-  on-primary-container: '#f4fffc'
-  inverse-primary: '#6bd8cb'
-  secondary: '#a93349'
-  on-secondary: '#ffffff'
-  secondary-container: '#fe7488'
-  on-secondary-container: '#730425'
-  tertiary: '#4648d4'
-  on-tertiary: '#ffffff'
-  tertiary-container: '#6063ee'
-  on-tertiary-container: '#fffbff'
-  error: '#ba1a1a'
-  on-error: '#ffffff'
-  error-container: '#ffdad6'
-  on-error-container: '#93000a'
-  primary-fixed: '#89f5e7'
-  primary-fixed-dim: '#6bd8cb'
-  on-primary-fixed: '#00201d'
-  on-primary-fixed-variant: '#005049'
-  secondary-fixed: '#ffdadc'
-  secondary-fixed-dim: '#ffb2b9'
-  on-secondary-fixed: '#400010'
-  on-secondary-fixed-variant: '#891933'
-  tertiary-fixed: '#e1e0ff'
-  tertiary-fixed-dim: '#c0c1ff'
-  on-tertiary-fixed: '#07006c'
-  on-tertiary-fixed-variant: '#2f2ebe'
-  background: '#f8f9ff'
-  on-background: '#0b1c30'
-  surface-variant: '#d3e4fe'
+  dark:
+    bg: '#0A0A0C'
+    surface-1: '#111114'
+    surface-2: '#1B1B1F'
+    surface-3: '#242429'
+    surface-4: '#2D2D34'
+    surface-5: '#3A3A42'
+    primary: '#7C5CFF'
+    primary-hover: '#8D71FF'
+    primary-active: '#6A4AE8'
+    accent-tint: '#B9ACFF'
+    border: '#2A2A30'
+    text-1: '#F2F2F4'
+    text-3: '#6E6E76'
+    success: '#3FCB8C'
+    warning: '#F5A623'
+    error: '#F2555A'
+  light:
+    bg: '#F6F6F7'
+    surface-1: '#FFFFFF'
+    surface-2: '#F0F0F2'
+    surface-3: '#E7E7EA'
+    surface-4: '#DBDBDF'
+    surface-5: '#C8C8CE'
+    primary: '#7C5CFF'
+    primary-hover: '#6A4AE8'
+    primary-active: '#5B3ED6'
+    accent-tint: '#7C5CFF'
+    border: '#E1E1E5'
+    text-1: '#14141A'
+    text-3: '#8A8A92'
+    success: '#2CA876'
+    warning: '#B96F09'
+    error: '#D8383F'
 typography:
   display:
-    fontFamily: Inter
-    fontSize: 48px
+    fontFamily: Space Grotesk
+    fontSize: 56px
     fontWeight: '700'
-    lineHeight: 56px
-    letterSpacing: -0.02em
-  headline-lg:
-    fontFamily: Inter
+  heading-1:
+    fontFamily: Space Grotesk
+    fontSize: 40px
+    fontWeight: '700'
+  heading-2:
+    fontFamily: Space Grotesk
     fontSize: 32px
     fontWeight: '600'
-    lineHeight: 40px
-    letterSpacing: -0.01em
-  headline-lg-mobile:
-    fontFamily: Inter
+  heading-3:
+    fontFamily: Space Grotesk
     fontSize: 24px
     fontWeight: '600'
-    lineHeight: 32px
-  headline-md:
-    fontFamily: Inter
-    fontSize: 24px
-    fontWeight: '600'
-    lineHeight: 32px
-  body-lg:
-    fontFamily: Inter
+  heading-4:
+    fontFamily: Space Grotesk
     fontSize: 18px
-    fontWeight: '400'
-    lineHeight: 28px
-  body-md:
-    fontFamily: Inter
+    fontWeight: '600'
+  body-lg:
+    fontFamily: Manrope
     fontSize: 16px
     fontWeight: '400'
-    lineHeight: 24px
-  label-md:
-    fontFamily: Geist
+  body:
+    fontFamily: Manrope
     fontSize: 14px
+    fontWeight: '400'
+  caption:
+    fontFamily: Manrope
+    fontSize: 12px
     fontWeight: '500'
-    lineHeight: 20px
-    letterSpacing: 0.02em
-  metric-xl:
-    fontFamily: Geist
-    fontSize: 36px
+  metric-lg:
+    fontFamily: JetBrains Mono
+    fontSize: 28px
     fontWeight: '700'
-    lineHeight: 44px
-    letterSpacing: -0.03em
+  metric-sm:
+    fontFamily: JetBrains Mono
+    fontSize: 16px
+    fontWeight: '600'
+icons:
+  set: lucide-react
+  stroke: 1.75px
+  style: esquinas redondeadas, coherente con Nightframe
 rounded:
-  sm: 0.25rem
-  DEFAULT: 0.5rem
-  md: 0.75rem
-  lg: 1rem
-  xl: 1.5rem
+  sm: 10px
+  DEFAULT: 12px
+  md: 14px
   full: 9999px
 spacing:
   unit: 4px
@@ -111,54 +96,58 @@ spacing:
   gutter: 20px
 ---
 
-## Brand & Style
-The design system is built on the intersection of medical precision and personal habit-building. The brand personality is **authoritative yet empathetic**, providing a sense of calm control over complex health and productivity data.
+> Referencia visual completa (todos los componentes renderizados, light + dark): [`docs/design-system/nightframe-reference.html`](./docs/design-system/nightframe-reference.html). Este `.md` documenta las reglas y tokens — el HTML muestra cómo debe verse cada uno en la práctica. Ante cualquier duda de implementación, el HTML manda.
 
-The style is a hybrid of **Corporate Modern** and **Soft Minimalism**. It prioritizes high legibility and information density without appearing cluttered. Borrowing from high-end wearables, it uses spacious layouts and purposeful color hits to guide the user's eye toward progress and action. The UI should evoke a feeling of "ordered life," moving away from chaotic notification-driven interfaces toward a structured, data-driven sanctuary.
+## Brand & Style
+Nightframe reemplaza al sistema anterior ("Clinical Vitality" — teal + coral, estética médica) que se sintió frío para un producto que además de rehab cubre tareas, finanzas y una bóveda de contraseñas de toda la familia. La personalidad es **oscura, minimalista y premium**: "precisión silenciosa, control total de tu vida, sin ruido visual."
+
+El estilo es **chato por diseño**: casi cero sombra, jerarquía comunicada por contraste de superficie (bordes hairline, escalones de gris) en vez de elevación decorativa. Un solo acento de color (violeta) se usa con moderación — nunca como decoración, siempre para marcar lo interactivo o lo importante.
 
 ## Colors
-The palette uses a **Deep Teal (#0D9488)** as the anchor, representing physiological stability and steady progress. The **Warm Coral (#FB7185)** is reserved strictly for high-priority actions, critical health alerts, and motivational "streaks" to maintain its visual impact.
+El **Violeta (#7C5CFF)** es el único color de marca — se usa en botones primarios, estados activos y focos de atención. No hay un color secundario "decorativo"; en su lugar, la jerarquía se construye con 5 niveles de superficie (`surface-1` a `surface-5`) que se aclaran progresivamente sobre el fondo base.
 
-- **Primary (Teal):** Used for active states, primary buttons, and positive data trends.
-- **Accent (Coral):** Used for "Commit" actions and urgent notifications.
-- **Tertiary (Indigo):** Introduced for secondary data categories like sleep or focus sessions to provide visual distinction in charts.
-- **Neutrals:** A slate-based neutral scale ensures that text remains legible against both light and dark backgrounds, avoiding pure blacks to reduce eye strain during late-night health tracking.
+- **Primary (Violeta):** Botones primarios, links, estados activos de navegación, foco de inputs.
+- **Accent-tint:** Halos/fondos sutiles detrás de iconos o badges activos (nunca como fondo de texto largo).
+- **Semánticos:** `success` (verde) para completado/positivo, `warning` (ámbar) para pendiente/atención, `error` (rojo coral) para vencido/crítico. Se usan solo en badges, bordes de input y mensajes — nunca como fondo de página.
+- **Modo claro y oscuro son ciudadanos de primera clase:** no es solo invertir valores — en claro los `surface` bajan de contraste entre sí (blancos y grises muy cercanos) mientras que en oscuro se separan más para mantener legibilidad sin depender de sombra.
 
 ## Typography
-The system utilizes **Inter** for its neutral, highly legible character in UI controls and long-form content. To distinguish data and technical metrics, **Geist** is introduced for labels and large numerical displays; its monospaced-influenced proportions ensure that numbers remain aligned and easy to scan in dashboards.
+**Space Grotesk** para todo lo que es jerarquía (display, headings) — geométrica, técnica, con carácter. **Manrope** para body y UI controls — neutral y muy legible en bloques largos. **JetBrains Mono** exclusivamente para métricas y números grandes (dashboards, montos, porcentajes), para que los dígitos queden alineados y se sientan "de instrumento".
 
-- **Headlines:** Use tight letter-spacing and bold weights to establish a strong hierarchy.
-- **Metrics:** Numerical data should always use the `metric-xl` or `label` roles to evoke a technical, clinical feel.
-- **Body:** Standardized at 16px for optimal readability across all demographics.
+- **Headings:** Space Grotesk 600–700, sin letter-spacing negativo agresivo — el peso hace el trabajo, no la compresión.
+- **Métricas:** Todo número protagonista (saldo, % de sesiones completadas, KPIs) usa `metric-lg` o `metric-sm` en JetBrains Mono.
+- **Body:** 14px como tamaño base de UI, 16px (`body-lg`) para contenido de lectura larga.
 
 ## Layout & Spacing
-The layout follows a **Fluid Grid** system with a strict 4px baseline rhythm.
+Grid fluido de 4px de base, igual que el sistema anterior — esto no cambia entre direcciones de diseño.
 
-- **Desktop:** 12-column grid with 24px gutters and 40px side margins. Sidebars are fixed at 280px to allow the main content area to breathe.
-- **Tablet:** 8-column grid with 20px gutters.
-- **Mobile:** 4-column grid with 16px gutters and margins.
-
-Information density is managed through "Negative Space Pockets"—areas of 40px+ padding between major sections (e.g., separating Sleep Data from Activity Logs) to prevent cognitive overload.
+- **Desktop:** 12 columnas, 24px gutter, sidebar fijo (con iconos + label) para navegación entre módulos.
+- **Tablet:** 8 columnas, 20px gutter.
+- **Mobile:** 4 columnas, 16px gutter, navegación inferior.
 
 ## Elevation & Depth
-This design system utilizes **Tonal Layers** combined with **Ambient Shadows**. Instead of traditional heavy shadows, depth is communicated through subtle shifts in background saturation.
-
-- **Level 0 (Base):** The primary background color.
-- **Level 1 (Cards):** Raised with a very soft, high-blur shadow: `0px 4px 20px rgba(0, 0, 0, 0.05)`. In dark mode, this is achieved by lightening the slate surface by 2%.
-- **Level 2 (Modals/Popovers):** Higher elevation with a more pronounced shadow to indicate interactivity.
-- **Glassmorphism:** Used exclusively for the mobile bottom navigation bar and the desktop sidebar header, utilizing a 12px backdrop blur to maintain context of the content underneath.
+Nightframe **no usa sombra dura**. La profundidad se comunica exclusivamente con:
+- **Contraste de superficie:** cada nivel (`surface-1` → `surface-5`) es un paso de luminosidad, no un shadow. Un card "flota" porque su superficie es un paso más clara que el fondo, no porque tenga blur debajo.
+- **Bordes hairline:** 1px al ~8-12% de opacidad sobre el fondo, para separar sin pesar visualmente.
+- **Modales/Popovers:** el único lugar donde se permite un scrim/overlay oscuro detrás — pero el modal mismo sigue siendo plano.
 
 ## Shapes
-A **Rounded** shape language is employed to soften the clinical nature of the data.
+Radios moderados, ni muy angulares ni muy suaves — refuerzan "control técnico" sin caer en frío absoluto.
 
-- **Standard Elements:** 0.5rem (8px) radius for buttons and input fields.
-- **Containers:** 1rem (16px) radius for dashboard cards and modular sections.
-- **Pills:** 100px radius for status chips (e.g., "In Progress," "Synced") and small toggle switches.
+- **Botones e inputs:** 10px.
+- **Cards y contenedores:** 12–14px.
+- **Chips/badges/avatares:** full (pill/círculo).
+
+## Iconography
+Set **lucide-react** (viene por defecto con shadcn/ui — no mezclar con react-icons u otros sets para no romper consistencia de grosor). Stroke 1.75px, esquinas redondeadas. Iconos base del proyecto: `dashboard`, `tareas`, `finanzas`, `vault`, `rehab`, `carrera`, `calendario`, `notificación`, `búsqueda`, `usuario`, `check`, `alerta`, `config`, `chevron`, `cerrar`, `agregar`.
 
 ## Components
-- **Buttons:** Primary buttons use the Teal background with white text. Secondary buttons use a subtle Teal outline with a 5% Teal fill on hover.
-- **Cards:** White or Deep Slate containers with a 1px border (`#E2E8F0` in light / `#1E293B` in dark) to define boundaries without heavy shadows.
-- **Data Visualization:** Charts should use rounded line caps. Use Teal for positive trends, Gray for neutral, and Coral for "below goal" or "high stress" metrics.
-- **Input Fields:** Minimalist design with a 1px bottom border that transforms into a full 8px rounded box outline only when focused.
-- **Bottom Navigation (Mobile):** Features large, clear icons with `label-md` text. The active state uses a small teal dot underneath the icon rather than a full color change.
-- **Progress Rings:** Used for health metrics (Steps, Heart Rate). Use a thick 8px stroke with a rounded cap and a muted track color.
+- **Botones:** variantes `primary` / `secondary` / `ghost` / `destructive` / `icon-button`, en 3 tamaños, con estados default/hover/focus/disabled explícitos (no solo opacidad — `primary-hover` y `primary-active` son tokens propios).
+- **Inputs:** borde 1px por defecto, estado `error` con borde rojo + mensaje debajo, `disabled` con superficie apagada. Incluye textarea, select/dropdown y combobox con búsqueda.
+- **Selección:** checkbox, radio y switch siguen el mismo lenguaje plano — sin relieve, cambio de color como único feedback.
+- **Calendario:** vista mensual completa, día seleccionado marcado con `primary`, usado para citas de rehab y vencimientos.
+- **Badges de estado:** `Activo` (success), `Pendiente` (warning), `Vencido` (error), `Completado` (neutral/surface) — texto + punto de color, sin fondo saturado.
+- **Cards y tablas:** card base sin sombra (borde + superficie), tabla con sorting por columna.
+- **Overlays:** modal/dialog con scrim, toast de confirmación/error, tooltip.
+- **Progreso:** barra lineal y progress ring de 8px stroke (métricas de rehab: sesiones completadas, %).
+- **Avatares:** avatar simple y avatar group con overflow (`+N`) para vistas de equipo/familia.

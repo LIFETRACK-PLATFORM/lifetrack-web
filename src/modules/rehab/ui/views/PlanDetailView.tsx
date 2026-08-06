@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
+import { StatusBadge } from "@/components/ui/badge";
 import { Icon } from "@/shared/ui/Icon";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
@@ -68,7 +69,7 @@ export function PlanDetailView({
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-on-surface-variant">
+      <div className="flex min-h-screen items-center justify-center text-text-3">
         Cargando plan…
       </div>
     );
@@ -114,12 +115,12 @@ export function PlanDetailView({
   return (
     <>
       {/* Mobile */}
-      <div className="flex min-h-screen flex-col bg-background text-on-surface md:hidden">
+      <div className="flex min-h-screen flex-col bg-background text-text-1 md:hidden">
         <header className="sticky top-0 z-40 flex w-full items-center justify-between bg-surface/80 px-6 py-4 backdrop-blur-md">
           <div className="flex items-center gap-4">
             <Link
               href="/rehab"
-              className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-surface-container active:scale-90"
+              className="flex h-10 w-10 items-center justify-center rounded-full transition-all hover:bg-surface-2 active:scale-90"
             >
               <Icon name="arrow_back" className="text-primary" />
             </Link>
@@ -128,11 +129,11 @@ export function PlanDetailView({
           <div className="flex gap-2">
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-container-high"
+              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-3"
             >
               <Icon name="notifications" />
             </button>
-            <div className="h-10 w-10 overflow-hidden rounded-full border border-outline-variant">
+            <div className="h-10 w-10 overflow-hidden rounded-full border border-border">
               <Image
                 src={DEFAULT_AVATAR}
                 alt={displayName}
@@ -146,15 +147,16 @@ export function PlanDetailView({
 
         <main className="flex-1 px-5 pb-32 pt-4">
           <section className="mb-10">
-            <div className="relative flex flex-col gap-2 overflow-hidden rounded-xl bg-primary-container p-6 text-on-primary-container shadow-sm">
-              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-on-primary/10 blur-2xl" />
-              <div className="flex items-start justify-between">
+            <div className="relative flex flex-col gap-2 overflow-hidden rounded-xl bg-primary p-6 text-primary-foreground ">
+              <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary-foreground/10 blur-2xl" />
+              <div className="flex items-start justify-between gap-2">
                 <span className="rounded-full bg-white/20 px-2 py-1 font-label text-label-md uppercase tracking-wider">
                   {plan.phaseLabel}
                 </span>
-                <span className="rounded-full bg-on-primary-container/20 px-2 py-1 font-label text-label-md text-primary-fixed">
-                  {plan.dayProgress}
-                </span>
+                <StatusBadge
+                  status="active"
+                  className="bg-white/10 text-primary-foreground [&_span]:bg-success"
+                />
               </div>
               <h2 className="text-headline-lg-mobile font-bold">
                 {plan.titleMobile}
@@ -174,8 +176,8 @@ export function PlanDetailView({
                 onClick={() => setTab(t.id)}
                 className={`rounded-full px-6 py-2 font-label text-label-md transition-all ${
                   tab === t.id
-                    ? "bg-primary text-on-primary shadow-md"
-                    : "bg-surface-container text-on-surface-variant"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-surface-2 text-text-3"
                 }`}
               >
                 {t.label}
@@ -186,7 +188,7 @@ export function PlanDetailView({
           {tab === "exercises" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-headline-md font-semibold text-on-surface">
+                <h3 className="text-headline-md font-semibold text-text-1">
                   Protocolo de hoy
                 </h3>
                 <span className="font-label text-label-md text-primary">
@@ -196,7 +198,7 @@ export function PlanDetailView({
               <button
                 type="button"
                 onClick={() => setIsAddExerciseOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary-container/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
               >
                 <Icon name="add" className="text-[20px]" />
                 Agregar ejercicio
@@ -207,7 +209,7 @@ export function PlanDetailView({
                   ex.completed ? (
                     <div
                       key={ex.id}
-                      className="flex flex-col gap-4 rounded-xl border border-transparent bg-surface-container-low p-4 opacity-70"
+                      className="flex flex-col gap-4 rounded-xl border border-transparent bg-surface-1 p-4 opacity-70"
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-primary/10">
@@ -218,10 +220,10 @@ export function PlanDetailView({
                           />
                         </div>
                         <div className="flex-1">
-                          <h4 className="text-[18px] font-bold leading-tight text-on-surface">
+                          <h4 className="text-[18px] font-bold leading-tight text-text-1">
                             {ex.name}
                           </h4>
-                          <p className="font-label text-label-md text-on-surface-variant">
+                          <p className="font-label text-label-md text-text-3">
                             {ex.detail}
                           </p>
                         </div>
@@ -240,20 +242,20 @@ export function PlanDetailView({
                   ) : (
                     <div
                       key={ex.id}
-                      className="flex flex-col gap-4 rounded-xl border border-outline-variant bg-surface-container-lowest p-4"
+                      className="flex flex-col gap-4 rounded-xl border border-border bg-surface-1 p-4"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-surface-container">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-surface-2">
                           <Icon
                             name={ex.icon}
                             className="text-[32px] text-primary"
                           />
                         </div>
                         <div className="flex-1">
-                          <h4 className="text-[18px] font-bold leading-tight text-on-surface">
+                          <h4 className="text-[18px] font-bold leading-tight text-text-1">
                             {ex.name}
                           </h4>
-                          <p className="font-label text-label-md text-on-surface-variant">
+                          <p className="font-label text-label-md text-text-3">
                             {ex.detail}
                           </p>
                         </div>
@@ -261,16 +263,16 @@ export function PlanDetailView({
                           <span className="font-metric text-[24px] text-primary">
                             {String(counts[ex.id] ?? 0).padStart(2, "0")}
                           </span>
-                          <span className="font-label text-label-md text-outline">
+                          <span className="font-label text-label-md text-text-3">
                             /{ex.target}
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 rounded-lg bg-surface-container-low p-2">
+                      <div className="flex items-center gap-2 rounded-lg bg-surface-1 p-2">
                         <button
                           type="button"
                           onClick={() => adjust(ex.id, -1, ex.target)}
-                          className="flex flex-1 items-center justify-center rounded-lg bg-surface-container-highest py-4 transition-transform active:scale-95"
+                          className="flex flex-1 items-center justify-center rounded-lg bg-surface-4 py-4 transition-transform active:scale-95"
                         >
                           <Icon name="remove" />
                         </button>
@@ -282,7 +284,7 @@ export function PlanDetailView({
                         <button
                           type="button"
                           onClick={() => adjust(ex.id, 1, ex.target)}
-                          className="flex flex-1 items-center justify-center rounded-lg bg-primary-container py-4 text-on-primary-container transition-transform active:scale-95"
+                          className="flex flex-1 items-center justify-center rounded-lg bg-primary py-4 text-primary-foreground transition-transform active:scale-95"
                         >
                           <Icon name="add" />
                         </button>
@@ -306,14 +308,14 @@ export function PlanDetailView({
           {tab === "appointments" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between px-1">
-                <h3 className="text-headline-md font-semibold text-on-surface">
+                <h3 className="text-headline-md font-semibold text-text-1">
                   Próximas sesiones
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setIsAddAppointmentOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary-container/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
               >
                 <Icon name="add" className="text-[20px]" />
                 Agregar cita
@@ -321,9 +323,9 @@ export function PlanDetailView({
               {plan.appointments.map((apt) => (
                 <div
                   key={apt.id}
-                  className="flex items-center gap-6 rounded-xl border border-outline-variant bg-surface-container-lowest p-6"
+                  className="flex items-center gap-6 rounded-xl border border-border bg-surface-1 p-6"
                 >
-                  <div className="flex min-w-[70px] flex-col items-center justify-center rounded-lg bg-secondary-container/10 px-4 py-2 text-on-secondary-container">
+                  <div className="flex min-w-[70px] flex-col items-center justify-center rounded-lg bg-surface-3 px-4 py-2 text-text-1">
                     <span className="font-label text-label-md font-bold">
                       {apt.month}
                     </span>
@@ -331,16 +333,18 @@ export function PlanDetailView({
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-[18px] font-bold text-on-surface">
+                      <h4 className="text-[18px] font-bold text-text-1">
                         {apt.title}
                       </h4>
-                      <AppointmentTypeBadge type={apt.type} />
+                      <StatusBadge
+                        status={apt.type === "THERAPY" ? "therapy" : "medical"}
+                      />
                     </div>
-                    <p className="font-label text-label-md text-on-surface-variant">
+                    <p className="font-label text-label-md text-text-3">
                       {apt.detail}
                     </p>
                   </div>
-                  <Icon name="chevron_right" className="text-outline" />
+                  <Icon name="chevron_right" className="text-text-3" />
                 </div>
               ))}
             </div>
@@ -348,12 +352,12 @@ export function PlanDetailView({
 
           {tab === "metrics" && (
             <div className="space-y-4">
-              <h3 className="px-1 text-headline-md font-semibold text-on-surface">
+              <h3 className="px-1 text-headline-md font-semibold text-text-1">
                 Indicadores de recuperación
               </h3>
-              <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
+              <div className="rounded-xl border border-border bg-surface-1 p-6">
                 <div className="mb-4 flex items-center justify-between">
-                  <span className="font-label text-label-md text-on-surface-variant">
+                  <span className="font-label text-label-md text-text-3">
                     Rango de extensión de rodilla
                   </span>
                   <span className="font-bold text-primary">
@@ -361,22 +365,22 @@ export function PlanDetailView({
                   </span>
                 </div>
                 <div className="flex h-32 items-end gap-2">
-                  <div className="h-1/4 flex-1 rounded-t-sm bg-surface-container-high" />
-                  <div className="h-2/4 flex-1 rounded-t-sm bg-surface-container-high" />
-                  <div className="h-3/4 flex-1 rounded-t-sm bg-surface-container-high" />
+                  <div className="h-1/4 flex-1 rounded-t-sm bg-surface-3" />
+                  <div className="h-2/4 flex-1 rounded-t-sm bg-surface-3" />
+                  <div className="h-3/4 flex-1 rounded-t-sm bg-surface-3" />
                   <div className="h-full flex-1 rounded-t-sm bg-primary" />
                 </div>
               </div>
-              <div className="flex items-center justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
+              <div className="flex items-center justify-between rounded-xl border border-border bg-surface-1 p-6">
                 <div>
-                  <span className="font-label text-label-md text-on-surface-variant">
+                  <span className="font-label text-label-md text-text-3">
                     Último dolor registrado
                   </span>
-                  <p className="font-metric text-metric-xl text-secondary">
+                  <p className="font-metric text-metric-xl text-error">
                     {plan.metrics.painLevel}
                   </p>
                 </div>
-                <Icon name="trending_down" className="text-[40px] text-secondary" />
+                <Icon name="trending_down" className="text-[40px] text-error" />
               </div>
               <PainLogForm
                 painLevel={painLevel}
@@ -393,14 +397,14 @@ export function PlanDetailView({
 
         <Link
           href="/rehab"
-          className="fixed bottom-24 right-5 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-primary-container text-on-primary-container shadow-lg transition-transform active:scale-90"
+          className="fixed bottom-24 right-5 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground  transition-transform active:scale-90"
         >
           <Icon name="add" className="text-[32px]" />
         </Link>
       </div>
 
       {/* Web */}
-      <div className="hidden min-h-screen bg-background text-on-surface md:block">
+      <div className="hidden min-h-screen bg-background text-text-1 md:block">
         <main className="min-h-screen">
           <header className="sticky top-0 z-40 mx-auto flex w-full max-w-app items-center justify-between bg-surface px-6 py-4">
             <div className="flex flex-col">
@@ -409,14 +413,14 @@ export function PlanDetailView({
               </h2>
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-                <p className="font-label text-label-md text-on-surface-variant">
+                <p className="font-label text-label-md text-text-3">
                   {plan.weekLabel}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="hidden items-center rounded-full border border-outline-variant/30 bg-surface-container-low px-4 py-1 sm:flex">
-                <Icon name="search" className="mr-2 text-outline-variant" />
+              <div className="hidden items-center rounded-full border border-border/30 bg-surface-1 px-4 py-1 sm:flex">
+                <Icon name="search" className="mr-2 text-text-3" />
                 <input
                   className="w-48 border-none bg-transparent text-body-md focus:outline-none"
                   placeholder="Buscar ejercicios..."
@@ -425,13 +429,13 @@ export function PlanDetailView({
               </div>
               <button
                 type="button"
-                className="rounded-full p-2 hover:bg-surface-container-high"
+                className="rounded-full p-2 hover:bg-surface-3"
               >
                 <Icon name="notifications" />
               </button>
               <button
                 type="button"
-                className="rounded-full p-2 hover:bg-surface-container-high"
+                className="rounded-full p-2 hover:bg-surface-3"
               >
                 <Icon name="settings" />
               </button>
@@ -439,7 +443,7 @@ export function PlanDetailView({
           </header>
 
           <div className="mt-4 px-6">
-            <div className="flex items-center gap-10 border-b border-outline-variant/20">
+            <div className="flex items-center gap-10 border-b border-border/20">
               {tabsWeb.map((t) => (
                 <button
                   key={t.id}
@@ -448,7 +452,7 @@ export function PlanDetailView({
                   className={`pb-4 font-label text-label-md transition-colors ${
                     tab === t.id
                       ? "border-b-2 border-primary text-primary"
-                      : "text-on-surface-variant hover:text-primary"
+                      : "text-text-3 hover:text-primary"
                   }`}
                 >
                   {t.label}
@@ -460,13 +464,13 @@ export function PlanDetailView({
           <div className="flex flex-col gap-6 p-6 lg:flex-row">
             <section className="flex-1">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-headline-md text-on-surface">
+                <h3 className="text-headline-md text-text-1">
                   Protocolo de hoy
                 </h3>
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    className="flex items-center gap-1 rounded-lg bg-surface-container-high px-4 py-2 font-label text-label-md text-on-surface-variant"
+                    className="flex items-center gap-1 rounded-lg bg-surface-3 px-4 py-2 font-label text-label-md text-text-3"
                   >
                     <Icon name="filter_list" className="text-[20px]" />
                     Filtrar
@@ -483,7 +487,7 @@ export function PlanDetailView({
                   )}
                   <button
                     type="button"
-                    className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 font-label text-label-md text-on-primary transition-all active:scale-95"
+                    className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95"
                   >
                     <Icon name="play_arrow" className="text-[20px]" />
                     Comenzar sesión
@@ -496,9 +500,9 @@ export function PlanDetailView({
                   {plan.exercises.map((ex) => (
                     <div
                       key={ex.id}
-                      className="group flex gap-4 rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-4 transition-all hover:shadow-[0px_4px_20px_rgba(0,0,0,0.05)]"
+                      className="group flex gap-4 rounded-xl border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2"
                     >
-                      <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
+                      <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg bg-surface-3">
                         <Image
                           src={ex.image}
                           alt={ex.name}
@@ -514,18 +518,18 @@ export function PlanDetailView({
                       </div>
                       <div className="flex flex-1 flex-col justify-center">
                         <div className="mb-1 flex items-start justify-between">
-                          <span className="rounded bg-primary-container/20 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
+                          <span className="rounded bg-primary/20 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
                             {ex.category}
                           </span>
                           <Icon
                             name="info"
-                            className="text-[18px] text-outline-variant"
+                            className="text-[18px] text-text-3"
                           />
                         </div>
-                        <h4 className="mb-1 text-body-lg font-semibold text-on-surface">
+                        <h4 className="mb-1 text-body-lg font-semibold text-text-1">
                           {ex.name}
                         </h4>
-                        <div className="flex items-center gap-4 font-label text-label-md text-on-surface-variant">
+                        <div className="flex items-center gap-4 font-label text-label-md text-text-3">
                           <div className="flex items-center gap-1">
                             <Icon name="repeat" className="text-[16px]" />
                             {ex.sets} series
@@ -561,9 +565,9 @@ export function PlanDetailView({
                   {plan.appointments.map((apt) => (
                     <div
                       key={apt.id}
-                      className="flex items-center gap-6 rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6"
+                      className="flex items-center gap-6 rounded-xl border border-border/30 bg-surface-1 p-6"
                     >
-                      <div className="flex min-w-[70px] flex-col items-center rounded-lg bg-secondary-container/10 px-4 py-2 text-on-secondary-container">
+                      <div className="flex min-w-[70px] flex-col items-center rounded-lg bg-surface-3 px-4 py-2 text-text-1">
                         <span className="font-label text-label-md font-bold">
                           {apt.month}
                         </span>
@@ -572,9 +576,11 @@ export function PlanDetailView({
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="text-body-lg font-bold">{apt.title}</h4>
-                          <AppointmentTypeBadge type={apt.type} />
+                          <StatusBadge
+                        status={apt.type === "THERAPY" ? "therapy" : "medical"}
+                      />
                         </div>
-                        <p className="font-label text-label-md text-on-surface-variant">
+                        <p className="font-label text-label-md text-text-3">
                           {apt.detail}
                         </p>
                       </div>
@@ -585,9 +591,9 @@ export function PlanDetailView({
 
               {tab === "metrics" && (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6">
+                  <div className="rounded-xl border border-border/30 bg-surface-1 p-6">
                     <div className="mb-4 flex justify-between">
-                      <span className="font-label text-label-md text-on-surface-variant">
+                      <span className="font-label text-label-md text-text-3">
                         Rango de extensión de rodilla
                       </span>
                       <span className="font-bold text-primary">
@@ -595,24 +601,24 @@ export function PlanDetailView({
                       </span>
                     </div>
                     <div className="flex h-40 items-end gap-2">
-                      <div className="h-1/4 flex-1 rounded-t-sm bg-surface-container-high" />
-                      <div className="h-2/4 flex-1 rounded-t-sm bg-surface-container-high" />
-                      <div className="h-3/4 flex-1 rounded-t-sm bg-surface-container-high" />
+                      <div className="h-1/4 flex-1 rounded-t-sm bg-surface-3" />
+                      <div className="h-2/4 flex-1 rounded-t-sm bg-surface-3" />
+                      <div className="h-3/4 flex-1 rounded-t-sm bg-surface-3" />
                       <div className="h-full flex-1 rounded-t-sm bg-primary" />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6">
+                  <div className="flex items-center justify-between rounded-xl border border-border/30 bg-surface-1 p-6">
                     <div>
-                      <span className="font-label text-label-md text-on-surface-variant">
+                      <span className="font-label text-label-md text-text-3">
                         Último dolor registrado
                       </span>
-                      <p className="font-metric text-metric-xl text-secondary">
+                      <p className="font-metric text-metric-xl text-error">
                         {plan.metrics.painLevel}
                       </p>
                     </div>
                     <Icon
                       name="trending_down"
-                      className="text-[40px] text-secondary"
+                      className="text-[40px] text-error"
                     />
                   </div>
                   <div className="md:col-span-2">
@@ -631,18 +637,18 @@ export function PlanDetailView({
             </section>
 
             <aside className="w-full space-y-6 lg:w-[320px]">
-              <div className="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6 card-elevation">
+              <div className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
                 <h3 className="mb-4 text-headline-md">Estadísticas de sesión</h3>
                 <div className="space-y-4">
                   <div className="flex justify-between">
-                    <span className="font-label text-label-md text-on-surface-variant">
+                    <span className="font-label text-label-md text-text-3">
                       Completado hoy
                     </span>
                     <span className="font-bold text-primary">
                       {plan.completedTodayCount} / {plan.scheduledTodayCount}
                     </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
+                  <div className="h-2 overflow-hidden rounded-full bg-surface-3">
                     <div
                       className="h-full rounded-full bg-primary"
                       style={{
@@ -659,20 +665,20 @@ export function PlanDetailView({
                     />
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-label text-label-md text-on-surface-variant">
+                    <span className="font-label text-label-md text-text-3">
                       Cumplimiento semanal
                     </span>
                     <span className="font-bold">{plan.weeklyCompliancePercent}%</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-label text-label-md text-on-surface-variant">
+                    <span className="font-label text-label-md text-text-3">
                       Racha
                     </span>
                     <span className="font-bold">{plan.streakDays} días</span>
                   </div>
                 </div>
               </div>
-              <div className="rounded-xl bg-tertiary-container p-6 text-on-tertiary-container">
+              <div className="rounded-xl border border-border bg-surface-2 p-6 text-text-1">
                 <div className="mb-2 flex items-center gap-2">
                   <Icon name="calendar_today" filled />
                   <span className="font-label text-label-md font-bold">
@@ -727,7 +733,7 @@ function DailyCheckButton({
       className={`flex w-full items-center justify-center gap-2 rounded-lg py-2 font-label text-label-md transition-all active:scale-95 disabled:opacity-60 ${
         completedToday
           ? "bg-primary/10 text-primary"
-          : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+          : "bg-surface-3 text-text-3 hover:bg-surface-4"
       }`}
     >
       <Icon name={completedToday ? "check_circle" : "radio_button_unchecked"} />
@@ -737,20 +743,6 @@ function DailyCheckButton({
           ? "Hecho hoy — tocar para desmarcar"
           : "Marcar como hecho hoy"}
     </button>
-  );
-}
-
-function AppointmentTypeBadge({ type }: { type: "THERAPY" | "MEDICAL" }) {
-  return (
-    <span
-      className={`rounded-full px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider ${
-        type === "THERAPY"
-          ? "bg-primary-container/40 text-primary"
-          : "bg-secondary-container/40 text-secondary"
-      }`}
-    >
-      {type === "THERAPY" ? "Terapia" : "Médica"}
-    </span>
   );
 }
 
@@ -772,8 +764,8 @@ function PainLogForm({
   error: string | null;
 }) {
   return (
-    <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
-      <h4 className="mb-3 font-label text-label-md text-on-surface-variant">
+    <div className="rounded-xl border border-border bg-surface-1 p-6">
+      <h4 className="mb-3 font-label text-label-md text-text-3">
         Registrar dolor de hoy (0-10)
       </h4>
       <div className="flex flex-wrap items-center gap-3">
@@ -783,20 +775,20 @@ function PainLogForm({
           max={10}
           value={painLevel}
           onChange={(e) => setPainLevel(e.target.value)}
-          className="w-20 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
+          className="w-20 rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
         />
         <input
           type="text"
           value={painNote}
           onChange={(e) => setPainNote(e.target.value)}
           placeholder="Nota (opcional)"
-          className="min-w-[160px] flex-1 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
+          className="min-w-[160px] flex-1 rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
         />
         <button
           type="button"
           onClick={onSubmit}
           disabled={submitting}
-          className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-on-primary transition-all active:scale-95 disabled:opacity-60"
+          className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
         >
           {submitting ? "Guardando…" : "Registrar"}
         </button>
