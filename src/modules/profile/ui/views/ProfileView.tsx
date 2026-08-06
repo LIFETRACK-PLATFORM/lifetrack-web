@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/shared/ui/Icon";
 import { ProfileRepository } from "@/modules/profile/domain/ProfileRepository";
+import { UserProfile } from "@/modules/profile/domain/UserProfile";
 import { createProfileRepository } from "@/modules/profile/infrastructure/createProfileRepository";
 import { useProfile } from "@/modules/profile/ui/hooks/useProfile";
 import { useUpdateProfile } from "@/modules/profile/ui/hooks/useUpdateProfile";
@@ -26,44 +27,38 @@ type FormState = {
   language: string;
 };
 
-export function ProfileView({
+function formStateFromProfile(profile: UserProfile): FormState {
+  return {
+    displayName: profile.displayName,
+    firstName: profile.firstName ?? "",
+    lastName: profile.lastName ?? "",
+    avatarUrl: profile.avatarUrl ?? "",
+    phone: profile.phone ?? "",
+    timezone: profile.timezone,
+    language: profile.language,
+  };
+}
+
+function ProfileForm({
+  profile,
+  onSaved,
   repository,
-}: { repository?: ProfileRepository } = {}) {
-  const activeRepository = useMemo(
-    () => repository ?? createProfileRepository(),
-    [repository],
-  );
-  const { profile, loading, error, setProfile } = useProfile(activeRepository);
+}: {
+  profile: UserProfile;
+  onSaved: (updated: UserProfile) => void;
+  repository: ProfileRepository;
+}) {
   const {
     saving,
     success,
     error: saveError,
     update,
     setSuccess,
-  } = useUpdateProfile(activeRepository);
+  } = useUpdateProfile(repository);
 
-  const [form, setForm] = useState<FormState>({
-    displayName: "",
-    firstName: "",
-    lastName: "",
-    avatarUrl: "",
-    phone: "",
-    timezone: "America/Lima",
-    language: "es",
-  });
-
-  useEffect(() => {
-    if (!profile) return;
-    setForm({
-      displayName: profile.displayName,
-      firstName: profile.firstName ?? "",
-      lastName: profile.lastName ?? "",
-      avatarUrl: profile.avatarUrl ?? "",
-      phone: profile.phone ?? "",
-      timezone: profile.timezone,
-      language: profile.language,
-    });
-  }, [profile]);
+  const [form, setForm] = useState<FormState>(() =>
+    formStateFromProfile(profile),
+  );
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -77,7 +72,7 @@ export function ProfileView({
       timezone: form.timezone.trim(),
       language: form.language.trim(),
     });
-    if (updated) setProfile(updated);
+    if (updated) onSaved(updated);
   }
 
   const avatarSrc =
@@ -86,40 +81,8 @@ export function ProfileView({
       form.displayName || "LT",
     )}`;
 
-  if (loading) {
-    return (
-      <main className="flex flex-1 flex-col gap-6 px-5 pb-24 pt-8 md:px-10 md:pb-10">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-24 w-24 rounded-full" />
-        <Skeleton className="h-10 w-full max-w-md" />
-        <Skeleton className="h-10 w-full max-w-md" />
-        <Skeleton className="h-10 w-full max-w-md" />
-      </main>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-3 px-5 pb-24 pt-8">
-        <Icon name="person" className="text-[40px] text-text-3" />
-        <p className="text-body-md text-text-3">
-          {error ?? "No se pudo cargar el perfil"}
-        </p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex flex-1 flex-col px-5 pb-24 pt-8 md:px-10 md:pb-10">
-      <header className="mb-8">
-        <h1 className="font-heading text-heading-3 font-semibold text-text-1">
-          Perfil
-        </h1>
-        <p className="mt-1 text-body-md text-text-3">
-          Actualiza tu información personal
-        </p>
-      </header>
-
+    <>
       <div className="mb-8 flex items-center gap-4">
         <div className="h-20 w-20 overflow-hidden rounded-full bg-surface-3">
           <Image
@@ -252,10 +215,67 @@ export function ProfileView({
           </Alert>
         )}
 
-        <Button type="submit" disabled={saving} className="mt-2 w-full sm:w-auto">
+        <Button
+          type="submit"
+          disabled={saving}
+          className="mt-2 w-full sm:w-auto"
+        >
           {saving ? "Guardando…" : "Guardar cambios"}
         </Button>
       </form>
+    </>
+  );
+}
+
+export function ProfileView({
+  repository,
+}: { repository?: ProfileRepository } = {}) {
+  const activeRepository = useMemo(
+    () => repository ?? createProfileRepository(),
+    [repository],
+  );
+  const { profile, loading, error, setProfile } = useProfile(activeRepository);
+
+  if (loading) {
+    return (
+      <main className="flex flex-1 flex-col gap-6 px-5 pb-24 pt-8 md:px-10 md:pb-10">
+        <Skeleton className="h-8 w-40" />
+        <Skeleton className="h-24 w-24 rounded-full" />
+        <Skeleton className="h-10 w-full max-w-md" />
+        <Skeleton className="h-10 w-full max-w-md" />
+        <Skeleton className="h-10 w-full max-w-md" />
+      </main>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-3 px-5 pb-24 pt-8">
+        <Icon name="person" className="text-[40px] text-text-3" />
+        <p className="text-body-md text-text-3">
+          {error ?? "No se pudo cargar el perfil"}
+        </p>
+      </main>
+    );
+  }
+
+  return (
+    <main className="flex flex-1 flex-col px-5 pb-24 pt-8 md:px-10 md:pb-10">
+      <header className="mb-8">
+        <h1 className="font-heading text-heading-3 font-semibold text-text-1">
+          Perfil
+        </h1>
+        <p className="mt-1 text-body-md text-text-3">
+          Actualiza tu información personal
+        </p>
+      </header>
+
+      <ProfileForm
+        key={profile.id}
+        profile={profile}
+        repository={activeRepository}
+        onSaved={setProfile}
+      />
     </main>
   );
 }
