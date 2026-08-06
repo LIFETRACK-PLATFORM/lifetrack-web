@@ -3,15 +3,18 @@ import { RehabPlan } from "../../domain/RehabPlan";
 import {
   AddAppointmentInput,
   AddExerciseInput,
+  AddMeasurementInput,
   AddPainLogInput,
   RehabRepository,
 } from "../../domain/RehabRepository";
 import { GetPlanUseCase } from "../../application/GetPlanUseCase";
 import { UpdateExerciseProgressUseCase } from "../../application/UpdateExerciseProgressUseCase";
 import { AddExerciseUseCase } from "../../application/AddExerciseUseCase";
+import { DeleteExerciseUseCase } from "../../application/DeleteExerciseUseCase";
 import { MarkExerciseCompletionUseCase } from "../../application/MarkExerciseCompletionUseCase";
 import { AddAppointmentUseCase } from "../../application/AddAppointmentUseCase";
 import { AddPainLogUseCase } from "../../application/AddPainLogUseCase";
+import { AddMeasurementUseCase } from "../../application/AddMeasurementUseCase";
 import { RehabApiError } from "../../infrastructure/http/rehabHttpClient";
 
 export function usePlan(repository: RehabRepository, planId: string) {
@@ -23,6 +26,12 @@ export function usePlan(repository: RehabRepository, planId: string) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [addExerciseError, setAddExerciseError] = useState<string | null>(null);
   const [addingExercise, setAddingExercise] = useState(false);
+  const [deleteExerciseError, setDeleteExerciseError] = useState<string | null>(
+    null,
+  );
+  const [deletingExerciseId, setDeletingExerciseId] = useState<string | null>(
+    null,
+  );
   const [completionError, setCompletionError] = useState<string | null>(null);
   const [pendingCompletionIds, setPendingCompletionIds] = useState<Set<string>>(
     new Set(),
@@ -33,6 +42,10 @@ export function usePlan(repository: RehabRepository, planId: string) {
   const [addingAppointment, setAddingAppointment] = useState(false);
   const [addPainLogError, setAddPainLogError] = useState<string | null>(null);
   const [addingPainLog, setAddingPainLog] = useState(false);
+  const [addMeasurementError, setAddMeasurementError] = useState<string | null>(
+    null,
+  );
+  const [addingMeasurement, setAddingMeasurement] = useState(false);
 
   const applyPlan = useCallback((fetched: RehabPlan) => {
     setPlan(fetched);
@@ -126,6 +139,31 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [plan, repository, refresh],
   );
 
+  const deleteExercise = useCallback(
+    async (exerciseId: string) => {
+      if (!plan) return false;
+      setDeletingExerciseId(exerciseId);
+      setDeleteExerciseError(null);
+
+      try {
+        const useCase = new DeleteExerciseUseCase(repository);
+        await useCase.execute(plan.id, exerciseId);
+        await refresh();
+        return true;
+      } catch (err) {
+        setDeleteExerciseError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo eliminar el ejercicio",
+        );
+        return false;
+      } finally {
+        setDeletingExerciseId(null);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
   const toggleExerciseCompletion = useCallback(
     async (exerciseId: string, completed: boolean) => {
       if (!plan) return;
@@ -198,6 +236,31 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [plan, repository, refresh],
   );
 
+  const addMeasurement = useCallback(
+    async (input: AddMeasurementInput) => {
+      if (!plan) return false;
+      setAddingMeasurement(true);
+      setAddMeasurementError(null);
+
+      try {
+        const useCase = new AddMeasurementUseCase(repository);
+        await useCase.execute(plan.id, input);
+        await refresh();
+        return true;
+      } catch (err) {
+        setAddMeasurementError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo registrar la medición",
+        );
+        return false;
+      } finally {
+        setAddingMeasurement(false);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
   return {
     plan,
     counts,
@@ -209,6 +272,9 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addExercise,
     addingExercise,
     addExerciseError,
+    deleteExercise,
+    deletingExerciseId,
+    deleteExerciseError,
     toggleExerciseCompletion,
     completionError,
     pendingCompletionIds,
@@ -218,5 +284,8 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addPainLog,
     addingPainLog,
     addPainLogError,
+    addMeasurement,
+    addingMeasurement,
+    addMeasurementError,
   };
 }

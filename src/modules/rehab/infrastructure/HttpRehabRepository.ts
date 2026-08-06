@@ -3,6 +3,7 @@ import { RehabPlan } from "../domain/RehabPlan";
 import {
   AddAppointmentInput,
   AddExerciseInput,
+  AddMeasurementInput,
   AddPainLogInput,
   RehabRepository,
 } from "../domain/RehabRepository";
@@ -121,6 +122,12 @@ export class HttpRehabRepository implements RehabRepository {
     });
   }
 
+  async deleteExercise(_planId: string, exerciseId: string): Promise<void> {
+    await rehabFetchStrict(`/rehab/exercises/${exerciseId}`, {
+      method: "DELETE",
+    });
+  }
+
   async addAppointment(
     planId: string,
     input: AddAppointmentInput,
@@ -133,6 +140,16 @@ export class HttpRehabRepository implements RehabRepository {
 
   async addPainLog(planId: string, input: AddPainLogInput): Promise<void> {
     await rehabFetchStrict(`/rehab/plans/${planId}/pain-logs`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  }
+
+  async addMeasurement(
+    planId: string,
+    input: AddMeasurementInput,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/plans/${planId}/measurements`, {
       method: "POST",
       body: JSON.stringify(input),
     });

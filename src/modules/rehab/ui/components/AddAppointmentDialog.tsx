@@ -1,11 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Icon } from "@/shared/ui/Icon";
 import {
   AddAppointmentInput,
   AppointmentType,
 } from "@/modules/rehab/domain/RehabRepository";
+import { cn } from "@/shared/lib/utils";
 
 export function AddAppointmentDialog({
   onClose,
@@ -18,19 +31,30 @@ export function AddAppointmentDialog({
   submitting: boolean;
   error: string | null;
 }) {
-  const [date, setDate] = useState("");
+  const [day, setDay] = useState<Date | undefined>(undefined);
+  const [time, setTime] = useState("09:00");
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [provider, setProvider] = useState("");
   const [type, setType] = useState<AppointmentType>("THERAPY");
   const [notes, setNotes] = useState("");
   const [repeatWeeks, setRepeatWeeks] = useState("0");
   const [clientError, setClientError] = useState<string | null>(null);
 
+  const dateLabel = useMemo(() => {
+    if (!day) return "Elegir fecha";
+    return format(day, "PPP", { locale: es });
+  }, [day]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setClientError(null);
 
-    if (!date) {
+    if (!day) {
       setClientError("La fecha es obligatoria.");
+      return;
+    }
+    if (!time) {
+      setClientError("La hora es obligatoria.");
       return;
     }
     if (!provider.trim()) {
@@ -43,8 +67,12 @@ export function AddAppointmentDialog({
       return;
     }
 
+    const [hours, minutes] = time.split(":").map(Number);
+    const scheduled = new Date(day);
+    scheduled.setHours(hours || 0, minutes || 0, 0, 0);
+
     const success = await onSubmit({
-      date: new Date(date).toISOString(),
+      date: scheduled.toISOString(),
       provider: provider.trim(),
       type,
       notes: notes.trim() || undefined,
@@ -60,94 +88,133 @@ export function AddAppointmentDialog({
           <h3 className="text-headline-md font-semibold text-text-1">
             Agregar cita
           </h3>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-3"
+            aria-label="Cerrar"
           >
             <Icon name="close" />
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="mb-1 block font-label text-label-md text-text-3">
+            <Label className="mb-1 font-label text-label-md text-text-3">
               Tipo de cita
-            </label>
+            </Label>
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant={type === "THERAPY" ? "default" : "secondary"}
+                className="flex-1"
                 onClick={() => setType("THERAPY")}
-                className={`flex-1 rounded-lg py-2 font-label text-label-md transition-all ${
-                  type === "THERAPY"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-surface-3 text-text-3"
-                }`}
               >
                 Terapia
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant={type === "MEDICAL" ? "default" : "secondary"}
+                className="flex-1"
                 onClick={() => setType("MEDICAL")}
-                className={`flex-1 rounded-lg py-2 font-label text-label-md transition-all ${
-                  type === "MEDICAL"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-surface-3 text-text-3"
-                }`}
               >
                 Médica
-              </button>
+              </Button>
             </div>
           </div>
 
-          <div>
-            <label className="mb-1 block font-label text-label-md text-text-3">
-              Fecha y hora
-            </label>
-            <input
-              type="datetime-local"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-            />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label className="font-label text-label-md text-text-3">
+                Fecha
+              </Label>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className={cn(
+                      "h-10 w-full justify-start font-normal",
+                      !day && "text-text-3",
+                    )}
+                  >
+                    <CalendarIcon strokeWidth={1.75} className="size-4" />
+                    {dateLabel}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={day}
+                    onSelect={(value) => {
+                      setDay(value);
+                      setCalendarOpen(false);
+                    }}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div className="space-y-1">
+              <Label
+                htmlFor="appointment-time"
+                className="font-label text-label-md text-text-3"
+              >
+                Hora
+              </Label>
+              <Input
+                id="appointment-time"
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="h-10"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="mb-1 block font-label text-label-md text-text-3">
+          <div className="space-y-1">
+            <Label
+              htmlFor="appointment-provider"
+              className="font-label text-label-md text-text-3"
+            >
               Profesional / centro
-            </label>
-            <input
-              type="text"
+            </Label>
+            <Input
+              id="appointment-provider"
               value={provider}
               onChange={(e) => setProvider(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
               placeholder="Ej. Centro Médico Apex"
             />
           </div>
 
-          <div>
-            <label className="mb-1 block font-label text-label-md text-text-3">
+          <div className="space-y-1">
+            <Label
+              htmlFor="appointment-notes"
+              className="font-label text-label-md text-text-3"
+            >
               Notas (opcional)
-            </label>
-            <input
-              type="text"
+            </Label>
+            <Input
+              id="appointment-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
             />
           </div>
 
-          <div>
-            <label className="mb-1 block font-label text-label-md text-text-3">
+          <div className="space-y-1">
+            <Label
+              htmlFor="appointment-repeat"
+              className="font-label text-label-md text-text-3"
+            >
               Repetir cada semana (0-12 veces)
-            </label>
-            <input
+            </Label>
+            <Input
+              id="appointment-repeat"
               type="number"
               min={0}
               max={12}
               value={repeatWeeks}
               onChange={(e) => setRepeatWeeks(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
             />
           </div>
 
@@ -156,20 +223,12 @@ export function AddAppointmentDialog({
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg px-4 py-2 font-label text-label-md text-text-3 hover:bg-surface-3"
-            >
+            <Button type="button" variant="ghost" onClick={onClose}>
               Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
-            >
+            </Button>
+            <Button type="submit" disabled={submitting}>
               {submitting ? "Guardando…" : "Agregar"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>

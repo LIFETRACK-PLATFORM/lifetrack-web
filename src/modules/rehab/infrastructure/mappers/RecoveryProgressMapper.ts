@@ -71,9 +71,13 @@ export function mapProgressToPlan(
   const exercises = (dto.exercises ?? []).map((e) => mapExercise(e, todayById));
   const scheduledToday = exercises.filter((e) => e.scheduledToday);
   const completedToday = scheduledToday.filter((e) => e.completedToday).length;
-  const painMeasurement = (dto.measurements ?? []).find((m) =>
-    m.type.includes("WEIGHT"),
-  );
+  const extensionMeasurements = (dto.measurements ?? [])
+    .filter((m) => m.type.includes("EXTENSION"))
+    .sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+    );
+  const latestExtension =
+    extensionMeasurements[extensionMeasurements.length - 1];
   const latestPain = dto.painLogs?.[dto.painLogs.length - 1];
 
   return new RehabPlan(
@@ -91,8 +95,8 @@ export function mapProgressToPlan(
       exercises,
       appointments: (dto.appointments ?? []).map(mapAppointment),
       metrics: {
-        kneeExtensionNote: painMeasurement
-          ? `${painMeasurement.value}${painMeasurement.unit}`
+        kneeExtensionNote: latestExtension
+          ? `${latestExtension.value}${latestExtension.unit}`
           : "Sin mediciones aún",
         painLevel: latestPain ? `${latestPain.level}/10` : "Sin registrar",
       },

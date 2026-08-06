@@ -5,6 +5,7 @@ import { Appointment } from "../domain/Appointment";
 import {
   AddAppointmentInput,
   AddExerciseInput,
+  AddMeasurementInput,
   AddPainLogInput,
   RehabRepository,
 } from "../domain/RehabRepository";
@@ -248,6 +249,13 @@ export class MockRehabRepository implements RehabRepository {
     plan.exercises.push(exercise);
   }
 
+  async deleteExercise(planId: string, exerciseId: string): Promise<void> {
+    const plan = plans[planId];
+    if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
+    const idx = plan.exercises.findIndex((ex) => ex.id === exerciseId);
+    if (idx >= 0) plan.exercises.splice(idx, 1);
+  }
+
   async addAppointment(
     planId: string,
     input: AddAppointmentInput,
@@ -271,4 +279,15 @@ export class MockRehabRepository implements RehabRepository {
   }
 
   async addPainLog(_planId: string, _input: AddPainLogInput): Promise<void> {}
+
+  async addMeasurement(
+    planId: string,
+    input: AddMeasurementInput,
+  ): Promise<void> {
+    const plan = plans[planId];
+    if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
+    if (input.type === "EXTENSION_DEGREES") {
+      plan.metrics.kneeExtensionNote = `${input.value}${input.unit}`;
+    }
+  }
 }
