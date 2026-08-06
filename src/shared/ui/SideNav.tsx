@@ -16,6 +16,7 @@ interface SideNavUser {
 export function SideNav({ user }: { user: SideNavUser }) {
   const pathname = usePathname();
   const rehabActive = pathname.startsWith("/rehab");
+  const financeActive = pathname.startsWith("/finance");
   const profileActive = pathname.startsWith("/profile");
 
   return (
@@ -50,6 +51,19 @@ export function SideNav({ user }: { user: SideNavUser }) {
           <Icon name="stabilization" className="text-[20px]" />
           <span className={`text-body-md ${rehabActive ? "font-semibold" : ""}`}>
             Rehabilitación
+          </span>
+        </Link>
+        <Link
+          href="/finance"
+          className={`flex items-center gap-4 rounded-[10px] px-4 py-2.5 transition-colors ${
+            financeActive
+              ? "bg-surface-2 text-primary"
+              : "text-text-3 hover:bg-surface-3 hover:text-text-1"
+          }`}
+        >
+          <Icon name="payments" className="text-[20px]" />
+          <span className={`text-body-md ${financeActive ? "font-semibold" : ""}`}>
+            Finanzas
           </span>
         </Link>
         <Link
