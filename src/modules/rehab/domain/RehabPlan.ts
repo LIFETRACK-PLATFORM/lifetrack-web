@@ -18,6 +18,10 @@ interface RehabPlanProps {
   exercises: Exercise[];
   appointments: Appointment[];
   metrics: PlanMetrics;
+  weeklyCompliancePercent: number;
+  streakDays: number;
+  completedTodayCount: number;
+  scheduledTodayCount: number;
 }
 
 export class RehabPlan extends Entity<RehabPlanProps> {
@@ -63,5 +67,21 @@ export class RehabPlan extends Entity<RehabPlanProps> {
 
   get metrics(): PlanMetrics {
     return this.props.metrics;
+  }
+
+  get weeklyCompliancePercent(): number {
+    return this.props.weeklyCompliancePercent;
+  }
+
+  get streakDays(): number {
+    return this.props.streakDays;
+  }
+
+  get completedTodayCount(): number {
+    return this.props.completedTodayCount;
+  }
+
+  get scheduledTodayCount(): number {
+    return this.props.scheduledTodayCount;
   }
 }

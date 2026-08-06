@@ -4,6 +4,16 @@ import { useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import { AddExerciseInput } from "@/modules/rehab/domain/RehabRepository";
 
+const WEEKDAYS = [
+  { value: 0, label: "D" },
+  { value: 1, label: "L" },
+  { value: 2, label: "M" },
+  { value: 3, label: "M" },
+  { value: 4, label: "J" },
+  { value: 5, label: "V" },
+  { value: 6, label: "S" },
+];
+
 export function AddExerciseDialog({
   onClose,
   onSubmit,
@@ -19,7 +29,16 @@ export function AddExerciseDialog({
   const [targetSets, setTargetSets] = useState("");
   const [targetReps, setTargetReps] = useState("");
   const [phase, setPhase] = useState("");
+  const [daysOfWeek, setDaysOfWeek] = useState<number[]>([]);
   const [clientError, setClientError] = useState<string | null>(null);
+
+  const toggleDay = (day: number) => {
+    setDaysOfWeek((current) =>
+      current.includes(day)
+        ? current.filter((d) => d !== day)
+        : [...current, day].sort(),
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +72,7 @@ export function AddExerciseDialog({
       targetSets: sets,
       targetReps: reps,
       phase: phaseValue,
+      daysOfWeek,
     });
     if (success) onClose();
   };
@@ -125,6 +145,28 @@ export function AddExerciseDialog({
               onChange={(e) => setPhase(e.target.value)}
               className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
             />
+          </div>
+
+          <div>
+            <label className="mb-1 block font-label text-label-md text-on-surface-variant">
+              Días de la semana (opcional — vacío = todos los días)
+            </label>
+            <div className="flex gap-2">
+              {WEEKDAYS.map((day) => (
+                <button
+                  key={day.value}
+                  type="button"
+                  onClick={() => toggleDay(day.value)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full font-label text-label-md transition-all ${
+                    daysOfWeek.includes(day.value)
+                      ? "bg-primary text-on-primary"
+                      : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+                  }`}
+                >
+                  {day.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {(clientError || error) && (

@@ -1,10 +1,13 @@
 import { Entity } from "@/shared/domain/building-blocks/Entity";
 
+export type AppointmentType = "THERAPY" | "MEDICAL";
+
 interface AppointmentProps {
   month: string;
   day: string;
   title: string;
   detail: string;
+  type: AppointmentType;
 }
 
 export class Appointment extends Entity<AppointmentProps> {
@@ -26,5 +29,9 @@ export class Appointment extends Entity<AppointmentProps> {
 
   get detail(): string {
     return this.props.detail;
+  }
+
+  get type(): AppointmentType {
+    return this.props.type;
   }
 }

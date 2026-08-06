@@ -11,6 +11,10 @@ interface ExerciseProps {
   sets: number;
   reps: number;
   image: string;
+  daysOfWeek: number[];
+  scheduledToday: boolean;
+  completedToday: boolean;
+  urgent: boolean;
 }
 
 export class Exercise extends Entity<ExerciseProps> {
@@ -56,5 +60,21 @@ export class Exercise extends Entity<ExerciseProps> {
 
   get image(): string {
     return this.props.image;
+  }
+
+  get daysOfWeek(): number[] {
+    return this.props.daysOfWeek;
+  }
+
+  get scheduledToday(): boolean {
+    return this.props.scheduledToday;
+  }
+
+  get completedToday(): boolean {
+    return this.props.completedToday;
+  }
+
+  get urgent(): boolean {
+    return this.props.urgent;
   }
 }

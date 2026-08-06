@@ -1,9 +1,16 @@
 import { DashboardSummary } from "../domain/DashboardSummary";
 import { RehabPlan } from "../domain/RehabPlan";
-import { AddExerciseInput, RehabRepository } from "../domain/RehabRepository";
+import {
+  AddAppointmentInput,
+  AddExerciseInput,
+  AddPainLogInput,
+  RehabRepository,
+} from "../domain/RehabRepository";
 import type {
+  GetTodayExercisesResponseDto,
   RecoveryPlanSummaryDto,
   RecoveryProgressDto,
+  WeeklySummaryDto,
 } from "./dtos/RecoveryProgressDto";
 import { rehabFetchStrict } from "./http/rehabHttpClient";
 import {
@@ -18,26 +25,52 @@ export class NoRecoveryPlansError extends Error {
 }
 
 export class HttpRehabRepository implements RehabRepository {
-  async getDashboard(): Promise<DashboardSummary> {
+  private getToday(planId: string) {
+    return rehabFetchStrict<GetTodayExercisesResponseDto>(
+      `/rehab/plans/${planId}/today`,
+    );
+  }
+
+  private getWeeklySummary(planId: string) {
+    return rehabFetchStrict<WeeklySummaryDto>(
+      `/rehab/plans/${planId}/weekly-summary`,
+    );
+  }
+
+  private getProgress(planId: string) {
+    return rehabFetchStrict<RecoveryProgressDto>(
+      `/rehab/plans/${planId}/progress`,
+    );
+  }
+
+  async getDashboard(): Promise<DashboardSummary[]> {
     const { plans = [] } = await rehabFetchStrict<{ plans?: RecoveryPlanSummaryDto[] }>(
       "/rehab/plans",
     );
-    if (plans.length === 0) {
+    const activePlans = plans.filter((p) => p.status === "ACTIVE");
+    if (activePlans.length === 0) {
       throw new NoRecoveryPlansError();
     }
 
-    const focus = plans[0];
-    const progress = await rehabFetchStrict<RecoveryProgressDto>(
-      `/rehab/plans/${focus.recoveryPlanId}/progress`,
+    return Promise.all(
+      activePlans.map(async (planSummary) => {
+        const [progress, today, weeklySummary] = await Promise.all([
+          this.getProgress(planSummary.recoveryPlanId),
+          this.getToday(planSummary.recoveryPlanId),
+          this.getWeeklySummary(planSummary.recoveryPlanId),
+        ]);
+        return mapProgressToDashboard(planSummary, progress, today, weeklySummary);
+      }),
     );
-    return mapProgressToDashboard(focus, progress);
   }
 
   async getPlan(id: string): Promise<RehabPlan> {
-    const progress = await rehabFetchStrict<RecoveryProgressDto>(
-      `/rehab/plans/${id}/progress`,
-    );
-    return mapProgressToPlan(progress);
+    const [progress, today, weeklySummary] = await Promise.all([
+      this.getProgress(id),
+      this.getToday(id),
+      this.getWeeklySummary(id),
+    ]);
+    return mapProgressToPlan(progress, today, weeklySummary);
   }
 
   async updateExerciseProgress(
@@ -52,6 +85,17 @@ export class HttpRehabRepository implements RehabRepository {
         repsDone: current,
         date: new Date().toISOString(),
       }),
+    });
+  }
+
+  async markExerciseCompletion(
+    exerciseId: string,
+    date: string,
+    completed: boolean,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/exercises/${exerciseId}/completions`, {
+      method: "POST",
+      body: JSON.stringify({ date, completed }),
     });
   }
 
@@ -72,6 +116,23 @@ export class HttpRehabRepository implements RehabRepository {
 
   async addExercise(planId: string, input: AddExerciseInput): Promise<void> {
     await rehabFetchStrict(`/rehab/plans/${planId}/exercises`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  }
+
+  async addAppointment(
+    planId: string,
+    input: AddAppointmentInput,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/plans/${planId}/appointments`, {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+  }
+
+  async addPainLog(planId: string, input: AddPainLogInput): Promise<void> {
+    await rehabFetchStrict(`/rehab/plans/${planId}/pain-logs`, {
       method: "POST",
       body: JSON.stringify(input),
     });
