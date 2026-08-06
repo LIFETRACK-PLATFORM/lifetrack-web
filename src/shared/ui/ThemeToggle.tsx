@@ -2,7 +2,6 @@
 
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/lib/utils";
 
@@ -13,12 +12,8 @@ type ThemeToggleProps = {
 
 export function ThemeToggle({ className, size = "icon-sm" }: ThemeToggleProps) {
   const { resolvedTheme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  // next-themes: undefined until hydrated — no useEffect/setState needed
+  const mounted = resolvedTheme != null;
   const isDark = resolvedTheme === "dark";
 
   return (
