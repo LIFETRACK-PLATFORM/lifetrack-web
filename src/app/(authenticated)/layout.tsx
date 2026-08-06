@@ -26,7 +26,9 @@ export default function AuthenticatedLayout({
   const [navName, setNavName] = useState<string | null>(null);
   const [navAvatar, setNavAvatar] = useState<string | null>(null);
   const showAppNav =
-    pathname.startsWith("/rehab") || pathname.startsWith("/profile");
+    pathname.startsWith("/rehab") ||
+    pathname.startsWith("/finance") ||
+    pathname.startsWith("/profile");
 
   useEffect(() => {
     if (!loading && (error || !user)) {
