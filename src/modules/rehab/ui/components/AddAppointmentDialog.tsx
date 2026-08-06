@@ -13,12 +13,25 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Icon } from "@/shared/ui/Icon";
 import {
   AddAppointmentInput,
   AppointmentType,
 } from "@/modules/rehab/domain/RehabRepository";
 import { cn } from "@/shared/lib/utils";
+
+const TIME_SLOTS = Array.from({ length: 24 * 4 }, (_, i) => {
+  const hours = Math.floor(i / 4);
+  const minutes = (i % 4) * 15;
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+});
 
 export function AddAppointmentDialog({
   onClose,
@@ -42,7 +55,7 @@ export function AddAppointmentDialog({
 
   const dateLabel = useMemo(() => {
     if (!day) return "Elegir fecha";
-    return format(day, "PPP", { locale: es });
+    return format(day, "d 'de' MMMM yyyy", { locale: es });
   }, [day]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,7 +96,7 @@ export function AddAppointmentDialog({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 p-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-surface-1 p-6">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface-1 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-headline-md font-semibold text-text-1">
             Agregar cita
@@ -143,7 +156,13 @@ export function AddAppointmentDialog({
                     {dateLabel}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent
+                  className="z-[110] w-auto border-border bg-surface-1 p-0"
+                  align="start"
+                  side="bottom"
+                  sideOffset={8}
+                  collisionPadding={16}
+                >
                   <Calendar
                     mode="single"
                     selected={day}
@@ -155,20 +174,23 @@ export function AddAppointmentDialog({
                 </PopoverContent>
               </Popover>
             </div>
+
             <div className="space-y-1">
-              <Label
-                htmlFor="appointment-time"
-                className="font-label text-label-md text-text-3"
-              >
+              <Label className="font-label text-label-md text-text-3">
                 Hora
               </Label>
-              <Input
-                id="appointment-time"
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                className="h-10"
-              />
+              <Select value={time} onValueChange={setTime}>
+                <SelectTrigger className="h-10 w-full bg-surface-1">
+                  <SelectValue placeholder="Elegir hora" />
+                </SelectTrigger>
+                <SelectContent className="z-[110] max-h-60">
+                  {TIME_SLOTS.map((slot) => (
+                    <SelectItem key={slot} value={slot}>
+                      {slot}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
