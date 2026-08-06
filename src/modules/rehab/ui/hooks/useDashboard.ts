@@ -5,7 +5,7 @@ import { GetDashboardUseCase } from "../../application/GetDashboardUseCase";
 import { NoRecoveryPlansError } from "../../infrastructure/HttpRehabRepository";
 
 export function useDashboard(repository: RehabRepository) {
-  const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
+  const [dashboards, setDashboards] = useState<DashboardSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEmpty, setIsEmpty] = useState(false);
@@ -23,7 +23,7 @@ export function useDashboard(repository: RehabRepository) {
     getDashboard
       .execute()
       .then((fetched) => {
-        if (!cancelled) setDashboard(fetched);
+        if (!cancelled) setDashboards(fetched);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -42,5 +42,5 @@ export function useDashboard(repository: RehabRepository) {
     };
   }, [repository]);
 
-  return { dashboard, loading, error, isEmpty };
+  return { dashboards, loading, error, isEmpty };
 }

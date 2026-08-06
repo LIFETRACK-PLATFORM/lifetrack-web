@@ -13,6 +13,11 @@ export interface ExerciseLogEntryDto {
   date: string;
 }
 
+export interface ExerciseCompletionEntryDto {
+  exerciseCompletionId: string;
+  date: string;
+}
+
 export interface ExerciseProgressDto {
   exerciseId: string;
   name: string;
@@ -20,13 +25,18 @@ export interface ExerciseProgressDto {
   targetReps: number;
   phase: number;
   logs: ExerciseLogEntryDto[];
+  daysOfWeek: number[];
+  completions: ExerciseCompletionEntryDto[];
 }
+
+export type AppointmentTypeDto = "THERAPY" | "MEDICAL";
 
 export interface AppointmentDto {
   appointmentId: string;
   recoveryPlanId: string;
   date: string;
   provider: string;
+  type: AppointmentTypeDto;
   notes?: string;
 }
 
@@ -39,6 +49,14 @@ export interface MeasurementDto {
   date: string;
 }
 
+export interface PainLogDto {
+  painLogId: string;
+  recoveryPlanId: string;
+  date: string;
+  level: number;
+  note?: string;
+}
+
 export interface RecoveryProgressDto {
   recoveryPlanId: string;
   bodyPart: string;
@@ -49,4 +67,38 @@ export interface RecoveryProgressDto {
   appointments: AppointmentDto[];
   measurements: MeasurementDto[];
   progressPhotos: unknown[];
+  painLogs: PainLogDto[];
+}
+
+export interface TodayExerciseDto {
+  exerciseId: string;
+  name: string;
+  targetSets: number;
+  targetReps: number;
+  phase: number;
+  scheduledToday: boolean;
+  completedToday: boolean;
+  urgent: boolean;
+}
+
+export interface GetTodayExercisesResponseDto {
+  exercises: TodayExerciseDto[];
+}
+
+export interface WeeklySummaryDayDto {
+  date: string;
+  due: number;
+  completed: number;
+  compliant: boolean;
+  isFuture: boolean;
+}
+
+export interface WeeklySummaryDto {
+  recoveryPlanId: string;
+  weekStart: string;
+  weekEnd: string;
+  days: WeeklySummaryDayDto[];
+  weeklyCompliancePercent: number;
+  appointmentsByType: { therapy: number; medical: number };
+  streakDays: number;
 }

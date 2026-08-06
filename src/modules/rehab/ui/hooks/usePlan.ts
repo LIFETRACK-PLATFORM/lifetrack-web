@@ -1,9 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { RehabPlan } from "../../domain/RehabPlan";
-import { AddExerciseInput, RehabRepository } from "../../domain/RehabRepository";
+import {
+  AddAppointmentInput,
+  AddExerciseInput,
+  AddPainLogInput,
+  RehabRepository,
+} from "../../domain/RehabRepository";
 import { GetPlanUseCase } from "../../application/GetPlanUseCase";
 import { UpdateExerciseProgressUseCase } from "../../application/UpdateExerciseProgressUseCase";
 import { AddExerciseUseCase } from "../../application/AddExerciseUseCase";
+import { MarkExerciseCompletionUseCase } from "../../application/MarkExerciseCompletionUseCase";
+import { AddAppointmentUseCase } from "../../application/AddAppointmentUseCase";
+import { AddPainLogUseCase } from "../../application/AddPainLogUseCase";
 import { RehabApiError } from "../../infrastructure/http/rehabHttpClient";
 
 export function usePlan(repository: RehabRepository, planId: string) {
@@ -15,6 +23,16 @@ export function usePlan(repository: RehabRepository, planId: string) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [addExerciseError, setAddExerciseError] = useState<string | null>(null);
   const [addingExercise, setAddingExercise] = useState(false);
+  const [completionError, setCompletionError] = useState<string | null>(null);
+  const [pendingCompletionIds, setPendingCompletionIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [addAppointmentError, setAddAppointmentError] = useState<string | null>(
+    null,
+  );
+  const [addingAppointment, setAddingAppointment] = useState(false);
+  const [addPainLogError, setAddPainLogError] = useState<string | null>(null);
+  const [addingPainLog, setAddingPainLog] = useState(false);
 
   const applyPlan = useCallback((fetched: RehabPlan) => {
     setPlan(fetched);
@@ -24,6 +42,12 @@ export function usePlan(repository: RehabRepository, planId: string) {
     }
     setCounts(initial);
   }, []);
+
+  const refresh = useCallback(async () => {
+    const getPlan = new GetPlanUseCase(repository);
+    const refreshed = await getPlan.execute(planId);
+    applyPlan(refreshed);
+  }, [repository, planId, applyPlan]);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,9 +112,7 @@ export function usePlan(repository: RehabRepository, planId: string) {
       try {
         const useCase = new AddExerciseUseCase(repository);
         await useCase.execute(plan.id, input);
-        const getPlan = new GetPlanUseCase(repository);
-        const refreshed = await getPlan.execute(plan.id);
-        applyPlan(refreshed);
+        await refresh();
         return true;
       } catch (err) {
         setAddExerciseError(
@@ -101,7 +123,79 @@ export function usePlan(repository: RehabRepository, planId: string) {
         setAddingExercise(false);
       }
     },
-    [plan, repository, applyPlan],
+    [plan, repository, refresh],
+  );
+
+  const toggleExerciseCompletion = useCallback(
+    async (exerciseId: string, completed: boolean) => {
+      if (!plan) return;
+      const today = new Date().toISOString().slice(0, 10);
+      setCompletionError(null);
+      setPendingCompletionIds((current) => new Set(current).add(exerciseId));
+
+      try {
+        const useCase = new MarkExerciseCompletionUseCase(repository);
+        await useCase.execute(exerciseId, today, completed);
+        await refresh();
+      } catch (err) {
+        setCompletionError(
+          err instanceof Error ? err.message : "No se pudo actualizar el ejercicio",
+        );
+      } finally {
+        setPendingCompletionIds((current) => {
+          const next = new Set(current);
+          next.delete(exerciseId);
+          return next;
+        });
+      }
+    },
+    [plan, repository, refresh],
+  );
+
+  const addAppointment = useCallback(
+    async (input: AddAppointmentInput) => {
+      if (!plan) return false;
+      setAddingAppointment(true);
+      setAddAppointmentError(null);
+
+      try {
+        const useCase = new AddAppointmentUseCase(repository);
+        await useCase.execute(plan.id, input);
+        await refresh();
+        return true;
+      } catch (err) {
+        setAddAppointmentError(
+          err instanceof Error ? err.message : "No se pudo agregar la cita",
+        );
+        return false;
+      } finally {
+        setAddingAppointment(false);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
+  const addPainLog = useCallback(
+    async (input: AddPainLogInput) => {
+      if (!plan) return false;
+      setAddingPainLog(true);
+      setAddPainLogError(null);
+
+      try {
+        const useCase = new AddPainLogUseCase(repository);
+        await useCase.execute(plan.id, input);
+        await refresh();
+        return true;
+      } catch (err) {
+        setAddPainLogError(
+          err instanceof Error ? err.message : "No se pudo registrar el dolor",
+        );
+        return false;
+      } finally {
+        setAddingPainLog(false);
+      }
+    },
+    [plan, repository, refresh],
   );
 
   return {
@@ -115,5 +209,14 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addExercise,
     addingExercise,
     addExerciseError,
+    toggleExerciseCompletion,
+    completionError,
+    pendingCompletionIds,
+    addAppointment,
+    addingAppointment,
+    addAppointmentError,
+    addPainLog,
+    addingPainLog,
+    addPainLogError,
   };
 }

@@ -9,6 +9,7 @@ import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
 import { AddExerciseDialog } from "@/modules/rehab/ui/components/AddExerciseDialog";
+import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointmentDialog";
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
@@ -24,6 +25,9 @@ export function PlanDetailView({
 }) {
   const [tab, setTab] = useState<Tab>("exercises");
   const [isAddExerciseOpen, setIsAddExerciseOpen] = useState(false);
+  const [isAddAppointmentOpen, setIsAddAppointmentOpen] = useState(false);
+  const [painLevel, setPainLevel] = useState("3");
+  const [painNote, setPainNote] = useState("");
   const activeRepository = useMemo(
     () => repository ?? createRehabRepository(),
     [repository],
@@ -40,7 +44,27 @@ export function PlanDetailView({
     addExercise,
     addingExercise,
     addExerciseError,
+    toggleExerciseCompletion,
+    completionError,
+    pendingCompletionIds,
+    addAppointment,
+    addingAppointment,
+    addAppointmentError,
+    addPainLog,
+    addingPainLog,
+    addPainLogError,
   } = usePlan(activeRepository, planId);
+
+  const handleAddPainLog = async () => {
+    const level = Number(painLevel);
+    if (!Number.isInteger(level) || level < 0 || level > 10) return;
+    const success = await addPainLog({
+      date: new Date().toISOString(),
+      level,
+      note: painNote.trim() || undefined,
+    });
+    if (success) setPainNote("");
+  };
 
   if (loading) {
     return (
@@ -205,6 +229,13 @@ export function PlanDetailView({
                           COMPLETADO
                         </span>
                       </div>
+                      <DailyCheckButton
+                        completedToday={ex.completedToday}
+                        pending={pendingCompletionIds.has(ex.id)}
+                        onToggle={() =>
+                          toggleExerciseCompletion(ex.id, !ex.completedToday)
+                        }
+                      />
                     </div>
                   ) : (
                     <div
@@ -256,17 +287,37 @@ export function PlanDetailView({
                           <Icon name="add" />
                         </button>
                       </div>
+                      <DailyCheckButton
+                        completedToday={ex.completedToday}
+                        pending={pendingCompletionIds.has(ex.id)}
+                        onToggle={() =>
+                          toggleExerciseCompletion(ex.id, !ex.completedToday)
+                        }
+                      />
                     </div>
                   ),
                 )}
+              {completionError && (
+                <p className="text-body-md text-error">{completionError}</p>
+              )}
             </div>
           )}
 
           {tab === "appointments" && (
             <div className="space-y-4">
-              <h3 className="px-1 text-headline-md font-semibold text-on-surface">
-                Próximas sesiones
-              </h3>
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-headline-md font-semibold text-on-surface">
+                  Próximas sesiones
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddAppointmentOpen(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary-container/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
+              >
+                <Icon name="add" className="text-[20px]" />
+                Agregar cita
+              </button>
               {plan.appointments.map((apt) => (
                 <div
                   key={apt.id}
@@ -279,9 +330,12 @@ export function PlanDetailView({
                     <span className="font-metric text-[28px]">{apt.day}</span>
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-[18px] font-bold text-on-surface">
-                      {apt.title}
-                    </h4>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-[18px] font-bold text-on-surface">
+                        {apt.title}
+                      </h4>
+                      <AppointmentTypeBadge type={apt.type} />
+                    </div>
                     <p className="font-label text-label-md text-on-surface-variant">
                       {apt.detail}
                     </p>
@@ -316,7 +370,7 @@ export function PlanDetailView({
               <div className="flex items-center justify-between rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
                 <div>
                   <span className="font-label text-label-md text-on-surface-variant">
-                    Nivel de dolor (prom.)
+                    Último dolor registrado
                   </span>
                   <p className="font-metric text-metric-xl text-secondary">
                     {plan.metrics.painLevel}
@@ -324,6 +378,15 @@ export function PlanDetailView({
                 </div>
                 <Icon name="trending_down" className="text-[40px] text-secondary" />
               </div>
+              <PainLogForm
+                painLevel={painLevel}
+                setPainLevel={setPainLevel}
+                painNote={painNote}
+                setPainNote={setPainNote}
+                onSubmit={handleAddPainLog}
+                submitting={addingPainLog}
+                error={addPainLogError}
+              />
             </div>
           )}
         </main>
@@ -472,6 +535,13 @@ export function PlanDetailView({
                             {ex.reps} repeticiones
                           </div>
                         </div>
+                        <DailyCheckButton
+                          completedToday={ex.completedToday}
+                          pending={pendingCompletionIds.has(ex.id)}
+                          onToggle={() =>
+                            toggleExerciseCompletion(ex.id, !ex.completedToday)
+                          }
+                        />
                       </div>
                     </div>
                   ))}
@@ -480,6 +550,14 @@ export function PlanDetailView({
 
               {tab === "appointments" && (
                 <div className="space-y-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddAppointmentOpen(true)}
+                    className="flex items-center gap-1 rounded-lg border border-primary/40 px-4 py-2 font-label text-label-md text-primary transition-all active:scale-95"
+                  >
+                    <Icon name="add" className="text-[20px]" />
+                    Agregar cita
+                  </button>
                   {plan.appointments.map((apt) => (
                     <div
                       key={apt.id}
@@ -492,7 +570,10 @@ export function PlanDetailView({
                         <span className="font-metric text-[28px]">{apt.day}</span>
                       </div>
                       <div>
-                        <h4 className="text-body-lg font-bold">{apt.title}</h4>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-body-lg font-bold">{apt.title}</h4>
+                          <AppointmentTypeBadge type={apt.type} />
+                        </div>
                         <p className="font-label text-label-md text-on-surface-variant">
                           {apt.detail}
                         </p>
@@ -523,7 +604,7 @@ export function PlanDetailView({
                   <div className="flex items-center justify-between rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-6">
                     <div>
                       <span className="font-label text-label-md text-on-surface-variant">
-                        Nivel de dolor (prom.)
+                        Último dolor registrado
                       </span>
                       <p className="font-metric text-metric-xl text-secondary">
                         {plan.metrics.painLevel}
@@ -532,6 +613,17 @@ export function PlanDetailView({
                     <Icon
                       name="trending_down"
                       className="text-[40px] text-secondary"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <PainLogForm
+                      painLevel={painLevel}
+                      setPainLevel={setPainLevel}
+                      painNote={painNote}
+                      setPainNote={setPainNote}
+                      onSubmit={handleAddPainLog}
+                      submitting={addingPainLog}
+                      error={addPainLogError}
                     />
                   </div>
                 </div>
@@ -546,16 +638,37 @@ export function PlanDetailView({
                     <span className="font-label text-label-md text-on-surface-variant">
                       Completado hoy
                     </span>
-                    <span className="font-bold text-primary">1 / 4</span>
+                    <span className="font-bold text-primary">
+                      {plan.completedTodayCount} / {plan.scheduledTodayCount}
+                    </span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-full bg-surface-container-high">
-                    <div className="h-full w-1/4 rounded-full bg-primary" />
+                    <div
+                      className="h-full rounded-full bg-primary"
+                      style={{
+                        width: `${
+                          plan.scheduledTodayCount === 0
+                            ? 0
+                            : Math.round(
+                                (plan.completedTodayCount /
+                                  plan.scheduledTodayCount) *
+                                  100,
+                              )
+                        }%`,
+                      }}
+                    />
                   </div>
                   <div className="flex justify-between">
                     <span className="font-label text-label-md text-on-surface-variant">
-                      Cumplimiento
+                      Cumplimiento semanal
                     </span>
-                    <span className="font-bold">92%</span>
+                    <span className="font-bold">{plan.weeklyCompliancePercent}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-label text-label-md text-on-surface-variant">
+                      Racha
+                    </span>
+                    <span className="font-bold">{plan.streakDays} días</span>
                   </div>
                 </div>
               </div>
@@ -584,6 +697,111 @@ export function PlanDetailView({
           error={addExerciseError}
         />
       )}
+
+      {isAddAppointmentOpen && (
+        <AddAppointmentDialog
+          onClose={() => setIsAddAppointmentOpen(false)}
+          onSubmit={addAppointment}
+          submitting={addingAppointment}
+          error={addAppointmentError}
+        />
+      )}
     </>
+  );
+}
+
+function DailyCheckButton({
+  completedToday,
+  pending,
+  onToggle,
+}: {
+  completedToday: boolean;
+  pending: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={pending}
+      className={`flex w-full items-center justify-center gap-2 rounded-lg py-2 font-label text-label-md transition-all active:scale-95 disabled:opacity-60 ${
+        completedToday
+          ? "bg-primary/10 text-primary"
+          : "bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest"
+      }`}
+    >
+      <Icon name={completedToday ? "check_circle" : "radio_button_unchecked"} />
+      {pending
+        ? "Guardando…"
+        : completedToday
+          ? "Hecho hoy — tocar para desmarcar"
+          : "Marcar como hecho hoy"}
+    </button>
+  );
+}
+
+function AppointmentTypeBadge({ type }: { type: "THERAPY" | "MEDICAL" }) {
+  return (
+    <span
+      className={`rounded-full px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider ${
+        type === "THERAPY"
+          ? "bg-primary-container/40 text-primary"
+          : "bg-secondary-container/40 text-secondary"
+      }`}
+    >
+      {type === "THERAPY" ? "Terapia" : "Médica"}
+    </span>
+  );
+}
+
+function PainLogForm({
+  painLevel,
+  setPainLevel,
+  painNote,
+  setPainNote,
+  onSubmit,
+  submitting,
+  error,
+}: {
+  painLevel: string;
+  setPainLevel: (value: string) => void;
+  painNote: string;
+  setPainNote: (value: string) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+  error: string | null;
+}) {
+  return (
+    <div className="rounded-xl border border-outline-variant bg-surface-container-lowest p-6">
+      <h4 className="mb-3 font-label text-label-md text-on-surface-variant">
+        Registrar dolor de hoy (0-10)
+      </h4>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="number"
+          min={0}
+          max={10}
+          value={painLevel}
+          onChange={(e) => setPainLevel(e.target.value)}
+          className="w-20 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
+        />
+        <input
+          type="text"
+          value={painNote}
+          onChange={(e) => setPainNote(e.target.value)}
+          placeholder="Nota (opcional)"
+          className="min-w-[160px] flex-1 rounded-lg border border-outline-variant bg-surface-container-lowest px-3 py-2 text-body-md text-on-surface focus:border-primary focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={submitting}
+          className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-on-primary transition-all active:scale-95 disabled:opacity-60"
+        >
+          {submitting ? "Guardando…" : "Registrar"}
+        </button>
+      </div>
+      {error && <p className="mt-2 text-body-md text-error">{error}</p>}
+    </div>
   );
 }

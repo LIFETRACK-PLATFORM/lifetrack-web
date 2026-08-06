@@ -40,11 +40,10 @@ interface DashboardSummaryProps {
   weeklyCompliance: number;
   weeklyBars: number[];
   recoveryScore: number;
-  activeMinutes: number;
-  activeMinutesDelta: string;
   phase: RecoveryPhase;
   todayExercises: TodayExerciseSummary[];
   upNext: UpNextExerciseSummary[];
+  streakDays: number;
 }
 
 export class DashboardSummary extends Entity<DashboardSummaryProps> {
@@ -80,14 +79,6 @@ export class DashboardSummary extends Entity<DashboardSummaryProps> {
     return this.props.recoveryScore;
   }
 
-  get activeMinutes(): number {
-    return this.props.activeMinutes;
-  }
-
-  get activeMinutesDelta(): string {
-    return this.props.activeMinutesDelta;
-  }
-
   get phase(): RecoveryPhase {
     return this.props.phase;
   }
@@ -98,5 +89,9 @@ export class DashboardSummary extends Entity<DashboardSummaryProps> {
 
   get upNext(): UpNextExerciseSummary[] {
     return this.props.upNext;
+  }
+
+  get streakDays(): number {
+    return this.props.streakDays;
   }
 }

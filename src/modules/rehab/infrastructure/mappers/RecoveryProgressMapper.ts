@@ -5,6 +5,9 @@ import { RehabPlan } from "../../domain/RehabPlan";
 import type {
   RecoveryPlanSummaryDto,
   RecoveryProgressDto,
+  TodayExerciseDto,
+  GetTodayExercisesResponseDto,
+  WeeklySummaryDto,
 } from "../dtos/RecoveryProgressDto";
 
 const DEFAULT_EXERCISE_IMAGE =
@@ -14,9 +17,13 @@ function sumLogsReps(logs: { repsDone: number }[]): number {
   return logs.reduce((acc, log) => acc + log.repsDone, 0);
 }
 
-function mapExercise(dto: RecoveryProgressDto["exercises"][number]): Exercise {
+function mapExercise(
+  dto: RecoveryProgressDto["exercises"][number],
+  todayById: Map<string, TodayExerciseDto>,
+): Exercise {
   const current = sumLogsReps(dto.logs);
   const target = dto.targetSets * dto.targetReps;
+  const today = todayById.get(dto.exerciseId);
   return new Exercise(
     {
       name: dto.name,
@@ -29,6 +36,10 @@ function mapExercise(dto: RecoveryProgressDto["exercises"][number]): Exercise {
       sets: dto.targetSets,
       reps: dto.targetReps,
       image: DEFAULT_EXERCISE_IMAGE,
+      daysOfWeek: dto.daysOfWeek ?? [],
+      scheduledToday: today?.scheduledToday ?? false,
+      completedToday: today?.completedToday ?? false,
+      urgent: today?.urgent ?? false,
     },
     dto.exerciseId,
   );
@@ -36,25 +47,34 @@ function mapExercise(dto: RecoveryProgressDto["exercises"][number]): Exercise {
 
 function mapAppointment(dto: RecoveryProgressDto["appointments"][number]): Appointment {
   const date = new Date(dto.date);
-  const month = date.toLocaleString("en-US", { month: "short" });
+  const month = date.toLocaleString("es-AR", { month: "short" });
   const day = String(date.getDate());
   return new Appointment(
     {
       month,
       day,
       title: dto.provider,
-      detail: dto.notes ?? "Medical appointment",
+      detail:
+        dto.notes ?? (dto.type === "THERAPY" ? "Sesión de terapia" : "Cita médica"),
+      type: dto.type,
     },
     dto.appointmentId,
   );
 }
 
-export function mapProgressToPlan(dto: RecoveryProgressDto): RehabPlan {
-  const exercises = (dto.exercises ?? []).map(mapExercise);
-  const completed = exercises.filter((e) => e.completed).length;
+export function mapProgressToPlan(
+  dto: RecoveryProgressDto,
+  today: GetTodayExercisesResponseDto,
+  weeklySummary: WeeklySummaryDto,
+): RehabPlan {
+  const todayById = new Map(today.exercises.map((e) => [e.exerciseId, e]));
+  const exercises = (dto.exercises ?? []).map((e) => mapExercise(e, todayById));
+  const scheduledToday = exercises.filter((e) => e.scheduledToday);
+  const completedToday = scheduledToday.filter((e) => e.completedToday).length;
   const painMeasurement = (dto.measurements ?? []).find((m) =>
     m.type.includes("WEIGHT"),
   );
+  const latestPain = dto.painLogs?.[dto.painLogs.length - 1];
 
   return new RehabPlan(
     {
@@ -64,18 +84,22 @@ export function mapProgressToPlan(dto: RecoveryProgressDto): RehabPlan {
       dayProgress: dto.status,
       weekLabel: new Date(dto.surgeryDate).toLocaleDateString(),
       statusMessage:
-        completed === exercises.length && exercises.length > 0
-          ? "All exercises completed"
-          : "In progress",
-      remainingToday: exercises.filter((e) => !e.completed).length,
+        scheduledToday.length > 0 && completedToday === scheduledToday.length
+          ? "Ejercicios de hoy completados"
+          : "En progreso",
+      remainingToday: Math.max(scheduledToday.length - completedToday, 0),
       exercises,
       appointments: (dto.appointments ?? []).map(mapAppointment),
       metrics: {
         kneeExtensionNote: painMeasurement
           ? `${painMeasurement.value}${painMeasurement.unit}`
-          : "No measurements yet",
-        painLevel: dto.status === "ACTIVE" ? "Moderate" : "Low",
+          : "Sin mediciones aún",
+        painLevel: latestPain ? `${latestPain.level}/10` : "Sin registrar",
       },
+      weeklyCompliancePercent: weeklySummary.weeklyCompliancePercent,
+      streakDays: weeklySummary.streakDays,
+      completedTodayCount: completedToday,
+      scheduledTodayCount: scheduledToday.length,
     },
     dto.recoveryPlanId,
   );
@@ -84,12 +108,21 @@ export function mapProgressToPlan(dto: RecoveryProgressDto): RehabPlan {
 export function mapProgressToDashboard(
   planSummary: RecoveryPlanSummaryDto,
   progress: RecoveryProgressDto,
+  today: GetTodayExercisesResponseDto,
+  weeklySummary: WeeklySummaryDto,
 ): DashboardSummary {
-  const exercises = (progress.exercises ?? []).map(mapExercise);
-  const done = exercises.filter((e) => e.completed).length;
-  const total = exercises.length || 1;
-  const percent = Math.round((done / total) * 100);
-  const nextAppt = (progress.appointments ?? [])[0];
+  const scheduledToday = today.exercises.filter((e) => e.scheduledToday);
+  const done = scheduledToday.filter((e) => e.completedToday).length;
+  const total = scheduledToday.length;
+  const percent = total === 0 ? 100 : Math.round((done / total) * 100);
+
+  const now = new Date();
+  const sortedAppointments = [...(progress.appointments ?? [])].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+  const nextAppt =
+    sortedAppointments.find((a) => new Date(a.date).getTime() >= now.getTime()) ??
+    sortedAppointments[0];
 
   return new DashboardSummary(
     {
@@ -98,33 +131,44 @@ export function mapProgressToDashboard(
       exerciseProgress: { done, total, percent },
       nextAppointment: nextAppt
         ? {
-            title: "Next Medical Check-up",
+            title:
+              nextAppt.type === "THERAPY"
+                ? "Próxima sesión de terapia"
+                : "Próximo chequeo médico",
             detail: `${nextAppt.provider} • ${new Date(nextAppt.date).toLocaleString()}`,
           }
-        : { title: "No upcoming appointments", detail: "Schedule one with your provider" },
-      weeklyCompliance: percent,
-      weeklyBars: [percent, percent, percent, percent, percent, percent, percent],
-      recoveryScore: percent,
-      activeMinutes: done * 10,
-      activeMinutesDelta: "",
+        : { title: "Sin citas próximas", detail: "Agenda una con tu profesional" },
+      weeklyCompliance: weeklySummary.weeklyCompliancePercent,
+      weeklyBars: weeklySummary.days.map((d) =>
+        d.due === 0 ? 0 : Math.round((d.completed / d.due) * 100),
+      ),
+      recoveryScore: weeklySummary.weeklyCompliancePercent,
+      streakDays: weeklySummary.streakDays,
       phase: {
         name: `Phase ${progress.exercises[0]?.phase ?? 1}`,
-        percent,
+        percent: weeklySummary.weeklyCompliancePercent,
         description: `Recovery plan status: ${planSummary.status}`,
       },
-      todayExercises: exercises.slice(0, 3).map((ex) => ({
-        id: ex.id,
+      todayExercises: today.exercises.map((ex) => ({
+        id: ex.exerciseId,
         name: ex.name,
-        detail: ex.detail,
-        status: ex.completed ? "completed" : ("pending" as const),
+        detail: `${ex.targetSets} sets × ${ex.targetReps} reps`,
+        status: ex.completedToday
+          ? "completed"
+          : ex.urgent
+            ? "urgent"
+            : ("pending" as const),
       })),
-      upNext: exercises.slice(0, 2).map((ex) => ({
-        id: ex.id,
-        name: ex.name,
-        detail: ex.detail,
-        icon: ex.icon,
-        locked: false,
-      })),
+      upNext: today.exercises
+        .filter((e) => !e.completedToday)
+        .slice(0, 2)
+        .map((ex) => ({
+          id: ex.exerciseId,
+          name: ex.name,
+          detail: `${ex.targetSets} sets × ${ex.targetReps} reps`,
+          icon: "fitness_center",
+          locked: false,
+        })),
     },
     "dashboard",
   );
