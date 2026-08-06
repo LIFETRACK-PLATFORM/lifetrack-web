@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { HttpAuthRepository } from "@/modules/auth/infrastructure/HttpAuthRepository";
 import { useSessionCheck } from "@/modules/auth/ui/hooks/useSessionCheck";
 import { AuthenticatedUserContext } from "@/modules/auth/ui/context/AuthenticatedUserContext";
+import { createProfileRepository } from "@/modules/profile/infrastructure/createProfileRepository";
 import { BottomNav } from "@/shared/ui/BottomNav";
 import { SideNav } from "@/shared/ui/SideNav";
 
 const authRepository = new HttpAuthRepository();
+const profileRepository = createProfileRepository();
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
@@ -21,13 +23,34 @@ export default function AuthenticatedLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { loading, user, error } = useSessionCheck(authRepository);
-  const showRehabNav = pathname.startsWith("/rehab");
+  const [navName, setNavName] = useState<string | null>(null);
+  const [navAvatar, setNavAvatar] = useState<string | null>(null);
+  const showAppNav =
+    pathname.startsWith("/rehab") || pathname.startsWith("/profile");
 
   useEffect(() => {
     if (!loading && (error || !user)) {
       router.replace("/login");
     }
   }, [loading, user, error, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    profileRepository
+      .getMyProfile()
+      .then((profile) => {
+        if (cancelled) return;
+        setNavName(profile.displayName);
+        setNavAvatar(profile.avatarUrl);
+      })
+      .catch(() => {
+        // Fallback al email de la sesión si el perfil aún no está disponible
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   if (loading) {
     return (
@@ -41,21 +64,31 @@ export default function AuthenticatedLayout({
     return null;
   }
 
+  const fallbackName = user.email.split("@")[0] ?? user.email;
   const navUser = {
-    name: user.email.split("@")[0] ?? user.email,
+    name: navName ?? fallbackName,
     email: user.email,
     membership: user.roles.join(", ") || "Miembro",
-    avatar: DEFAULT_AVATAR,
+    avatar:
+      navAvatar ||
+      `https://ui-avatars.com/api/?background=7C5CFF&color=fff&name=${encodeURIComponent(
+        navName ?? fallbackName,
+      )}` ||
+      DEFAULT_AVATAR,
   };
 
   return (
     <AuthenticatedUserContext.Provider value={user}>
       <div className="flex min-h-full flex-1 bg-background">
-        {showRehabNav && <SideNav user={navUser} />}
-        <div className={`flex min-h-full flex-1 flex-col ${showRehabNav ? "md:pl-[280px]" : ""}`}>
+        {showAppNav && <SideNav user={navUser} />}
+        <div
+          className={`flex min-h-full flex-1 flex-col ${
+            showAppNav ? "md:pl-[280px]" : ""
+          }`}
+        >
           {children}
         </div>
-        {showRehabNav && <BottomNav />}
+        {showAppNav && <BottomNav />}
       </div>
     </AuthenticatedUserContext.Provider>
   );
