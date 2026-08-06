@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import { StatusBadge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/shared/ui/Icon";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { DashboardSummary } from "@/modules/rehab/domain/DashboardSummary";
@@ -103,11 +104,7 @@ export function DashboardView({
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-text-3">
-        Cargando recuperación…
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
@@ -232,6 +229,89 @@ export function DashboardView({
               {dashboards.map((d) => (
                 <WebPlanSection key={d.planId} d={d} showTitle={showPlanTitle} />
               ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    </>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <>
+      {/* Mobile */}
+      <div className="min-h-screen bg-background pb-32 text-text-1 md:hidden">
+        <header className="fixed left-0 top-0 z-40 w-full bg-surface">
+          <div className="mx-auto flex w-full max-w-app items-center justify-between px-6 py-4">
+            <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+        </header>
+
+        <main className="mt-20 space-y-10 px-5">
+          <section className="negative-space-pocket space-y-4">
+            <Skeleton className="h-4 w-32" />
+            <div className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
+              <div className="flex items-end justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-9 w-24" />
+                </div>
+                <Skeleton className="h-16 w-16 rounded-full" />
+              </div>
+              <Skeleton className="mt-4 h-12 w-full rounded-lg" />
+            </div>
+          </section>
+
+          <section className="negative-space-pocket">
+            <Skeleton className="h-20 w-full rounded-xl" />
+          </section>
+
+          <section className="grid grid-cols-2 gap-4 negative-space-pocket">
+            <Skeleton className="col-span-2 h-40 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+          </section>
+
+          <section className="negative-space-pocket space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-16 w-full rounded-lg" />
+            <Skeleton className="h-16 w-full rounded-lg" />
+          </section>
+        </main>
+      </div>
+
+      {/* Web */}
+      <div className="hidden overflow-hidden bg-background text-text-1 md:block">
+        <main className="h-screen overflow-y-auto bg-background p-10">
+          <div className="mx-auto max-w-app">
+            <header className="mb-10 flex items-end justify-between">
+              <div className="space-y-2">
+                <Skeleton className="h-7 w-64" />
+                <Skeleton className="h-4 w-80" />
+              </div>
+              <div className="flex gap-4">
+                <Skeleton className="h-9 w-9 rounded-lg" />
+                <Skeleton className="h-9 w-9 rounded-lg" />
+              </div>
+            </header>
+
+            <div className="grid grid-cols-12 gap-6">
+              <div className="col-span-12 space-y-6 lg:col-span-7">
+                <Skeleton className="h-40 w-full rounded-xl" />
+                <div className="space-y-4 rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
+                  <Skeleton className="h-5 w-40" />
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                  <Skeleton className="h-16 w-full rounded-lg" />
+                </div>
+              </div>
+              <div className="col-span-12 space-y-6 lg:col-span-5">
+                <Skeleton className="h-48 w-full rounded-xl" />
+                <Skeleton className="h-24 w-full rounded-xl" />
+                <Skeleton className="h-14 w-full rounded-xl" />
+              </div>
             </div>
           </div>
         </main>

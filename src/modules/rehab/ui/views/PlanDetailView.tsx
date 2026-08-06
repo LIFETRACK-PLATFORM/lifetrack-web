@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/shared/ui/Icon";
 import { ExerciseMediaThumb } from "@/modules/rehab/ui/components/ExerciseMediaThumb";
 import { AddExerciseDialog } from "@/modules/rehab/ui/components/AddExerciseDialog";
@@ -101,11 +102,7 @@ export function PlanDetailView({
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-text-3">
-        Cargando plan…
-      </div>
-    );
+    return <PlanDetailSkeleton />;
   }
 
   if (notFound) {
@@ -785,6 +782,77 @@ export function PlanDetailView({
           error={addAppointmentError}
         />
       )}
+    </>
+  );
+}
+
+function PlanDetailSkeleton() {
+  return (
+    <>
+      {/* Mobile */}
+      <div className="flex min-h-screen flex-col bg-background text-text-1 md:hidden">
+        <header className="sticky top-0 z-40 flex w-full items-center justify-between bg-surface/80 px-6 py-4 backdrop-blur-md">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <h1 className="text-headline-md font-bold text-primary">Rehabilitación</h1>
+          </div>
+          <Skeleton className="h-10 w-10 rounded-full" />
+        </header>
+
+        <main className="flex-1 px-5 pb-32 pt-4">
+          <Skeleton className="mb-10 h-32 w-full rounded-xl" />
+          <div className="mb-6 flex gap-2">
+            <Skeleton className="h-9 w-24 rounded-full" />
+            <Skeleton className="h-9 w-24 rounded-full" />
+            <Skeleton className="h-9 w-24 rounded-full" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+            <Skeleton className="h-24 w-full rounded-xl" />
+          </div>
+        </main>
+      </div>
+
+      {/* Web */}
+      <div className="hidden min-h-screen bg-background text-text-1 md:block">
+        <main className="min-h-screen">
+          <header className="sticky top-0 z-40 mx-auto flex w-full max-w-app items-center justify-between bg-surface px-6 py-4">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-56" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <Skeleton className="h-9 w-9 rounded-full" />
+            </div>
+          </header>
+
+          <div className="mt-4 px-6">
+            <div className="flex items-center gap-10 border-b border-border/20 pb-4">
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-5 w-20" />
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-6 p-6 lg:flex-row">
+            <section className="flex-1 space-y-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <Skeleton className="h-28 w-full rounded-xl" />
+                <Skeleton className="h-28 w-full rounded-xl" />
+                <Skeleton className="h-28 w-full rounded-xl" />
+                <Skeleton className="h-28 w-full rounded-xl" />
+              </div>
+            </section>
+            <aside className="w-full space-y-6 lg:w-[320px]">
+              <Skeleton className="h-48 w-full rounded-xl" />
+              <Skeleton className="h-24 w-full rounded-xl" />
+            </aside>
+          </div>
+        </main>
+      </div>
     </>
   );
 }
