@@ -1,16 +1,30 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { StatusBadge } from "@/components/ui/badge";
+import { Icon } from "@/shared/ui/Icon";
+import { ExerciseMediaThumb } from "@/modules/rehab/ui/components/ExerciseMediaThumb";
+import { AddExerciseDialog } from "@/modules/rehab/ui/components/AddExerciseDialog";
+import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointmentDialog";
+import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
+import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
+import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
+import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
-import { StatusBadge } from "@/components/ui/badge";
-import { Icon } from "@/shared/ui/Icon";
-import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
-import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
-import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
-import { AddExerciseDialog } from "@/modules/rehab/ui/components/AddExerciseDialog";
-import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointmentDialog";
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
@@ -29,6 +43,7 @@ export function PlanDetailView({
   const [isAddAppointmentOpen, setIsAddAppointmentOpen] = useState(false);
   const [painLevel, setPainLevel] = useState("3");
   const [painNote, setPainNote] = useState("");
+  const [extensionDegrees, setExtensionDegrees] = useState("");
   const activeRepository = useMemo(
     () => repository ?? createRehabRepository(),
     [repository],
@@ -45,6 +60,9 @@ export function PlanDetailView({
     addExercise,
     addingExercise,
     addExerciseError,
+    deleteExercise,
+    deletingExerciseId,
+    deleteExerciseError,
     toggleExerciseCompletion,
     completionError,
     pendingCompletionIds,
@@ -54,6 +72,9 @@ export function PlanDetailView({
     addPainLog,
     addingPainLog,
     addPainLogError,
+    addMeasurement,
+    addingMeasurement,
+    addMeasurementError,
   } = usePlan(activeRepository, planId);
 
   const handleAddPainLog = async () => {
@@ -65,6 +86,18 @@ export function PlanDetailView({
       note: painNote.trim() || undefined,
     });
     if (success) setPainNote("");
+  };
+
+  const handleAddExtension = async () => {
+    const value = Number(extensionDegrees);
+    if (!Number.isFinite(value)) return;
+    const success = await addMeasurement({
+      type: "EXTENSION_DEGREES",
+      value,
+      unit: "°",
+      date: new Date().toISOString(),
+    });
+    if (success) setExtensionDegrees("");
   };
 
   if (loading) {
@@ -227,9 +260,16 @@ export function PlanDetailView({
                             {ex.detail}
                           </p>
                         </div>
-                        <span className="font-label text-label-md font-bold text-primary">
-                          COMPLETADO
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <DeleteExerciseButton
+                            exerciseName={ex.name}
+                            deleting={deletingExerciseId === ex.id}
+                            onConfirm={() => void deleteExercise(ex.id)}
+                          />
+                          <span className="font-label text-label-md font-bold text-primary">
+                            COMPLETADO
+                          </span>
+                        </div>
                       </div>
                       <DailyCheckButton
                         completedToday={ex.completedToday}
@@ -259,13 +299,20 @@ export function PlanDetailView({
                             {ex.detail}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <span className="font-metric text-[24px] text-primary">
-                            {String(counts[ex.id] ?? 0).padStart(2, "0")}
-                          </span>
-                          <span className="font-label text-label-md text-text-3">
-                            /{ex.target}
-                          </span>
+                        <div className="flex items-center gap-2">
+                          <DeleteExerciseButton
+                            exerciseName={ex.name}
+                            deleting={deletingExerciseId === ex.id}
+                            onConfirm={() => void deleteExercise(ex.id)}
+                          />
+                          <div className="text-right">
+                            <span className="font-metric text-[24px] text-primary">
+                              {String(counts[ex.id] ?? 0).padStart(2, "0")}
+                            </span>
+                            <span className="font-label text-label-md text-text-3">
+                              /{ex.target}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 rounded-lg bg-surface-1 p-2">
@@ -302,6 +349,18 @@ export function PlanDetailView({
               {completionError && (
                 <p className="text-body-md text-error">{completionError}</p>
               )}
+              {deleteExerciseError && (
+                <p className="text-body-md text-error">{deleteExerciseError}</p>
+              )}
+              <PainLogForm
+                painLevel={painLevel}
+                setPainLevel={setPainLevel}
+                painNote={painNote}
+                setPainNote={setPainNote}
+                onSubmit={handleAddPainLog}
+                submitting={addingPainLog}
+                error={addPainLogError}
+              />
             </div>
           )}
 
@@ -347,6 +406,15 @@ export function PlanDetailView({
                   <Icon name="chevron_right" className="text-text-3" />
                 </div>
               ))}
+              <PainLogForm
+                painLevel={painLevel}
+                setPainLevel={setPainLevel}
+                painNote={painNote}
+                setPainNote={setPainNote}
+                onSubmit={handleAddPainLog}
+                submitting={addingPainLog}
+                error={addPainLogError}
+              />
             </div>
           )}
 
@@ -371,6 +439,13 @@ export function PlanDetailView({
                   <div className="h-full flex-1 rounded-t-sm bg-primary" />
                 </div>
               </div>
+              <ExtensionForm
+                value={extensionDegrees}
+                setValue={setExtensionDegrees}
+                onSubmit={handleAddExtension}
+                submitting={addingMeasurement}
+                error={addMeasurementError}
+              />
               <div className="flex items-center justify-between rounded-xl border border-border bg-surface-1 p-6">
                 <div>
                   <span className="font-label text-label-md text-text-3">
@@ -421,10 +496,10 @@ export function PlanDetailView({
             <div className="flex items-center gap-4">
               <div className="hidden items-center rounded-full border border-border/30 bg-surface-1 px-4 py-1 sm:flex">
                 <Icon name="search" className="mr-2 text-text-3" />
-                <input
-                  className="w-48 border-none bg-transparent text-body-md focus:outline-none"
+                <Input
+                  className="h-8 w-48 border-none bg-transparent shadow-none focus-visible:ring-0"
                   placeholder="Buscar ejercicios..."
-                  type="text"
+                  type="search"
                 />
               </div>
               <button
@@ -468,13 +543,6 @@ export function PlanDetailView({
                   Protocolo de hoy
                 </h3>
                 <div className="flex gap-2">
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 rounded-lg bg-surface-3 px-4 py-2 font-label text-label-md text-text-3"
-                  >
-                    <Icon name="filter_list" className="text-[20px]" />
-                    Filtrar
-                  </button>
                   {tab === "exercises" && (
                     <button
                       type="button"
@@ -485,13 +553,6 @@ export function PlanDetailView({
                       Agregar ejercicio
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95"
-                  >
-                    <Icon name="play_arrow" className="text-[20px]" />
-                    Comenzar sesión
-                  </button>
                 </div>
               </div>
 
@@ -502,28 +563,19 @@ export function PlanDetailView({
                       key={ex.id}
                       className="group flex gap-4 rounded-xl border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2"
                     >
-                      <div className="relative h-32 w-32 shrink-0 overflow-hidden rounded-lg bg-surface-3">
-                        <Image
-                          src={ex.image}
-                          alt={ex.name}
-                          fill
-                          className="object-cover"
-                        />
-                        <div className="absolute inset-0 flex items-center justify-center bg-primary/10 opacity-0 transition-opacity group-hover:opacity-100">
-                          <Icon
-                            name="play_circle"
-                            className="text-metric-xl text-primary"
-                          />
-                        </div>
-                      </div>
+                      <ExerciseMediaThumb
+                        mediaUrl={ex.image}
+                        name={ex.name}
+                      />
                       <div className="flex flex-1 flex-col justify-center">
                         <div className="mb-1 flex items-start justify-between">
                           <span className="rounded bg-primary/20 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
                             {ex.category}
                           </span>
-                          <Icon
-                            name="info"
-                            className="text-[18px] text-text-3"
+                          <DeleteExerciseButton
+                            exerciseName={ex.name}
+                            deleting={deletingExerciseId === ex.id}
+                            onConfirm={() => void deleteExercise(ex.id)}
                           />
                         </div>
                         <h4 className="mb-1 text-body-lg font-semibold text-text-1">
@@ -549,6 +601,20 @@ export function PlanDetailView({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {(tab === "exercises" || tab === "photos") && (
+                <div className="mt-2">
+                  <PainLogForm
+                    painLevel={painLevel}
+                    setPainLevel={setPainLevel}
+                    painNote={painNote}
+                    setPainNote={setPainNote}
+                    onSubmit={handleAddPainLog}
+                    submitting={addingPainLog}
+                    error={addPainLogError}
+                  />
                 </div>
               )}
 
@@ -621,7 +687,14 @@ export function PlanDetailView({
                       className="text-[40px] text-error"
                     />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 space-y-4">
+                    <ExtensionForm
+                      value={extensionDegrees}
+                      setValue={setExtensionDegrees}
+                      onSubmit={handleAddExtension}
+                      submitting={addingMeasurement}
+                      error={addMeasurementError}
+                    />
                     <PainLogForm
                       painLevel={painLevel}
                       setPainLevel={setPainLevel}
@@ -743,6 +816,94 @@ function DailyCheckButton({
           ? "Hecho hoy — tocar para desmarcar"
           : "Marcar como hecho hoy"}
     </button>
+  );
+}
+
+function DeleteExerciseButton({
+  exerciseName,
+  deleting,
+  onConfirm,
+}: {
+  exerciseName: string;
+  deleting: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="text-text-3 hover:text-error"
+          disabled={deleting}
+          aria-label={`Eliminar ${exerciseName}`}
+        >
+          <Icon name="trash" className="text-[18px]" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Eliminar ejercicio</AlertDialogTitle>
+          <AlertDialogDescription>
+            ¿Seguro que quieres eliminar &quot;{exerciseName}&quot;? Esta acción no
+            se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={deleting}
+          >
+            {deleting ? "Eliminando…" : "Eliminar"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function ExtensionForm({
+  value,
+  setValue,
+  onSubmit,
+  submitting,
+  error,
+}: {
+  value: string;
+  setValue: (value: string) => void;
+  onSubmit: () => void;
+  submitting: boolean;
+  error: string | null;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-surface-1 p-6">
+      <h4 className="mb-3 font-label text-label-md text-text-3">
+        Registrar extensión de rodilla (grados)
+      </h4>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="number"
+          step="0.1"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Ej. 5"
+          className="w-28 rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+        />
+        <span className="font-label text-label-md text-text-3">°</span>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={submitting || value.trim() === ""}
+          className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
+        >
+          {submitting ? "Guardando…" : "Registrar"}
+        </button>
+      </div>
+      {error && <p className="mt-2 text-body-md text-error">{error}</p>}
+    </div>
   );
 }
 
