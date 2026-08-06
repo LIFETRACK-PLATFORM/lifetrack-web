@@ -16,6 +16,7 @@ interface SideNavUser {
 export function SideNav({ user }: { user: SideNavUser }) {
   const pathname = usePathname();
   const rehabActive = pathname.startsWith("/rehab");
+  const profileActive = pathname.startsWith("/profile");
 
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-full w-[280px] flex-col border-r border-border bg-surface-1 px-4 py-6 md:flex">
@@ -52,11 +53,19 @@ export function SideNav({ user }: { user: SideNavUser }) {
           </span>
         </Link>
         <Link
-          href="/rehab"
-          className="flex items-center gap-4 rounded-[10px] px-4 py-2.5 text-text-3 transition-colors hover:bg-surface-3 hover:text-text-1"
+          href="/profile"
+          className={`flex items-center gap-4 rounded-[10px] px-4 py-2.5 transition-colors ${
+            profileActive
+              ? "bg-surface-2 text-primary"
+              : "text-text-3 hover:bg-surface-3 hover:text-text-1"
+          }`}
         >
           <Icon name="person" className="text-[20px]" />
-          <span className="text-body-md">Perfil</span>
+          <span
+            className={`text-body-md ${profileActive ? "font-semibold" : ""}`}
+          >
+            Perfil
+          </span>
         </Link>
       </nav>
       <div className="mt-auto flex items-center gap-3 border-t border-border px-2 pt-4">
@@ -67,6 +76,7 @@ export function SideNav({ user }: { user: SideNavUser }) {
             width={40}
             height={40}
             className="h-full w-full object-cover"
+            unoptimized
           />
         </div>
         <div className="min-w-0 flex-1">
