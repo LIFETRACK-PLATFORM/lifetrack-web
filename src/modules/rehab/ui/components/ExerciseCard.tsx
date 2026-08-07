@@ -75,15 +75,10 @@ export function ExerciseCard({
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-block rounded bg-primary/15 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
-                  {exercise.category}
-                </span>
-                <ExerciseDayStatus
-                  completedToday={isDoneToday}
-                  urgent={exercise.urgent}
-                />
-              </div>
+              <ExerciseDayStatus
+                completedToday={isDoneToday}
+                urgent={exercise.urgent}
+              />
               <h4 className="truncate text-body-lg font-semibold text-text-1">
                 {exercise.name}
               </h4>
@@ -113,19 +108,32 @@ export function ExerciseCard({
           </div>
 
           <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-label text-label-md text-text-3">
-            <span className="inline-flex items-center gap-1">
-              <Icon name="repeat" className="text-[14px]" />
-              {exercise.sets} series
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Icon name="history" className="text-[14px]" />
-              {exercise.reps} reps
-            </span>
+            {exercise.metricType === "DURATION" ? (
+              <span className="inline-flex items-center gap-1">
+                <Icon name="history" className="text-[14px]" />
+                {exercise.targetDurationMinutes} min
+              </span>
+            ) : (
+              <>
+                <span className="inline-flex items-center gap-1">
+                  <Icon name="repeat" className="text-[14px]" />
+                  {exercise.sets} series
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <Icon name="history" className="text-[14px]" />
+                  {exercise.reps} reps
+                </span>
+              </>
+            )}
             <span className="inline-flex items-center gap-1 font-medium text-primary">
               <Icon name="target" className="text-[14px]" />
               {current}/{target}
             </span>
           </p>
+
+          {exercise.notes && (
+            <p className="text-label-md text-text-3">{exercise.notes}</p>
+          )}
 
           <ExerciseRepCounter
             current={current}

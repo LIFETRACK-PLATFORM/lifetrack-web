@@ -1,5 +1,7 @@
 import { Entity } from "@/shared/domain/building-blocks/Entity";
 
+export type ExerciseMetricType = "REPS" | "DURATION";
+
 interface ExerciseProps {
   name: string;
   detail: string;
@@ -7,8 +9,9 @@ interface ExerciseProps {
   current: number;
   target: number;
   completed: boolean;
-  category: string;
-  phase: number;
+  metricType: ExerciseMetricType;
+  targetDurationMinutes: number | null;
+  notes: string | null;
   sets: number;
   reps: number;
   image: string;
@@ -47,12 +50,16 @@ export class Exercise extends Entity<ExerciseProps> {
     return this.props.completed;
   }
 
-  get category(): string {
-    return this.props.category;
+  get metricType(): ExerciseMetricType {
+    return this.props.metricType;
   }
 
-  get phase(): number {
-    return this.props.phase;
+  get targetDurationMinutes(): number | null {
+    return this.props.targetDurationMinutes;
+  }
+
+  get notes(): string | null {
+    return this.props.notes;
   }
 
   get sets(): number {

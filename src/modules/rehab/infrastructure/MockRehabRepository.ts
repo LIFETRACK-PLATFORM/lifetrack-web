@@ -97,8 +97,9 @@ const plans: Record<string, RehabPlan> = {
             current: 8,
             target: 10,
             completed: false,
-            category: "Fuerza",
-            phase: 1,
+            metricType: "REPS",
+            targetDurationMinutes: null,
+            notes: null,
             sets: 3,
             reps: 15,
             image:
@@ -118,8 +119,9 @@ const plans: Record<string, RehabPlan> = {
             current: 15,
             target: 20,
             completed: false,
-            category: "Movilidad",
-            phase: 1,
+            metricType: "REPS",
+            targetDurationMinutes: null,
+            notes: null,
             sets: 2,
             reps: 10,
             image:
@@ -139,8 +141,9 @@ const plans: Record<string, RehabPlan> = {
             current: 10,
             target: 10,
             completed: true,
-            category: "Núcleo/Estabilidad",
-            phase: 1,
+            metricType: "REPS",
+            targetDurationMinutes: null,
+            notes: null,
             sets: 3,
             reps: 12,
             image:
@@ -160,8 +163,9 @@ const plans: Record<string, RehabPlan> = {
             current: 0,
             target: 15,
             completed: false,
-            category: "Isométrico",
-            phase: 1,
+            metricType: "REPS",
+            targetDurationMinutes: null,
+            notes: null,
             sets: 3,
             reps: 15,
             image:
@@ -181,6 +185,8 @@ const plans: Record<string, RehabPlan> = {
             day: "24",
             title: "Evaluación de fisioterapia",
             detail: "09:00 a. m. • Centro Médico Apex",
+            provider: "Centro Médico Apex",
+            notes: null,
             type: "THERAPY",
             date: "2026-10-24T09:00:00.000Z",
             attended: null,
@@ -192,6 +198,13 @@ const plans: Record<string, RehabPlan> = {
         kneeExtensionNote: "+2° de mejora",
         painLevel: "3/10",
       },
+      painHistory: [
+        { date: "2026-07-28", level: 6 },
+        { date: "2026-07-30", level: 5 },
+        { date: "2026-08-02", level: 4 },
+        { date: "2026-08-04", level: 4 },
+        { date: "2026-08-06", level: 3 },
+      ],
     },
     "acl-recovery",
   ),
@@ -238,17 +251,24 @@ export class MockRehabRepository implements RehabRepository {
     const plan = plans[planId];
     if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
 
-    const target = input.targetSets * input.targetReps;
+    const isDuration = input.metricType === "DURATION";
+    const target = isDuration
+      ? input.targetDurationMinutes ?? 0
+      : input.targetSets * input.targetReps;
+    const detail = isDuration
+      ? `${input.targetDurationMinutes ?? 0} min`
+      : `${input.targetSets} series × ${input.targetReps} repeticiones`;
     const exercise = new Exercise(
       {
         name: input.name,
-        detail: `${input.targetSets} series × ${input.targetReps} repeticiones`,
+        detail,
         icon: "fitness_center",
         current: 0,
         target,
         completed: false,
-        category: `phase-${input.phase}`,
-        phase: input.phase,
+        metricType: input.metricType,
+        targetDurationMinutes: input.targetDurationMinutes ?? null,
+        notes: input.notes ?? null,
         sets: input.targetSets,
         reps: input.targetReps,
         image: MOCK_EXERCISE_IMAGE,
@@ -280,18 +300,25 @@ export class MockRehabRepository implements RehabRepository {
     const idx = plan.exercises.findIndex((ex) => ex.id === exerciseId);
     if (idx < 0) throw new Error(`Ejercicio no encontrado: ${exerciseId}`);
 
-    const target = input.targetSets * input.targetReps;
+    const isDuration = input.metricType === "DURATION";
+    const target = isDuration
+      ? input.targetDurationMinutes ?? 0
+      : input.targetSets * input.targetReps;
+    const detail = isDuration
+      ? `${input.targetDurationMinutes ?? 0} min`
+      : `${input.targetSets} series × ${input.targetReps} repeticiones`;
     const current = plan.exercises[idx];
     plan.exercises[idx] = new Exercise(
       {
         name: input.name,
-        detail: `${input.targetSets} series × ${input.targetReps} repeticiones`,
+        detail,
         icon: current.icon,
         current: Math.min(current.current, target),
         target,
         completed: current.current >= target && target > 0,
-        category: `phase-${input.phase}`,
-        phase: input.phase,
+        metricType: input.metricType,
+        targetDurationMinutes: input.targetDurationMinutes ?? null,
+        notes: input.notes ?? null,
         sets: input.targetSets,
         reps: input.targetReps,
         image: current.image,
@@ -317,8 +344,10 @@ export class MockRehabRepository implements RehabRepository {
         {
           month: date.toLocaleString("es-AR", { month: "short" }),
           day: String(date.getDate()),
-          title: input.provider,
+          title: input.title ?? input.provider,
           detail: input.notes ?? (input.type === "THERAPY" ? "Sesión de terapia" : "Cita médica"),
+          provider: input.provider,
+          notes: input.notes ?? null,
           type: input.type,
           date: date.toISOString(),
           attended: null,
@@ -326,6 +355,35 @@ export class MockRehabRepository implements RehabRepository {
         `appointment-${Date.now()}`,
       ),
     );
+  }
+
+  async updateAppointment(
+    appointmentId: string,
+    input: AddAppointmentInput,
+  ): Promise<void> {
+    for (const plan of Object.values(plans)) {
+      const idx = plan.appointments.findIndex((a) => a.id === appointmentId);
+      if (idx < 0) continue;
+      const current = plan.appointments[idx];
+      const date = new Date(input.date);
+      plan.appointments[idx] = new Appointment(
+        {
+          month: date.toLocaleString("es-AR", { month: "short" }),
+          day: String(date.getDate()),
+          title: input.title ?? input.provider,
+          detail:
+            input.notes ??
+            (input.type === "THERAPY" ? "Sesión de terapia" : "Cita médica"),
+          provider: input.provider,
+          notes: input.notes ?? null,
+          type: input.type,
+          date: date.toISOString(),
+          attended: current.attended,
+        },
+        current.id,
+      );
+      return;
+    }
   }
 
   async markAppointmentAttendance(
@@ -342,6 +400,8 @@ export class MockRehabRepository implements RehabRepository {
           day: current.day,
           title: current.title,
           detail: current.detail,
+          provider: current.provider,
+          notes: current.notes,
           type: current.type,
           date: current.date,
           attended,

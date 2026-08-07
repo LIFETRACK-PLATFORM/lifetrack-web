@@ -38,18 +38,37 @@ export function AddAppointmentDialog({
   onSubmit,
   submitting,
   error,
+  appointmentId,
+  initial,
 }: {
   onClose: () => void;
   onSubmit: (input: AddAppointmentInput) => Promise<boolean>;
   submitting: boolean;
   error: string | null;
+  appointmentId?: string;
+  initial?: {
+    title: string;
+    date: string;
+    provider: string;
+    type: AppointmentType;
+    notes?: string;
+  };
 }) {
-  const [day, setDay] = useState<Date | undefined>(undefined);
-  const [time, setTime] = useState("09:00");
+  const isEdit = Boolean(appointmentId);
+  const initialDate = initial ? new Date(initial.date) : undefined;
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [day, setDay] = useState<Date | undefined>(initialDate);
+  const [time, setTime] = useState(
+    initialDate
+      ? `${String(initialDate.getHours()).padStart(2, "0")}:${String(
+          initialDate.getMinutes(),
+        ).padStart(2, "0")}`
+      : "09:00",
+  );
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [provider, setProvider] = useState("");
-  const [type, setType] = useState<AppointmentType>("THERAPY");
-  const [notes, setNotes] = useState("");
+  const [provider, setProvider] = useState(initial?.provider ?? "");
+  const [type, setType] = useState<AppointmentType>(initial?.type ?? "THERAPY");
+  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [repeatWeeks, setRepeatWeeks] = useState("0");
   const [clientError, setClientError] = useState<string | null>(null);
 
@@ -62,6 +81,10 @@ export function AddAppointmentDialog({
     e.preventDefault();
     setClientError(null);
 
+    if (!title.trim()) {
+      setClientError("El título es obligatorio.");
+      return;
+    }
     if (!day) {
       setClientError("La fecha es obligatoria.");
       return;
@@ -85,11 +108,12 @@ export function AddAppointmentDialog({
     scheduled.setHours(hours || 0, minutes || 0, 0, 0);
 
     const success = await onSubmit({
+      title: title.trim(),
       date: scheduled.toISOString(),
       provider: provider.trim(),
       type,
       notes: notes.trim() || undefined,
-      repeatWeeks: repeats,
+      repeatWeeks: isEdit ? undefined : repeats,
     });
     if (success) onClose();
   };
@@ -99,7 +123,7 @@ export function AddAppointmentDialog({
       <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface-1 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-headline-md font-semibold text-text-1">
-            Agregar cita
+            {isEdit ? "Editar cita" : "Agregar cita"}
           </h3>
           <Button
             type="button"
@@ -113,6 +137,21 @@ export function AddAppointmentDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1">
+            <Label
+              htmlFor="appointment-title"
+              className="font-label text-label-md text-text-3"
+            >
+              Título
+            </Label>
+            <Input
+              id="appointment-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ej. Control post-operatorio"
+            />
+          </div>
+
           <div>
             <Label className="mb-1 font-label text-label-md text-text-3">
               Tipo de cita
@@ -223,30 +262,32 @@ export function AddAppointmentDialog({
             />
           </div>
 
-          <details className="rounded-lg border border-border/40 bg-surface-2/50 px-3 py-2">
-            <summary className="cursor-pointer font-label text-label-md text-text-3">
-              Repetir semanalmente (opcional)
-            </summary>
-            <div className="mt-3 space-y-1">
-              <Label
-                htmlFor="appointment-repeat"
-                className="font-label text-label-md text-text-3"
-              >
-                Número de semanas extra (0-12)
-              </Label>
-              <Input
-                id="appointment-repeat"
-                type="number"
-                min={0}
-                max={12}
-                value={repeatWeeks}
-                onChange={(e) => setRepeatWeeks(e.target.value)}
-              />
-              <p className="text-[12px] text-text-3">
-                Crea citas adicionales cada 7 días. Deja 0 para una sola cita.
-              </p>
-            </div>
-          </details>
+          {!isEdit && (
+            <details className="rounded-lg border border-border/40 bg-surface-2/50 px-3 py-2">
+              <summary className="cursor-pointer font-label text-label-md text-text-3">
+                Repetir semanalmente (opcional)
+              </summary>
+              <div className="mt-3 space-y-1">
+                <Label
+                  htmlFor="appointment-repeat"
+                  className="font-label text-label-md text-text-3"
+                >
+                  Número de semanas extra (0-12)
+                </Label>
+                <Input
+                  id="appointment-repeat"
+                  type="number"
+                  min={0}
+                  max={12}
+                  value={repeatWeeks}
+                  onChange={(e) => setRepeatWeeks(e.target.value)}
+                />
+                <p className="text-[12px] text-text-3">
+                  Crea citas adicionales cada 7 días. Deja 0 para una sola cita.
+                </p>
+              </div>
+            </details>
+          )}
 
           {(clientError || error) && (
             <p className="text-body-md text-error">{clientError ?? error}</p>
@@ -257,7 +298,7 @@ export function AddAppointmentDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Guardando…" : "Agregar"}
+              {submitting ? "Guardando…" : isEdit ? "Guardar" : "Agregar"}
             </Button>
           </div>
         </form>

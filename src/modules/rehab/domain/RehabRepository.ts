@@ -10,18 +10,23 @@ export interface CreateRecoveryPlanInput {
   surgeryDate: string;
 }
 
+export type ExerciseMetricType = "REPS" | "DURATION";
+
 export interface AddExerciseInput {
   name: string;
+  metricType: ExerciseMetricType;
   targetSets: number;
   targetReps: number;
-  phase: number;
+  targetDurationMinutes?: number;
   referenceMediaUrl?: string;
+  notes?: string;
   daysOfWeek?: number[];
 }
 
 export type UpdateExerciseInput = AddExerciseInput;
 
 export interface AddAppointmentInput {
+  title?: string;
   date: string;
   provider: string;
   type: AppointmentType;
@@ -74,6 +79,10 @@ export interface RehabRepository {
   ): Promise<void>;
   deleteExercise(planId: string, exerciseId: string): Promise<void>;
   addAppointment(planId: string, input: AddAppointmentInput): Promise<void>;
+  updateAppointment(
+    appointmentId: string,
+    input: AddAppointmentInput,
+  ): Promise<void>;
   deleteAppointment(planId: string, appointmentId: string): Promise<void>;
   markAppointmentAttendance(
     appointmentId: string,

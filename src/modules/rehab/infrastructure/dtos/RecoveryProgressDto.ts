@@ -18,15 +18,20 @@ export interface ExerciseCompletionEntryDto {
   date: string;
 }
 
+export type ExerciseMetricTypeDto = "REPS" | "DURATION";
+
 export interface ExerciseProgressDto {
   exerciseId: string;
   name: string;
+  metricType: ExerciseMetricTypeDto;
   targetSets: number;
   targetReps: number;
-  phase: number;
+  targetDurationMinutes?: number;
+  notes?: string;
   logs: ExerciseLogEntryDto[];
   daysOfWeek: number[];
   completions: ExerciseCompletionEntryDto[];
+  completedToday: boolean;
 }
 
 export type AppointmentTypeDto = "THERAPY" | "MEDICAL";
@@ -34,6 +39,7 @@ export type AppointmentTypeDto = "THERAPY" | "MEDICAL";
 export interface AppointmentDto {
   appointmentId: string;
   recoveryPlanId: string;
+  title?: string;
   date: string;
   provider: string;
   type: AppointmentTypeDto;
@@ -76,7 +82,6 @@ export interface TodayExerciseDto {
   name: string;
   targetSets: number;
   targetReps: number;
-  phase: number;
   scheduledToday: boolean;
   completedToday: boolean;
   urgent: boolean;

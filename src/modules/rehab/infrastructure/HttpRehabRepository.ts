@@ -161,6 +161,16 @@ export class HttpRehabRepository implements RehabRepository {
     });
   }
 
+  async updateAppointment(
+    appointmentId: string,
+    input: AddAppointmentInput,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/appointments/${appointmentId}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  }
+
   async markAppointmentAttendance(
     appointmentId: string,
     attended: boolean,
