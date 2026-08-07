@@ -14,6 +14,14 @@ export interface PainLogPoint {
   note?: string;
 }
 
+export interface WeeklyDayPoint {
+  date: string;
+  due: number;
+  completed: number;
+  compliant: boolean;
+  isFuture: boolean;
+}
+
 interface RehabPlanProps {
   titleMobile: string;
   titleWeb: string;
@@ -27,6 +35,7 @@ interface RehabPlanProps {
   appointments: Appointment[];
   metrics: PlanMetrics;
   painHistory: PainLogPoint[];
+  weeklyDays: WeeklyDayPoint[];
   weeklyCompliancePercent: number;
   streakDays: number;
   completedTodayCount: number;
@@ -84,6 +93,10 @@ export class RehabPlan extends Entity<RehabPlanProps> {
 
   get painHistory(): PainLogPoint[] {
     return this.props.painHistory;
+  }
+
+  get weeklyDays(): WeeklyDayPoint[] {
+    return this.props.weeklyDays;
   }
 
   get weeklyCompliancePercent(): number {

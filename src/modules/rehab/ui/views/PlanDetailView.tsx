@@ -26,7 +26,10 @@ import { Appointment } from "@/modules/rehab/domain/Appointment";
 import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
 import { exerciseDomId } from "@/modules/rehab/ui/rehabRoutes";
 import type { RecoveryPlanStatus } from "@/modules/rehab/domain/RehabRepository";
-import type { PainLogPoint } from "@/modules/rehab/domain/RehabPlan";
+import type {
+  PainLogPoint,
+  WeeklyDayPoint,
+} from "@/modules/rehab/domain/RehabPlan";
 import type { StatusBadgeStatus } from "@/components/ui/badge";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import Image from "next/image";
@@ -299,6 +302,7 @@ export function PlanDetailView({
                   Quedan {plan.remainingToday}
                 </span>
               </div>
+              <WeeklyDaysStrip days={plan.weeklyDays} />
               <button
                 type="button"
                 onClick={() => setIsAddExerciseOpen(true)}
@@ -544,6 +548,8 @@ export function PlanDetailView({
                   )}
                 </div>
               </div>
+
+              {tab === "exercises" && <WeeklyDaysStrip days={plan.weeklyDays} />}
 
               {(tab === "exercises" || tab === "photos") && (
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -861,6 +867,53 @@ function PlanDetailSkeleton() {
         </main>
       </div>
     </>
+  );
+}
+
+const WEEKDAY_LETTERS = ["D", "L", "M", "M", "J", "V", "S"];
+
+function WeeklyDaysStrip({ days }: { days: WeeklyDayPoint[] }) {
+  if (days.length === 0) return null;
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-border bg-surface-1 px-3 py-3">
+      {days.map((day, i) => {
+        const isToday = day.date === todayIso;
+        const isRest = day.due === 0;
+        const status = isRest
+          ? "rest"
+          : day.isFuture
+            ? "future"
+            : day.compliant
+              ? "done"
+              : "missed";
+
+        return (
+          <div
+            key={day.date}
+            className="flex flex-1 flex-col items-center gap-1.5"
+            title={`${day.date}${isRest ? " · sin ejercicios agendados" : ` · ${day.completed}/${day.due} completados`}`}
+          >
+            <span className="font-label text-[11px] text-text-3">
+              {WEEKDAY_LETTERS[i]}
+            </span>
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] ${
+                status === "done"
+                  ? "bg-success/20 text-success"
+                  : status === "missed"
+                    ? "bg-error/15 text-error"
+                    : "bg-surface-3 text-text-3"
+              } ${isToday ? "ring-2 ring-primary ring-offset-1 ring-offset-surface-1" : ""}`}
+            >
+              {status === "done" && <Icon name="check" className="text-[14px]" />}
+              {status === "missed" && <Icon name="close" className="text-[14px]" />}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
