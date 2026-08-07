@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import { VaultItem } from "../../domain/VaultItem";
+import { normalizeSiteForCopy } from "../../domain/extractDomain";
+import { CopyField } from "./CopyField";
 
 export function VaultItemCard({
   item,
@@ -32,6 +34,7 @@ export function VaultItemCard({
     try {
       const password = await onReveal(item.id);
       setRevealed(password);
+      setShowPassword(true);
     } catch (err) {
       setRevealError(
         err instanceof Error
@@ -56,34 +59,40 @@ export function VaultItemCard({
   return (
     <div className="rounded-lg border border-border/30 bg-surface-2 p-4">
       <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <Icon name="encrypted" className="shrink-0 text-[18px] text-primary" />
-            <p className="truncate text-body-md font-semibold text-text-1">
-              {item.site}
-            </p>
-          </div>
-          <p className="mt-1 truncate font-label text-label-md text-text-3">
-            {item.username}
-          </p>
+        <div className="min-w-0 flex-1 space-y-3">
+          <CopyField
+            label="Sitio"
+            value={normalizeSiteForCopy(item.site)}
+            mono
+          />
+
+          <CopyField label="Usuario" value={item.username} mono />
 
           {revealed !== null && (
-            <div className="mt-3 flex items-center gap-2 rounded-lg border border-border/30 bg-surface-1 px-3 py-2">
-              <code className="flex-1 truncate font-mono text-body-md text-text-1">
-                {showPassword ? revealed : "••••••••••••"}
-              </code>
+            <div className="space-y-2">
+              <CopyField
+                label="Contraseña"
+                value={revealed}
+                mono
+                masked
+                visible={showPassword}
+              />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="rounded p-1 text-text-3 hover:text-text-1"
+                className="inline-flex items-center gap-1 font-label text-label-md text-text-3 transition-colors hover:text-text-1"
               >
-                <Icon name={showPassword ? "visibility_off" : "visibility"} />
+                <Icon
+                  name={showPassword ? "visibility_off" : "visibility"}
+                  className="text-[16px]"
+                />
+                {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
               </button>
             </div>
           )}
 
           {revealError && (
-            <p className="mt-2 text-body-md text-error">{revealError}</p>
+            <p className="text-body-md text-error">{revealError}</p>
           )}
         </div>
 
@@ -93,7 +102,7 @@ export function VaultItemCard({
             onClick={handleReveal}
             disabled={revealing || deleting}
             className="rounded-lg p-2 text-text-3 transition-colors hover:bg-surface-3 hover:text-primary disabled:opacity-50"
-            title={revealed !== null ? "Ocultar" : "Revelar"}
+            title={revealed !== null ? "Ocultar" : "Revelar contraseña"}
           >
             <Icon
               name={revealed !== null ? "visibility_off" : "visibility"}
