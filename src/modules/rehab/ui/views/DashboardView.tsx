@@ -11,6 +11,7 @@ import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { DashboardSummary } from "@/modules/rehab/domain/DashboardSummary";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { useDashboard } from "@/modules/rehab/ui/hooks/useDashboard";
+import { planExerciseHref } from "@/modules/rehab/ui/rehabRoutes";
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
@@ -441,9 +442,10 @@ function MobilePlanSection({
         </h3>
         <div className="space-y-2">
           {d.upNext.map((item) => (
-            <div
+            <Link
               key={item.id}
-              className="flex items-center gap-4 rounded-lg border border-border bg-surface-1 p-4 transition-all active:bg-surface-2"
+              href={planExerciseHref(d.planId, item.id)}
+              className="flex items-center gap-4 rounded-lg border border-border bg-surface-1 p-4 transition-all hover:border-primary hover:bg-surface-2 active:bg-surface-3"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-2 text-primary">
                 <Icon name={item.icon} />
@@ -456,8 +458,8 @@ function MobilePlanSection({
                   {item.detail}
                 </p>
               </div>
-              <Icon name="play_circle" className="text-text-3" />
-            </div>
+              <Icon name="play_circle" className="text-primary" />
+            </Link>
           ))}
           {d.upNext.length === 0 && (
             <p className="text-body-md text-text-3">
@@ -516,61 +518,80 @@ function WebPlanSection({
             </span>
           </div>
           <div className="space-y-4">
-            {d.todayExercises.map((ex) => (
-              <div
-                key={ex.id}
-                className={`flex items-center justify-between rounded-lg p-4 transition-all ${
-                  ex.status === "completed"
-                    ? "border border-transparent bg-surface-1"
-                    : ex.status === "urgent"
-                      ? "border border-error/30 bg-error/10"
-                      : "cursor-pointer border border-border/30 bg-white hover:border-primary"
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  {ex.status === "completed" ? (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Icon name="check" className="text-[18px]" />
+            {d.todayExercises.map((ex) => {
+              const rowClassName = `flex items-center justify-between rounded-lg p-4 transition-all ${
+                ex.status === "completed"
+                  ? "border border-transparent bg-surface-1"
+                  : ex.status === "urgent"
+                    ? "cursor-pointer border border-error/30 bg-error/10 hover:border-error hover:bg-error/15"
+                    : "cursor-pointer border border-border/30 bg-surface-2 hover:border-primary hover:bg-surface-3"
+              }`;
+
+              const rowContent = (
+                <>
+                  <div className="flex items-center gap-4">
+                    {ex.status === "completed" ? (
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                        <Icon name="check" className="text-[18px]" />
+                      </div>
+                    ) : ex.status === "urgent" ? (
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-error">
+                        <Icon
+                          name="priority_high"
+                          className="text-[18px] text-error"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-6 w-6 rounded-full border-2 border-border" />
+                    )}
+                    <div>
+                      <p
+                        className={`font-bold ${
+                          ex.status === "urgent" ? "text-error" : "text-text-1"
+                        }`}
+                      >
+                        {ex.name}
+                      </p>
+                      <p className="text-[12px] text-text-3">{ex.detail}</p>
                     </div>
-                  ) : ex.status === "urgent" ? (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-error">
-                      <Icon
-                        name="priority_high"
-                        className="text-[18px] text-error"
-                      />
-                    </div>
-                  ) : (
-                    <div className="h-6 w-6 rounded-full border-2 border-border" />
-                  )}
-                  <div>
-                    <p
-                      className={`font-bold ${
-                        ex.status === "urgent" ? "text-error" : "text-text-1"
-                      }`}
-                    >
-                      {ex.name}
-                    </p>
-                    <p className="text-[12px] text-text-3">{ex.detail}</p>
                   </div>
-                </div>
-                <StatusBadge
-                  status={
-                    ex.status === "completed"
-                      ? "completed"
-                      : ex.status === "urgent"
-                        ? "overdue"
-                        : "pending"
-                  }
-                  label={
-                    ex.status === "completed"
-                      ? "Completado"
-                      : ex.status === "urgent"
-                        ? "Vencido"
-                        : "Pendiente"
-                  }
-                />
-              </div>
-            ))}
+                  <StatusBadge
+                    status={
+                      ex.status === "completed"
+                        ? "completed"
+                        : ex.status === "urgent"
+                          ? "overdue"
+                          : "pending"
+                    }
+                    label={
+                      ex.status === "completed"
+                        ? "Completado"
+                        : ex.status === "urgent"
+                          ? "Vencido"
+                          : "Pendiente"
+                    }
+                  />
+                </>
+              );
+
+              if (ex.status === "completed") {
+                return (
+                  <div key={ex.id} className={rowClassName}>
+                    {rowContent}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={ex.id}
+                  href={planExerciseHref(d.planId, ex.id)}
+                  className={rowClassName}
+                >
+                  {rowContent}
+                </Link>
+              );
+            })}
             {d.todayExercises.length === 0 && (
               <p className="text-body-md text-text-3">
                 No tenés ejercicios agendados para hoy.
