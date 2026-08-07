@@ -7,6 +7,7 @@ import {
   AddExerciseInput,
   AddMeasurementInput,
   AddPainLogInput,
+  RecoveryPlanStatus,
   RehabRepository,
 } from "../domain/RehabRepository";
 
@@ -81,6 +82,7 @@ const plans: Record<string, RehabPlan> = {
       dayProgress: "Día 14/30",
       weekLabel: "Semana 6 de 12 • Fase 2: Movilidad y fortalecimiento",
       statusMessage: "Progresando según lo planeado",
+      status: "ACTIVE",
       remainingToday: 3,
       weeklyCompliancePercent: 92,
       streakDays: 5,
@@ -220,6 +222,11 @@ export class MockRehabRepository implements RehabRepository {
     void input;
     return "acl-recovery";
   }
+
+  async updatePlanStatus(
+    _planId: string,
+    _status: RecoveryPlanStatus,
+  ): Promise<void> {}
 
   async addExercise(planId: string, input: AddExerciseInput): Promise<void> {
     const plan = plans[planId];

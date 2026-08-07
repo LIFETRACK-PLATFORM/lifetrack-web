@@ -1,8 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Icon } from "@/shared/ui/Icon";
-import { StatusBadge } from "@/components/ui/badge";
+import { Icon, type IconName } from "@/shared/ui/Icon";
+import { Badge, StatusBadge } from "@/components/ui/badge";
+import {
+  DEFAULT_COLOR_BY_KIND,
+  DEFAULT_ICON_BY_KIND,
+} from "@/modules/finance/domain/categoryIcons";
 import { FinanceRepository } from "@/modules/finance/domain/FinanceRepository";
 import { createFinanceRepository } from "@/modules/finance/infrastructure/createFinanceRepository";
 import { useFinanceOverview } from "@/modules/finance/ui/hooks/useFinanceOverview";
@@ -115,6 +119,17 @@ export function FinanceView({
 
   const categoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name ?? "—";
+  const categoryIcon = (id: string): IconName => {
+    const category = categories.find((c) => c.id === id);
+    return (
+      (category?.icon as IconName) ||
+      DEFAULT_ICON_BY_KIND[category?.kind ?? "EXPENSE"]
+    );
+  };
+  const categoryColor = (id: string): string => {
+    const category = categories.find((c) => c.id === id);
+    return category?.color || DEFAULT_COLOR_BY_KIND[category?.kind ?? "EXPENSE"];
+  };
   const accountName = (id: string) =>
     accounts.find((a) => a.id === id)?.name ?? "—";
 
@@ -195,13 +210,25 @@ export function FinanceView({
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {categories.map((c) => (
-                <StatusBadge
-                  key={c.id}
-                  status={c.kind === "INCOME" ? "active" : "pending"}
-                  label={c.name}
-                />
-              ))}
+              {categories.map((c) => {
+                const hex = c.color || DEFAULT_COLOR_BY_KIND[c.kind];
+                return (
+                  <Badge
+                    key={c.id}
+                    variant="outline"
+                    className="gap-1.5 border-transparent"
+                    style={{ color: hex, backgroundColor: `${hex}1A` }}
+                  >
+                    <Icon
+                      name={
+                        (c.icon as IconName) || DEFAULT_ICON_BY_KIND[c.kind]
+                      }
+                      className="text-[14px]"
+                    />
+                    {c.name}
+                  </Badge>
+                );
+              })}
               {categories.length === 0 && (
                 <p className="text-body-md text-text-3">
                   Todavía no tenés categorías. Creá la primera.
@@ -316,17 +343,15 @@ export function FinanceView({
                 >
                   <div className="flex items-center gap-4">
                     <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                        t.kind === "INCOME"
-                          ? "bg-success/10 text-success"
-                          : "bg-error/10 text-error"
-                      }`}
+                      className="flex h-10 w-10 items-center justify-center rounded-full"
+                      style={{
+                        backgroundColor: `${categoryColor(t.categoryId)}1A`,
+                        color: categoryColor(t.categoryId),
+                      }}
                     >
                       <Icon
-                        name={
-                          t.kind === "INCOME" ? "trending_down" : "payments"
-                        }
-                        className={`text-[18px] ${t.kind === "INCOME" ? "rotate-180" : ""}`}
+                        name={categoryIcon(t.categoryId)}
+                        className="text-[18px]"
                       />
                     </div>
                     <div>

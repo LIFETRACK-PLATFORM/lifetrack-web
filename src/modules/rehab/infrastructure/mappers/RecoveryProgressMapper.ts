@@ -86,6 +86,7 @@ export function mapProgressToPlan(
       titleWeb: `${dto.bodyPart} Recovery`,
       phaseLabel: `Phase ${dto.exercises[0]?.phase ?? 1}`,
       dayProgress: dto.status,
+      status: dto.status as RehabPlan["status"],
       weekLabel: new Date(dto.surgeryDate).toLocaleDateString(),
       statusMessage:
         scheduledToday.length > 0 && completedToday === scheduledToday.length

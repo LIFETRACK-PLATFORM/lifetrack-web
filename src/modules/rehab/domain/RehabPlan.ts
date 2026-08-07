@@ -1,6 +1,7 @@
 import { Entity } from "@/shared/domain/building-blocks/Entity";
 import { Exercise } from "./Exercise";
 import { Appointment } from "./Appointment";
+import type { RecoveryPlanStatus } from "./RehabRepository";
 
 interface PlanMetrics {
   kneeExtensionNote: string;
@@ -14,6 +15,7 @@ interface RehabPlanProps {
   dayProgress: string;
   weekLabel: string;
   statusMessage: string;
+  status: RecoveryPlanStatus;
   remainingToday: number;
   exercises: Exercise[];
   appointments: Appointment[];
@@ -51,6 +53,10 @@ export class RehabPlan extends Entity<RehabPlanProps> {
 
   get statusMessage(): string {
     return this.props.statusMessage;
+  }
+
+  get status(): RecoveryPlanStatus {
+    return this.props.status;
   }
 
   get remainingToday(): number {
