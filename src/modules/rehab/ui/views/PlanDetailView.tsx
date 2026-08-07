@@ -358,7 +358,7 @@ export function PlanDetailView({
           </div>
 
           {tab === "exercises" && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex items-center justify-between px-1">
                 <h3 className="text-headline-md font-semibold text-text-1">
                   {protocolTitle}
@@ -442,15 +442,17 @@ export function PlanDetailView({
               {deleteExerciseError && (
                 <p className="text-body-md text-error">{deleteExerciseError}</p>
               )}
-              <PainLogForm
-                painLevel={painLevel}
-                setPainLevel={setPainLevel}
-                painNote={painNote}
-                setPainNote={setPainNote}
-                onSubmit={handleAddPainLog}
-                submitting={addingPainLog}
-                error={addPainLogError}
-              />
+              <div className="mt-4 border-t border-border/20 pt-6">
+                <PainLogForm
+                  painLevel={painLevel}
+                  setPainLevel={setPainLevel}
+                  painNote={painNote}
+                  setPainNote={setPainNote}
+                  onSubmit={handleAddPainLog}
+                  submitting={addingPainLog}
+                  error={addPainLogError}
+                />
+              </div>
             </div>
           )}
 
@@ -544,13 +546,6 @@ export function PlanDetailView({
             </div>
           )}
         </main>
-
-        <Link
-          href="/rehab"
-          className="fixed bottom-24 right-5 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground  transition-transform active:scale-90"
-        >
-          <Icon name="add" className="text-[32px]" />
-        </Link>
       </div>
 
       {/* Web */}
@@ -625,8 +620,8 @@ export function PlanDetailView({
             </div>
           </div>
 
-          <div className="flex flex-col gap-6 p-6 lg:flex-row">
-            <section className="flex-1">
+          <div className="flex flex-col gap-8 p-6 lg:flex-row lg:gap-10">
+            <section className="flex-1 space-y-6">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-headline-md text-text-1">{protocolTitle}</h3>
                 <div className="flex items-center gap-4">
@@ -650,6 +645,7 @@ export function PlanDetailView({
 
               {tab === "exercises" && (
                 <WeeklyDaysStrip
+                  className="mb-6"
                   days={plan.weeklyDays}
                   selectedDate={viewingDate}
                   todayIso={todayIso}
@@ -658,7 +654,7 @@ export function PlanDetailView({
               )}
 
               {tab === "exercises" && isBorrowedView && borrowedRoutineDate && (
-                <div className="mb-4">
+                <div className="mb-6">
                   <ProtocolBorrowedBanner
                     sourceDate={borrowedRoutineDate}
                     targetDate={viewingDate}
@@ -671,7 +667,7 @@ export function PlanDetailView({
               )}
 
               {tab === "exercises" && (
-                <div className="mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                   {protocolExercises.map((ex) => (
                     <ExerciseCard
                       key={ex.id}
@@ -699,12 +695,14 @@ export function PlanDetailView({
                     />
                   ))}
                   {protocolExercises.length === 0 && (
-                    <ProtocolEmptyDay
+                    <div className="col-span-full">
+                      <ProtocolEmptyDay
                       viewingDate={viewingDate}
                       weeklyDays={plan.weeklyDays}
                       exercises={plan.exercises}
                       onBorrowRoutine={handleBorrowRoutine}
                     />
+                    </div>
                   )}
                   {saveError && (
                     <p className="col-span-full text-body-md text-error">
@@ -775,7 +773,7 @@ export function PlanDetailView({
               )}
 
               {(tab === "exercises" || tab === "photos") && (
-                <div className="mt-2">
+                <div className="mt-8 border-t border-border/20 pt-8">
                   <PainLogForm
                     painLevel={painLevel}
                     setPainLevel={setPainLevel}

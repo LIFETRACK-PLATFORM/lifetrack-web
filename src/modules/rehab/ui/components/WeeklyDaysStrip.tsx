@@ -11,16 +11,18 @@ export function WeeklyDaysStrip({
   selectedDate,
   todayIso,
   onSelectDate,
+  className = "",
 }: {
   days: WeeklyDayPoint[];
   selectedDate: string;
   todayIso: string;
   onSelectDate: (date: string) => void;
+  className?: string;
 }) {
   if (days.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-border bg-surface-1 px-3 py-3">
+    <div className={`rounded-xl border border-border bg-surface-1 px-3 py-3 ${className}`.trim()}>
       <div className="flex items-center justify-between gap-1">
         {days.map((day, index) => {
           const isToday = day.date === todayIso;

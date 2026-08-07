@@ -27,21 +27,25 @@ export function ProtocolEmptyDay({
     .reverse()
     .find((day) => getExercisesDueOn(exercises, day.date).length > 0);
 
+  const alternateSourceDays = recentWithExercises
+    ? sourceDays.filter((day) => day.date !== recentWithExercises.date)
+    : sourceDays;
+
   return (
-    <div className="rounded-xl border border-dashed border-border/60 bg-surface-1 px-4 py-6 text-center">
+    <div className="rounded-xl border border-dashed border-border/60 bg-surface-1 px-5 py-8 text-center sm:px-6">
       <Icon name="event_busy" className="mx-auto mb-2 text-[28px] text-text-3" />
       <p className="text-body-md font-medium text-text-1">
         Sin ejercicios agendados este día
       </p>
-      <p className="mt-1 text-body-md text-text-3">
-        ¿Fue feriado o descanso pero igual hiciste la rutina? Puedes registrar la
-        misma sesión de otro día sin crear ejercicios nuevos.
+      <p className="mt-2 max-w-md mx-auto text-body-md text-text-3">
+        ¿Fue feriado o descanso pero igual hiciste la rutina? Registra la misma
+        sesión de otro día sin crear ejercicios nuevos.
       </p>
       {recentWithExercises && (
         <button
           type="button"
           onClick={() => onBorrowRoutine(recentWithExercises.date)}
-          className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95"
+          className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-label text-label-md text-primary-foreground transition-all active:scale-95"
         >
           <Icon name="content_copy" className="text-[18px]" />
           Usar rutina del{" "}
@@ -52,9 +56,13 @@ export function ProtocolEmptyDay({
           })}
         </button>
       )}
-      {sourceDays.length > 1 && (
-        <div className="mt-4 flex flex-wrap justify-center gap-2">
-          {sourceDays.map((day) => (
+      {alternateSourceDays.length > 0 && (
+        <div className="mt-6 space-y-3">
+          <p className="font-label text-label-md text-text-3">
+            {recentWithExercises ? "O elegir otro día:" : "Elegir día:"}
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {alternateSourceDays.map((day) => (
             <button
               key={day.date}
               type="button"
@@ -66,7 +74,8 @@ export function ProtocolEmptyDay({
                 day: "numeric",
               })}
             </button>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
