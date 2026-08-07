@@ -198,6 +198,13 @@ export function EditRecurringDialog({
               <input type="number" min={1} max={28} value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none" />
             </div>
           </div>
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">Modo</label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setMode("AUTO")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${mode === "AUTO" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Automático</button>
+              <button type="button" onClick={() => setMode("REMIND")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${mode === "REMIND" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Recordatorio</button>
+            </div>
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Cuenta</label>
@@ -210,6 +217,13 @@ export function EditRecurringDialog({
               <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1">
                 {categories.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
               </select>
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">Tipo</label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setKind("EXPENSE")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${kind === "EXPENSE" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Gasto</button>
+              <button type="button" onClick={() => setKind("INCOME")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${kind === "INCOME" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Ingreso</button>
             </div>
           </div>
           {(clientError || error) && <p className="text-body-md text-error">{clientError ?? error}</p>}

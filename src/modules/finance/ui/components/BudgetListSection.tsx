@@ -33,15 +33,19 @@ export function BudgetListSection({
   onDelete: (budget: BudgetListItem) => void;
   onCreate: () => void;
 }) {
-  const [items, setItems] = useState<BudgetWithStatus[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = `${month}-${year}-${budgets.map((b) => b.budgetId).join(",")}`;
+  const [fetchState, setFetchState] = useState<{
+    key: string;
+    items: BudgetWithStatus[];
+  } | null>(null);
 
   const categoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name ?? "—";
 
   useEffect(() => {
+    if (budgets.length === 0) return;
+
     let cancelled = false;
-    setLoading(true);
     const useCase = new GetBudgetStatusUseCase(repository);
     Promise.all(
       budgets.map(async (budget) => ({
@@ -52,17 +56,22 @@ export function BudgetListSection({
           periodYear: year,
         }),
       })),
-    )
-      .then((result) => {
-        if (!cancelled) setItems(result);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    ).then((result) => {
+      if (!cancelled) setFetchState({ key: cacheKey, items: result });
+    });
+
     return () => {
       cancelled = true;
     };
-  }, [budgets, categories, month, year, repository]);
+  }, [budgets, cacheKey, month, year, repository]);
+
+  const loading = budgets.length > 0 && fetchState?.key !== cacheKey;
+  const items =
+    budgets.length === 0
+      ? []
+      : fetchState?.key === cacheKey
+        ? fetchState.items
+        : [];
 
   return (
     <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">

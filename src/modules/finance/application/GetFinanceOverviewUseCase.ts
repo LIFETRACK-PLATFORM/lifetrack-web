@@ -9,7 +9,7 @@ export interface FinanceOverview {
   transactions: Transaction[];
 }
 
-export interface FinanceOverviewFilters extends TransactionFilters {}
+export type FinanceOverviewFilters = TransactionFilters;
 
 export class GetFinanceOverviewUseCase {
   constructor(private readonly financeRepository: FinanceRepository) {}
