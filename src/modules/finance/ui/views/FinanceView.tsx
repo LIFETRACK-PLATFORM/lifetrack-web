@@ -16,6 +16,13 @@ import { CreateAccountDialog } from "@/modules/finance/ui/components/CreateAccou
 import { CreateCategoryDialog } from "@/modules/finance/ui/components/CreateCategoryDialog";
 import { CreateTransactionDialog } from "@/modules/finance/ui/components/CreateTransactionDialog";
 import { CreateBudgetDialog } from "@/modules/finance/ui/components/CreateBudgetDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const now = new Date();
 
@@ -257,18 +264,21 @@ export function FinanceView({
               </p>
             ) : (
               <div className="space-y-4">
-                <select
+                <Select
                   value={budgetCategoryId}
-                  onChange={(e) => handleSelectBudgetCategory(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+                  onValueChange={handleSelectBudgetCategory}
                 >
-                  <option value="">Elegí una categoría de gasto…</option>
-                  {expenseCategories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Elegí una categoría de gasto…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {expenseCategories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
                 {budgetLoading && (
                   <p className="text-body-md text-text-3">Cargando…</p>
