@@ -22,12 +22,14 @@ import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointme
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
+import { exerciseDomId } from "@/modules/rehab/ui/rehabRoutes";
 import type { RecoveryPlanStatus } from "@/modules/rehab/domain/RehabRepository";
 import type { StatusBadgeStatus } from "@/components/ui/badge";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
@@ -82,6 +84,45 @@ export function PlanDetailView({
     addingMeasurement,
     addMeasurementError,
   } = usePlan(activeRepository, planId);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const focusExerciseId = searchParams.get("exercise");
+  const [highlightExerciseId, setHighlightExerciseId] = useState<string | null>(
+    null,
+  );
+  const focusedExerciseRef = useRef(false);
+
+  useEffect(() => {
+    if (!plan || loading || !focusExerciseId || focusedExerciseRef.current) {
+      return;
+    }
+
+    const exists = plan.exercises.some((exercise) => exercise.id === focusExerciseId);
+    if (!exists) {
+      router.replace(`/rehab/plans/${planId}`, { scroll: false });
+      return;
+    }
+
+    focusedExerciseRef.current = true;
+
+    const scrollTimer = window.setTimeout(() => {
+      document
+        .getElementById(exerciseDomId(focusExerciseId))
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlightExerciseId(focusExerciseId);
+      router.replace(`/rehab/plans/${planId}`, { scroll: false });
+    }, 150);
+
+    const highlightTimer = window.setTimeout(() => {
+      setHighlightExerciseId(null);
+    }, 2500);
+
+    return () => {
+      window.clearTimeout(scrollTimer);
+      window.clearTimeout(highlightTimer);
+    };
+  }, [plan, loading, focusExerciseId, planId, router]);
 
   const handleAddPainLog = async () => {
     const level = Number(painLevel);
@@ -254,7 +295,8 @@ export function PlanDetailView({
                   ex.completed ? (
                     <div
                       key={ex.id}
-                      className="flex flex-col gap-4 rounded-xl border border-transparent bg-surface-1 p-4 opacity-70"
+                      id={exerciseDomId(ex.id)}
+                      className={`flex flex-col gap-4 rounded-xl border border-transparent bg-surface-1 p-4 opacity-70 ${exerciseHighlightClass(highlightExerciseId, ex.id)}`}
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-primary/10">
@@ -294,7 +336,8 @@ export function PlanDetailView({
                   ) : (
                     <div
                       key={ex.id}
-                      className="flex flex-col gap-4 rounded-xl border border-border bg-surface-1 p-4"
+                      id={exerciseDomId(ex.id)}
+                      className={`flex flex-col gap-4 rounded-xl border border-border bg-surface-1 p-4 ${exerciseHighlightClass(highlightExerciseId, ex.id)}`}
                     >
                       <div className="flex items-center gap-4">
                         <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-surface-2">
@@ -327,27 +370,12 @@ export function PlanDetailView({
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 rounded-lg bg-surface-1 p-2">
-                        <button
-                          type="button"
-                          onClick={() => adjust(ex.id, -1, ex.target)}
-                          className="flex flex-1 items-center justify-center rounded-lg bg-surface-4 py-4 transition-transform active:scale-95"
-                        >
-                          <Icon name="remove" />
-                        </button>
-                        <div className="w-12 text-center">
-                          <span className="text-headline-md font-bold">
-                            {counts[ex.id] ?? 0}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => adjust(ex.id, 1, ex.target)}
-                          className="flex flex-1 items-center justify-center rounded-lg bg-primary py-4 text-primary-foreground transition-transform active:scale-95"
-                        >
-                          <Icon name="add" />
-                        </button>
-                      </div>
+                      <ExerciseRepCounter
+                        current={counts[ex.id] ?? 0}
+                        target={ex.target}
+                        onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
+                        compact={false}
+                      />
                       <DailyCheckButton
                         completedToday={ex.completedToday}
                         pending={pendingCompletionIds.has(ex.id)}
@@ -358,6 +386,9 @@ export function PlanDetailView({
                     </div>
                   ),
                 )}
+              {saveError && (
+                <p className="text-body-md text-error">{saveError}</p>
+              )}
               {completionError && (
                 <p className="text-body-md text-error">{completionError}</p>
               )}
@@ -587,7 +618,10 @@ export function PlanDetailView({
                   {plan.exercises.map((ex) => (
                     <div
                       key={ex.id}
-                      className="group flex gap-4 rounded-xl border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2"
+                      id={exerciseDomId(ex.id)}
+                      className={`group flex gap-4 rounded-xl border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2 ${
+                        ex.completed ? "opacity-70" : ""
+                      } ${exerciseHighlightClass(highlightExerciseId, ex.id)}`}
                     >
                       <ExerciseMediaThumb
                         mediaUrl={ex.image}
@@ -598,11 +632,18 @@ export function PlanDetailView({
                           <span className="rounded bg-primary/20 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
                             {ex.category}
                           </span>
-                          <DeleteExerciseButton
-                            exerciseName={ex.name}
-                            deleting={deletingExerciseId === ex.id}
-                            onConfirm={() => void deleteExercise(ex.id)}
-                          />
+                          <div className="flex items-center gap-2">
+                            {ex.completed && (
+                              <span className="font-label text-label-md font-bold text-primary">
+                                COMPLETADO
+                              </span>
+                            )}
+                            <DeleteExerciseButton
+                              exerciseName={ex.name}
+                              deleting={deletingExerciseId === ex.id}
+                              onConfirm={() => void deleteExercise(ex.id)}
+                            />
+                          </div>
                         </div>
                         <h4 className="mb-1 text-body-lg font-semibold text-text-1">
                           {ex.name}
@@ -616,7 +657,25 @@ export function PlanDetailView({
                             <Icon name="history" className="text-[16px]" />
                             {ex.reps} repeticiones
                           </div>
+                          {!ex.completed && (
+                            <div className="flex items-center gap-1 text-primary">
+                              <Icon name="target" className="text-[16px]" />
+                              <span className="font-metric text-[16px]">
+                                {counts[ex.id] ?? 0}/{ex.target}
+                              </span>
+                            </div>
+                          )}
                         </div>
+                        {!ex.completed && (
+                          <ExerciseRepCounter
+                            current={counts[ex.id] ?? 0}
+                            target={ex.target}
+                            onAdjust={(delta) =>
+                              adjust(ex.id, delta, ex.target)
+                            }
+                            compact
+                          />
+                        )}
                         <DailyCheckButton
                           completedToday={ex.completedToday}
                           pending={pendingCompletionIds.has(ex.id)}
@@ -627,6 +686,11 @@ export function PlanDetailView({
                       </div>
                     </div>
                   ))}
+                  {saveError && (
+                    <p className="col-span-full text-body-md text-error">
+                      {saveError}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -886,6 +950,15 @@ function PlanDetailSkeleton() {
   );
 }
 
+function exerciseHighlightClass(
+  highlightedId: string | null,
+  exerciseId: string,
+): string {
+  return highlightedId === exerciseId
+    ? "ring-2 ring-primary ring-offset-2 ring-offset-background transition-shadow duration-500"
+    : "transition-shadow duration-500";
+}
+
 function DailyCheckButton({
   completedToday,
   pending,
@@ -942,6 +1015,8 @@ function PlanStatusControl({
     return (
       <ConfirmStatusButton
         label="Reactivar plan"
+        icon="play_circle"
+        className="border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
         confirmTitle="Reactivar plan"
         confirmDescription="El plan volverá a estar activo y aparecerá de nuevo en tu panel de rehabilitación."
         confirmLabel="Reactivar"
@@ -955,6 +1030,8 @@ function PlanStatusControl({
     <div className="flex flex-wrap items-center gap-2">
       <ConfirmStatusButton
         label="Marcar como completado"
+        icon="check_circle"
+        className="border-success/40 bg-success/10 text-success hover:bg-success/20"
         confirmTitle="Completar plan"
         confirmDescription="El plan pasará a estado completado y podrás crear un nuevo plan de recuperación. Esta acción no se puede deshacer."
         confirmLabel="Completar"
@@ -963,6 +1040,8 @@ function PlanStatusControl({
       />
       <ConfirmStatusButton
         label="Pausar plan"
+        icon="pause_circle"
+        className="border-warning/40 bg-warning/10 text-warning hover:bg-warning/20"
         confirmTitle="Pausar plan"
         confirmDescription="El plan dejará de estar activo hasta que lo reactives."
         confirmLabel="Pausar"
@@ -973,8 +1052,59 @@ function PlanStatusControl({
   );
 }
 
+function ExerciseRepCounter({
+  current,
+  target,
+  onAdjust,
+  compact = false,
+}: {
+  current: number;
+  target: number;
+  onAdjust: (delta: number) => void;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-lg bg-surface-2 p-2 ${compact ? "mt-3" : ""}`}
+    >
+      <button
+        type="button"
+        onClick={() => onAdjust(-1)}
+        disabled={current <= 0}
+        className={`flex flex-1 items-center justify-center rounded-lg bg-surface-4 transition-transform active:scale-95 disabled:opacity-40 ${
+          compact ? "py-2" : "py-4"
+        }`}
+        aria-label="Reducir repeticiones"
+      >
+        <Icon name="remove" />
+      </button>
+      <div className="min-w-12 text-center">
+        <span
+          className={`font-bold text-primary ${compact ? "font-metric text-[18px]" : "text-headline-md"}`}
+        >
+          {current}
+        </span>
+        <span className="font-label text-label-md text-text-3">/{target}</span>
+      </div>
+      <button
+        type="button"
+        onClick={() => onAdjust(1)}
+        disabled={current >= target}
+        className={`flex flex-1 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform active:scale-95 disabled:opacity-40 ${
+          compact ? "py-2" : "py-4"
+        }`}
+        aria-label="Aumentar repeticiones"
+      >
+        <Icon name="add" />
+      </button>
+    </div>
+  );
+}
+
 function ConfirmStatusButton({
   label,
+  icon,
+  className,
   confirmTitle,
   confirmDescription,
   confirmLabel,
@@ -982,6 +1112,8 @@ function ConfirmStatusButton({
   onConfirm,
 }: {
   label: string;
+  icon: string;
+  className?: string;
   confirmTitle: string;
   confirmDescription: string;
   confirmLabel: string;
@@ -991,7 +1123,14 @@ function ConfirmStatusButton({
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" disabled={disabled}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={disabled}
+          className={className}
+        >
+          <Icon name={icon} className="text-[18px]" />
           {label}
         </Button>
       </AlertDialogTrigger>
