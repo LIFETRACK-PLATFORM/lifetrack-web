@@ -152,4 +152,24 @@ export class HttpAuthRepository implements AuthRepository {
       roles: data.roles,
     });
   }
+
+  async linkAccount(input: {
+    provider: string;
+    linkToken: string;
+    password: string;
+  }): Promise<void> {
+    const response = await fetch(`${API_GATEWAY_URL}/auth/link-account`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(input),
+    });
+
+    if (!response.ok) {
+      const errorBody = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+      throw new Error(errorBody?.message ?? "No se pudo vincular la cuenta");
+    }
+  }
 }

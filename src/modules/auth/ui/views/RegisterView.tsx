@@ -12,6 +12,7 @@ import { loginAvatars, loginHeroImage } from "@/modules/auth/infrastructure/cont
 import { AuthRepository } from "@/modules/auth/domain/AuthRepository";
 import { MockAuthRepository } from "@/modules/auth/infrastructure/MockAuthRepository";
 import { useRegister } from "@/modules/auth/ui/hooks/useRegister";
+import { oauthStartUrl } from "@/modules/auth/infrastructure/oauthUrls";
 
 export function RegisterView({ repository }: { repository?: AuthRepository } = {}) {
   const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +40,10 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
   }
 
   const displayError = matchError ?? error;
+
+  function startOAuth(provider: "google" | "github") {
+    window.location.href = oauthStartUrl(provider);
+  }
 
   if (success) {
     return (
@@ -229,6 +234,36 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
                 <Icon name="arrow_forward" />
               </Button>
             </form>
+
+            <div className="relative my-10">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border/30" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-surface-1 px-4 font-label text-label-md text-text-3">
+                  O continúa con
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 w-full"
+                onClick={() => startOAuth("google")}
+              >
+                <span className="font-label text-label-md font-semibold">Google</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 w-full"
+                onClick={() => startOAuth("github")}
+              >
+                <span className="font-label text-label-md font-semibold">GitHub</span>
+              </Button>
+            </div>
           </div>
 
           <p className="mt-10 text-center text-body-md text-text-3">
@@ -399,7 +434,34 @@ export function RegisterView({ repository }: { repository?: AuthRepository } = {
               </Button>
             </form>
 
-            <p className="mt-10 text-center text-body-md text-text-3">
+            <div className="my-10 flex items-center">
+              <div className="h-px flex-grow bg-border" />
+              <span className="px-4 font-label text-label-md text-text-3">
+                o continúa con
+              </span>
+              <div className="h-px flex-grow bg-border" />
+            </div>
+
+            <div className="mb-10 grid grid-cols-2 gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 w-full"
+                onClick={() => startOAuth("google")}
+              >
+                Google
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 w-full"
+                onClick={() => startOAuth("github")}
+              >
+                GitHub
+              </Button>
+            </div>
+
+            <p className="text-center text-body-md text-text-3">
               ¿Ya tienes una cuenta?{" "}
               <Link href="/login" className="font-bold text-primary hover:underline">
                 Inicia sesión

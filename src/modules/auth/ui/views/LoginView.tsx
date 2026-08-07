@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,18 @@ import { loginAvatars, loginHeroImage } from "@/modules/auth/infrastructure/cont
 import { AuthRepository } from "@/modules/auth/domain/AuthRepository";
 import { MockAuthRepository } from "@/modules/auth/infrastructure/MockAuthRepository";
 import { useLogin } from "@/modules/auth/ui/hooks/useLogin";
+import { oauthStartUrl } from "@/modules/auth/infrastructure/oauthUrls";
+
+const OAUTH_ERROR_MESSAGES: Record<string, string> = {
+  oauth_denied: "El proveedor OAuth denegó el acceso.",
+  oauth_invalid_state: "La sesión OAuth expiró o no es válida. Intenta de nuevo.",
+  oauth_failed: "No se pudo completar el inicio de sesión social.",
+};
 
 export function LoginView({ repository }: { repository?: AuthRepository } = {}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const oauthError = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
   const activeRepository = useMemo(
     () => repository ?? new MockAuthRepository(),
@@ -23,6 +32,12 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
   );
   const { loading, success, error, isEmailNotVerified, login } =
     useLogin(activeRepository);
+  const displayError =
+    error ?? (oauthError ? OAUTH_ERROR_MESSAGES[oauthError] ?? null : null);
+
+  function startOAuth(provider: "google" | "github") {
+    window.location.href = oauthStartUrl(provider);
+  }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -138,12 +153,12 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                   </Button>
                 </div>
               </div>
-              {error && (
+              {displayError && (
                 <p
                   role="alert"
                   className="rounded-lg bg-error/10 px-4 py-3 text-body-md text-error"
                 >
-                  {error}
+                  {displayError}
                   {isEmailNotVerified && (
                     <span className="mt-1 block text-label-md">
                       Revisa tu bandeja de entrada (y spam) para el enlace de
@@ -178,7 +193,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 type="button"
                 variant="outline"
                 className="h-12 w-full"
-                onClick={() => router.push("/onboarding")}
+                onClick={() => startOAuth("google")}
               >
                 <span className="font-label text-label-md font-semibold">Google</span>
               </Button>
@@ -186,9 +201,9 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 type="button"
                 variant="outline"
                 className="h-12 w-full"
-                onClick={() => router.push("/onboarding")}
+                onClick={() => startOAuth("github")}
               >
-                <span className="font-label text-label-md font-semibold">Apple</span>
+                <span className="font-label text-label-md font-semibold">GitHub</span>
               </Button>
             </div>
           </div>
@@ -320,12 +335,12 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                   </Button>
                 </div>
               </div>
-              {error && (
+              {displayError && (
                 <p
                   role="alert"
                   className="rounded-lg bg-error/10 px-4 py-3 text-body-md text-error"
                 >
-                  {error}
+                  {displayError}
                   {isEmailNotVerified && (
                     <span className="mt-1 block text-label-md">
                       Revisa tu bandeja de entrada (y spam) para el enlace de
@@ -356,7 +371,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 type="button"
                 variant="outline"
                 className="h-12 w-full"
-                onClick={() => router.push("/onboarding")}
+                onClick={() => startOAuth("google")}
               >
                 Google
               </Button>
@@ -364,7 +379,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
                 type="button"
                 variant="outline"
                 className="h-12 w-full"
-                onClick={() => router.push("/onboarding")}
+                onClick={() => startOAuth("github")}
               >
                 GitHub
               </Button>
