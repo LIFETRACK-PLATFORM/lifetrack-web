@@ -223,22 +223,30 @@ export function AddAppointmentDialog({
             />
           </div>
 
-          <div className="space-y-1">
-            <Label
-              htmlFor="appointment-repeat"
-              className="font-label text-label-md text-text-3"
-            >
-              Repetir cada semana (0-12 veces)
-            </Label>
-            <Input
-              id="appointment-repeat"
-              type="number"
-              min={0}
-              max={12}
-              value={repeatWeeks}
-              onChange={(e) => setRepeatWeeks(e.target.value)}
-            />
-          </div>
+          <details className="rounded-lg border border-border/40 bg-surface-2/50 px-3 py-2">
+            <summary className="cursor-pointer font-label text-label-md text-text-3">
+              Repetir semanalmente (opcional)
+            </summary>
+            <div className="mt-3 space-y-1">
+              <Label
+                htmlFor="appointment-repeat"
+                className="font-label text-label-md text-text-3"
+              >
+                Número de semanas extra (0-12)
+              </Label>
+              <Input
+                id="appointment-repeat"
+                type="number"
+                min={0}
+                max={12}
+                value={repeatWeeks}
+                onChange={(e) => setRepeatWeeks(e.target.value)}
+              />
+              <p className="text-[12px] text-text-3">
+                Crea citas adicionales cada 7 días. Deja 0 para una sola cita.
+              </p>
+            </div>
+          </details>
 
           {(clientError || error) && (
             <p className="text-body-md text-error">{clientError ?? error}</p>

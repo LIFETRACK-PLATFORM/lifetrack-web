@@ -7,14 +7,17 @@ import {
   AddPainLogInput,
   RecoveryPlanStatus,
   RehabRepository,
+  UpdateExerciseInput,
 } from "../../domain/RehabRepository";
 import { GetPlanUseCase } from "../../application/GetPlanUseCase";
 import { UpdateExerciseProgressUseCase } from "../../application/UpdateExerciseProgressUseCase";
 import { AddExerciseUseCase } from "../../application/AddExerciseUseCase";
 import { DeleteExerciseUseCase } from "../../application/DeleteExerciseUseCase";
+import { UpdateExerciseUseCase } from "../../application/UpdateExerciseUseCase";
 import { MarkExerciseCompletionUseCase } from "../../application/MarkExerciseCompletionUseCase";
 import { UpdateRecoveryPlanStatusUseCase } from "../../application/UpdateRecoveryPlanStatusUseCase";
 import { AddAppointmentUseCase } from "../../application/AddAppointmentUseCase";
+import { DeleteAppointmentUseCase } from "../../application/DeleteAppointmentUseCase";
 import { MarkAppointmentAttendanceUseCase } from "../../application/MarkAppointmentAttendanceUseCase";
 import { AddPainLogUseCase } from "../../application/AddPainLogUseCase";
 import { AddMeasurementUseCase } from "../../application/AddMeasurementUseCase";
@@ -29,6 +32,10 @@ export function usePlan(repository: RehabRepository, planId: string) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [addExerciseError, setAddExerciseError] = useState<string | null>(null);
   const [addingExercise, setAddingExercise] = useState(false);
+  const [updatingExercise, setUpdatingExercise] = useState(false);
+  const [updateExerciseError, setUpdateExerciseError] = useState<string | null>(
+    null,
+  );
   const [deleteExerciseError, setDeleteExerciseError] = useState<string | null>(
     null,
   );
@@ -43,6 +50,12 @@ export function usePlan(repository: RehabRepository, planId: string) {
     null,
   );
   const [addingAppointment, setAddingAppointment] = useState(false);
+  const [deletingAppointmentId, setDeletingAppointmentId] = useState<
+    string | null
+  >(null);
+  const [deleteAppointmentError, setDeleteAppointmentError] = useState<
+    string | null
+  >(null);
   const [attendanceError, setAttendanceError] = useState<string | null>(null);
   const [pendingAttendanceIds, setPendingAttendanceIds] = useState<Set<string>>(
     new Set(),
@@ -145,6 +158,31 @@ export function usePlan(repository: RehabRepository, planId: string) {
         return false;
       } finally {
         setAddingExercise(false);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
+  const updateExercise = useCallback(
+    async (exerciseId: string, input: UpdateExerciseInput) => {
+      if (!plan) return false;
+      setUpdatingExercise(true);
+      setUpdateExerciseError(null);
+
+      try {
+        const useCase = new UpdateExerciseUseCase(repository);
+        await useCase.execute(plan.id, exerciseId, input);
+        await refresh();
+        return true;
+      } catch (err) {
+        setUpdateExerciseError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo actualizar el ejercicio",
+        );
+        return false;
+      } finally {
+        setUpdatingExercise(false);
       }
     },
     [plan, repository, refresh],
@@ -253,6 +291,29 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [plan, repository, refresh],
   );
 
+  const deleteAppointment = useCallback(
+    async (appointmentId: string) => {
+      if (!plan) return false;
+      setDeletingAppointmentId(appointmentId);
+      setDeleteAppointmentError(null);
+
+      try {
+        const useCase = new DeleteAppointmentUseCase(repository);
+        await useCase.execute(plan.id, appointmentId);
+        await refresh();
+        return true;
+      } catch (err) {
+        setDeleteAppointmentError(
+          err instanceof Error ? err.message : "No se pudo eliminar la cita",
+        );
+        return false;
+      } finally {
+        setDeletingAppointmentId(null);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
   const addPainLog = useCallback(
     async (input: AddPainLogInput) => {
       if (!plan) return false;
@@ -337,6 +398,9 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addExercise,
     addingExercise,
     addExerciseError,
+    updateExercise,
+    updatingExercise,
+    updateExerciseError,
     deleteExercise,
     deletingExerciseId,
     deleteExerciseError,
@@ -349,6 +413,9 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addAppointment,
     addingAppointment,
     addAppointmentError,
+    deleteAppointment,
+    deletingAppointmentId,
+    deleteAppointmentError,
     markAppointmentAttendance,
     attendanceError,
     pendingAttendanceIds,

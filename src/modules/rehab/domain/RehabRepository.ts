@@ -19,6 +19,8 @@ export interface AddExerciseInput {
   daysOfWeek?: number[];
 }
 
+export type UpdateExerciseInput = AddExerciseInput;
+
 export interface AddAppointmentInput {
   date: string;
   provider: string;
@@ -65,8 +67,14 @@ export interface RehabRepository {
   createPlan(input: CreateRecoveryPlanInput): Promise<string>;
   updatePlanStatus(planId: string, status: RecoveryPlanStatus): Promise<void>;
   addExercise(planId: string, input: AddExerciseInput): Promise<void>;
+  updateExercise(
+    planId: string,
+    exerciseId: string,
+    input: UpdateExerciseInput,
+  ): Promise<void>;
   deleteExercise(planId: string, exerciseId: string): Promise<void>;
   addAppointment(planId: string, input: AddAppointmentInput): Promise<void>;
+  deleteAppointment(planId: string, appointmentId: string): Promise<void>;
   markAppointmentAttendance(
     appointmentId: string,
     attended: boolean,
