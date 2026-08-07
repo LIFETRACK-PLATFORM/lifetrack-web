@@ -8,6 +8,7 @@ interface ExerciseProps {
   target: number;
   completed: boolean;
   category: string;
+  phase: number;
   sets: number;
   reps: number;
   image: string;
@@ -48,6 +49,10 @@ export class Exercise extends Entity<ExerciseProps> {
 
   get category(): string {
     return this.props.category;
+  }
+
+  get phase(): number {
+    return this.props.phase;
   }
 
   get sets(): number {

@@ -33,6 +33,7 @@ function mapExercise(
       target,
       completed: current >= target && target > 0,
       category: `phase-${dto.phase}`,
+      phase: dto.phase,
       sets: dto.targetSets,
       reps: dto.targetReps,
       image: DEFAULT_EXERCISE_IMAGE,

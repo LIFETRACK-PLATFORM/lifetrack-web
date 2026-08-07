@@ -16,11 +16,13 @@ import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/shared/ui/Icon";
-import { ExerciseMediaThumb } from "@/modules/rehab/ui/components/ExerciseMediaThumb";
-import { AddExerciseDialog } from "@/modules/rehab/ui/components/AddExerciseDialog";
+import { ExerciseCard } from "@/modules/rehab/ui/components/ExerciseCard";
+import { ExerciseFormDialog } from "@/modules/rehab/ui/components/ExerciseFormDialog";
 import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointmentDialog";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
+import { Exercise } from "@/modules/rehab/domain/Exercise";
+import { Appointment } from "@/modules/rehab/domain/Appointment";
 import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
 import { exerciseDomId } from "@/modules/rehab/ui/rehabRoutes";
 import type { RecoveryPlanStatus } from "@/modules/rehab/domain/RehabRepository";
@@ -45,6 +47,7 @@ export function PlanDetailView({
 }) {
   const [tab, setTab] = useState<Tab>("exercises");
   const [isAddExerciseOpen, setIsAddExerciseOpen] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [isAddAppointmentOpen, setIsAddAppointmentOpen] = useState(false);
   const [painLevel, setPainLevel] = useState("3");
   const [painNote, setPainNote] = useState("");
@@ -65,6 +68,9 @@ export function PlanDetailView({
     addExercise,
     addingExercise,
     addExerciseError,
+    updateExercise,
+    updatingExercise,
+    updateExerciseError,
     deleteExercise,
     deletingExerciseId,
     deleteExerciseError,
@@ -77,6 +83,9 @@ export function PlanDetailView({
     addAppointment,
     addingAppointment,
     addAppointmentError,
+    deleteAppointment,
+    deletingAppointmentId,
+    deleteAppointmentError,
     markAppointmentAttendance,
     attendanceError,
     pendingAttendanceIds,
@@ -294,103 +303,28 @@ export function PlanDetailView({
               </button>
               {plan.exercises
                 .filter((e) => e.id !== "glute")
-                .map((ex) =>
-                  ex.completed ? (
-                    <div
-                      key={ex.id}
-                      id={exerciseDomId(ex.id)}
-                      className={`flex flex-col gap-4 rounded-xl border border-transparent bg-surface-1 p-4 opacity-70 ${exerciseHighlightClass(highlightExerciseId, ex.id)}`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-primary/10">
-                          <Icon
-                            name="check_circle"
-                            filled
-                            className="text-[32px] text-primary"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-[18px] font-bold leading-tight text-text-1">
-                            {ex.name}
-                          </h4>
-                          <p className="font-label text-label-md text-text-3">
-                            {ex.detail}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <DeleteExerciseButton
-                            exerciseName={ex.name}
-                            deleting={deletingExerciseId === ex.id}
-                            onConfirm={() => void deleteExercise(ex.id)}
-                          />
-                          <span className="font-label text-label-md font-bold text-primary">
-                            COMPLETADO
-                          </span>
-                        </div>
-                      </div>
-                      <DailyCheckButton
-                        completedToday={ex.completedToday}
-                        pending={pendingCompletionIds.has(ex.id)}
-                        onToggle={() =>
-                          toggleExerciseCompletion(ex.id, !ex.completedToday)
-                        }
-                      />
-                    </div>
-                  ) : (
-                    <div
-                      key={ex.id}
-                      id={exerciseDomId(ex.id)}
-                      className={`flex flex-col gap-4 rounded-xl border border-border bg-surface-1 p-4 ${exerciseHighlightClass(highlightExerciseId, ex.id)}`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-surface-2">
-                          <Icon
-                            name={ex.icon}
-                            className="text-[32px] text-primary"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-[18px] font-bold leading-tight text-text-1">
-                            {ex.name}
-                          </h4>
-                          <p className="font-label text-label-md text-text-3">
-                            {ex.detail}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <DeleteExerciseButton
-                            exerciseName={ex.name}
-                            deleting={deletingExerciseId === ex.id}
-                            onConfirm={() => void deleteExercise(ex.id)}
-                          />
-                          <div className="text-right">
-                            <span className="font-metric text-[24px] text-primary">
-                              {String(counts[ex.id] ?? 0).padStart(2, "0")}
-                            </span>
-                            <span className="font-label text-label-md text-text-3">
-                              /{ex.target}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <ExerciseRepCounter
-                        current={counts[ex.id] ?? 0}
-                        target={ex.target}
-                        onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
-                        compact={false}
-                      />
-                      <DailyCheckButton
-                        completedToday={ex.completedToday}
-                        pending={pendingCompletionIds.has(ex.id)}
-                        onToggle={() =>
-                          toggleExerciseCompletion(ex.id, !ex.completedToday)
-                        }
-                      />
-                    </div>
-                  ),
-                )}
+                .map((ex) => (
+                  <ExerciseCard
+                    key={ex.id}
+                    exercise={ex}
+                    current={counts[ex.id] ?? 0}
+                    highlighted={highlightExerciseId === ex.id}
+                    pendingCompletion={pendingCompletionIds.has(ex.id)}
+                    deleting={deletingExerciseId === ex.id}
+                    showMedia={false}
+                    onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
+                    onToggleCompletion={() =>
+                      toggleExerciseCompletion(ex.id, !ex.completedToday)
+                    }
+                    onEdit={() => setEditingExercise(ex)}
+                    onDelete={() => void deleteExercise(ex.id)}
+                  />
+                ))}
               {saveError && (
                 <p className="text-body-md text-error">{saveError}</p>
+              )}
+              {updateExerciseError && (
+                <p className="text-body-md text-error">{updateExerciseError}</p>
               )}
               {completionError && (
                 <p className="text-body-md text-error">{completionError}</p>
@@ -426,45 +360,22 @@ export function PlanDetailView({
                 Agregar cita
               </button>
               {plan.appointments.map((apt) => (
-                <div
+                <AppointmentListItem
                   key={apt.id}
-                  className="flex items-center gap-6 rounded-xl border border-border bg-surface-1 p-6"
-                >
-                  <div className="flex min-w-[70px] flex-col items-center justify-center rounded-lg bg-surface-3 px-4 py-2 text-text-1">
-                    <span className="font-label text-label-md font-bold">
-                      {apt.month}
-                    </span>
-                    <span className="font-metric text-[28px]">{apt.day}</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-[18px] font-bold text-text-1">
-                        {apt.title}
-                      </h4>
-                      <StatusBadge
-                        status={apt.type === "THERAPY" ? "therapy" : "medical"}
-                      />
-                    </div>
-                    <p className="font-label text-label-md text-text-3">
-                      {apt.detail}
-                    </p>
-                    {isPastOrToday(apt.date) && (
-                      <div className="mt-2">
-                        <AppointmentAttendanceControl
-                          attended={apt.attended}
-                          pending={pendingAttendanceIds.has(apt.id)}
-                          onMark={(attended) =>
-                            void markAppointmentAttendance(apt.id, attended)
-                          }
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <Icon name="chevron_right" className="text-text-3" />
-                </div>
+                  apt={apt}
+                  pendingAttendance={pendingAttendanceIds.has(apt.id)}
+                  deleting={deletingAppointmentId === apt.id}
+                  onMarkAttendance={(attended) =>
+                    void markAppointmentAttendance(apt.id, attended)
+                  }
+                  onDelete={() => void deleteAppointment(apt.id)}
+                />
               ))}
               {attendanceError && (
                 <p className="text-body-md text-error">{attendanceError}</p>
+              )}
+              {deleteAppointmentError && (
+                <p className="text-body-md text-error">{deleteAppointmentError}</p>
               )}
               <PainLogForm
                 painLevel={painLevel}
@@ -631,81 +542,32 @@ export function PlanDetailView({
               </div>
 
               {(tab === "exercises" || tab === "photos") && (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {plan.exercises.map((ex) => (
-                    <div
+                    <ExerciseCard
                       key={ex.id}
-                      id={exerciseDomId(ex.id)}
-                      className={`group flex gap-4 rounded-xl border border-border bg-surface-1 p-4 transition-colors hover:bg-surface-2 ${
-                        ex.completed ? "opacity-70" : ""
-                      } ${exerciseHighlightClass(highlightExerciseId, ex.id)}`}
-                    >
-                      <ExerciseMediaThumb
-                        mediaUrl={ex.image}
-                        name={ex.name}
-                      />
-                      <div className="flex min-w-0 flex-1 flex-col justify-center">
-                        <div className="mb-1 flex items-start justify-between gap-2">
-                          <span className="rounded bg-primary/20 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
-                            {ex.category}
-                          </span>
-                          <div className="flex shrink-0 items-center gap-2">
-                            {ex.completed && (
-                              <span className="font-label text-label-md font-bold text-primary">
-                                COMPLETADO
-                              </span>
-                            )}
-                            <DeleteExerciseButton
-                              exerciseName={ex.name}
-                              deleting={deletingExerciseId === ex.id}
-                              onConfirm={() => void deleteExercise(ex.id)}
-                            />
-                          </div>
-                        </div>
-                        <h4 className="mb-1 truncate text-body-lg font-semibold text-text-1">
-                          {ex.name}
-                        </h4>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-label text-label-md text-text-3">
-                          <div className="flex items-center gap-1">
-                            <Icon name="repeat" className="text-[16px]" />
-                            {ex.sets} series
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Icon name="history" className="text-[16px]" />
-                            {ex.reps} repeticiones
-                          </div>
-                          {!ex.completed && (
-                            <div className="flex items-center gap-1 text-primary">
-                              <Icon name="target" className="text-[16px]" />
-                              <span className="font-metric text-[16px]">
-                                {counts[ex.id] ?? 0}/{ex.target}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        {!ex.completed && (
-                          <ExerciseRepCounter
-                            current={counts[ex.id] ?? 0}
-                            target={ex.target}
-                            onAdjust={(delta) =>
-                              adjust(ex.id, delta, ex.target)
-                            }
-                            compact
-                          />
-                        )}
-                        <DailyCheckButton
-                          completedToday={ex.completedToday}
-                          pending={pendingCompletionIds.has(ex.id)}
-                          onToggle={() =>
-                            toggleExerciseCompletion(ex.id, !ex.completedToday)
-                          }
-                        />
-                      </div>
-                    </div>
+                      exercise={ex}
+                      current={counts[ex.id] ?? 0}
+                      highlighted={highlightExerciseId === ex.id}
+                      pendingCompletion={pendingCompletionIds.has(ex.id)}
+                      deleting={deletingExerciseId === ex.id}
+                      showMedia
+                      onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
+                      onToggleCompletion={() =>
+                        toggleExerciseCompletion(ex.id, !ex.completedToday)
+                      }
+                      onEdit={() => setEditingExercise(ex)}
+                      onDelete={() => void deleteExercise(ex.id)}
+                    />
                   ))}
                   {saveError && (
                     <p className="col-span-full text-body-md text-error">
                       {saveError}
+                    </p>
+                  )}
+                  {updateExerciseError && (
+                    <p className="col-span-full text-body-md text-error">
+                      {updateExerciseError}
                     </p>
                   )}
                 </div>
@@ -736,42 +598,24 @@ export function PlanDetailView({
                     Agregar cita
                   </button>
                   {plan.appointments.map((apt) => (
-                    <div
+                    <AppointmentListItem
                       key={apt.id}
-                      className="flex items-center gap-6 rounded-xl border border-border/30 bg-surface-1 p-6"
-                    >
-                      <div className="flex min-w-[70px] flex-col items-center rounded-lg bg-surface-3 px-4 py-2 text-text-1">
-                        <span className="font-label text-label-md font-bold">
-                          {apt.month}
-                        </span>
-                        <span className="font-metric text-[28px]">{apt.day}</span>
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-body-lg font-bold">{apt.title}</h4>
-                          <StatusBadge
-                        status={apt.type === "THERAPY" ? "therapy" : "medical"}
-                      />
-                        </div>
-                        <p className="font-label text-label-md text-text-3">
-                          {apt.detail}
-                        </p>
-                        {isPastOrToday(apt.date) && (
-                          <div className="mt-2">
-                            <AppointmentAttendanceControl
-                              attended={apt.attended}
-                              pending={pendingAttendanceIds.has(apt.id)}
-                              onMark={(attended) =>
-                                void markAppointmentAttendance(apt.id, attended)
-                              }
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                      apt={apt}
+                      pendingAttendance={pendingAttendanceIds.has(apt.id)}
+                      deleting={deletingAppointmentId === apt.id}
+                      onMarkAttendance={(attended) =>
+                        void markAppointmentAttendance(apt.id, attended)
+                      }
+                      onDelete={() => void deleteAppointment(apt.id)}
+                    />
                   ))}
                   {attendanceError && (
                     <p className="text-body-md text-error">{attendanceError}</p>
+                  )}
+                  {deleteAppointmentError && (
+                    <p className="text-body-md text-error">
+                      {deleteAppointmentError}
+                    </p>
                   )}
                 </div>
               )}
@@ -890,11 +734,28 @@ export function PlanDetailView({
       </div>
 
       {isAddExerciseOpen && (
-        <AddExerciseDialog
+        <ExerciseFormDialog
           onClose={() => setIsAddExerciseOpen(false)}
           onSubmit={addExercise}
           submitting={addingExercise}
           error={addExerciseError}
+        />
+      )}
+      {editingExercise && (
+        <ExerciseFormDialog
+          key={editingExercise.id}
+          exerciseId={editingExercise.id}
+          initial={{
+            name: editingExercise.name,
+            targetSets: editingExercise.sets,
+            targetReps: editingExercise.reps,
+            phase: editingExercise.phase,
+            daysOfWeek: editingExercise.daysOfWeek,
+          }}
+          onClose={() => setEditingExercise(null)}
+          onSubmit={(input) => updateExercise(editingExercise.id, input)}
+          submitting={updatingExercise}
+          error={updateExerciseError}
         />
       )}
 
@@ -981,47 +842,102 @@ function PlanDetailSkeleton() {
   );
 }
 
-function exerciseHighlightClass(
-  highlightedId: string | null,
-  exerciseId: string,
-): string {
-  return highlightedId === exerciseId
-    ? "ring-2 ring-primary ring-offset-2 ring-offset-background transition-shadow duration-500"
-    : "transition-shadow duration-500";
+function isPastOrToday(dateIso: string): boolean {
+  return new Date(dateIso).getTime() <= Date.now();
 }
 
-function DailyCheckButton({
-  completedToday,
-  pending,
-  onToggle,
+function AppointmentListItem({
+  apt,
+  pendingAttendance,
+  deleting,
+  onMarkAttendance,
+  onDelete,
 }: {
-  completedToday: boolean;
-  pending: boolean;
-  onToggle: () => void;
+  apt: Appointment;
+  pendingAttendance: boolean;
+  deleting: boolean;
+  onMarkAttendance: (attended: boolean) => void;
+  onDelete: () => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      disabled={pending}
-      className={`flex w-full items-center justify-center gap-2 rounded-lg py-2 font-label text-label-md transition-all active:scale-95 disabled:opacity-60 ${
-        completedToday
-          ? "bg-primary/10 text-primary"
-          : "bg-surface-3 text-text-3 hover:bg-surface-4"
-      }`}
-    >
-      <Icon name={completedToday ? "check_circle" : "radio_button_unchecked"} />
-      {pending
-        ? "Guardando…"
-        : completedToday
-          ? "Hecho hoy"
-          : "Marcar como hecho hoy"}
-    </button>
+    <div className="flex flex-col gap-3 rounded-xl border border-border/30 bg-surface-1 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+      <div className="flex min-w-0 flex-1 items-start gap-4">
+        <div className="flex min-w-[64px] shrink-0 flex-col items-center rounded-lg bg-surface-3 px-3 py-2 text-text-1">
+          <span className="font-label text-label-md font-bold">{apt.month}</span>
+          <span className="font-metric text-[24px] sm:text-[28px]">{apt.day}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <h4 className="truncate text-body-lg font-bold">{apt.title}</h4>
+            <StatusBadge
+              status={apt.type === "THERAPY" ? "therapy" : "medical"}
+            />
+          </div>
+          <p className="font-label text-label-md text-text-3">{apt.detail}</p>
+          {isPastOrToday(apt.date) && (
+            <div className="mt-2">
+              <AppointmentAttendanceControl
+                attended={apt.attended}
+                pending={pendingAttendance}
+                onMark={onMarkAttendance}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+      <DeleteAppointmentButton
+        title={apt.title}
+        deleting={deleting}
+        onConfirm={onDelete}
+      />
+    </div>
   );
 }
 
-function isPastOrToday(dateIso: string): boolean {
-  return new Date(dateIso).getTime() <= Date.now();
+function DeleteAppointmentButton({
+  title,
+  deleting,
+  onConfirm,
+}: {
+  title: string;
+  deleting: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="self-end text-text-3 hover:text-error sm:self-start"
+          disabled={deleting}
+          aria-label={`Eliminar cita ${title}`}
+        >
+          <Icon name="trash" className="text-[18px]" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Eliminar cita</AlertDialogTitle>
+          <AlertDialogDescription>
+            ¿Eliminar la cita con &quot;{title}&quot;? Esta acción no se puede
+            deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={deleting}
+          >
+            {deleting ? "Eliminando…" : "Eliminar"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
 }
 
 function AppointmentAttendanceControl({
@@ -1142,55 +1058,6 @@ function PlanStatusControl({
   );
 }
 
-function ExerciseRepCounter({
-  current,
-  target,
-  onAdjust,
-  compact = false,
-}: {
-  current: number;
-  target: number;
-  onAdjust: (delta: number) => void;
-  compact?: boolean;
-}) {
-  return (
-    <div
-      className={`flex items-center gap-2 rounded-lg bg-surface-2 p-2 ${compact ? "mt-3" : ""}`}
-    >
-      <button
-        type="button"
-        onClick={() => onAdjust(-1)}
-        disabled={current <= 0}
-        className={`flex flex-1 items-center justify-center rounded-lg bg-surface-4 transition-transform active:scale-95 disabled:opacity-40 ${
-          compact ? "py-2" : "py-4"
-        }`}
-        aria-label="Reducir repeticiones"
-      >
-        <Icon name="remove" />
-      </button>
-      <div className="min-w-12 text-center">
-        <span
-          className={`font-bold text-primary ${compact ? "font-metric text-[18px]" : "text-headline-md"}`}
-        >
-          {current}
-        </span>
-        <span className="font-label text-label-md text-text-3">/{target}</span>
-      </div>
-      <button
-        type="button"
-        onClick={() => onAdjust(1)}
-        disabled={current >= target}
-        className={`flex flex-1 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform active:scale-95 disabled:opacity-40 ${
-          compact ? "py-2" : "py-4"
-        }`}
-        aria-label="Aumentar repeticiones"
-      >
-        <Icon name="add" />
-      </button>
-    </div>
-  );
-}
-
 function ConfirmStatusButton({
   label,
   icon,
@@ -1233,52 +1100,6 @@ function ConfirmStatusButton({
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm} disabled={disabled}>
             {confirmLabel}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
-function DeleteExerciseButton({
-  exerciseName,
-  deleting,
-  onConfirm,
-}: {
-  exerciseName: string;
-  deleting: boolean;
-  onConfirm: () => void;
-}) {
-  return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="text-text-3 hover:text-error"
-          disabled={deleting}
-          aria-label={`Eliminar ${exerciseName}`}
-        >
-          <Icon name="trash" className="text-[18px]" />
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Eliminar ejercicio</AlertDialogTitle>
-          <AlertDialogDescription>
-            ¿Seguro que quieres eliminar &quot;{exerciseName}&quot;? Esta acción no
-            se puede deshacer.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            onClick={onConfirm}
-            disabled={deleting}
-          >
-            {deleting ? "Eliminando…" : "Eliminar"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
