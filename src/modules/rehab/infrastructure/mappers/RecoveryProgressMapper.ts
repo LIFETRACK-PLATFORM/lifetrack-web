@@ -45,6 +45,7 @@ function mapExercise(
       reps: dto.targetReps,
       image: DEFAULT_EXERCISE_IMAGE,
       daysOfWeek: dto.daysOfWeek ?? [],
+      completions: (dto.completions ?? []).map((c) => c.date),
       scheduledToday: today?.scheduledToday ?? false,
       // completedToday viene directo del progreso (cubre todos los ejercicios,
       // no solo los "due" hoy/ayer que devuelve GetTodayExercises).

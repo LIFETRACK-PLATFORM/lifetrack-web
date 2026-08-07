@@ -90,7 +90,7 @@ export function ExerciseCard({
                 completedToday={exercise.completedToday}
                 pending={pendingCompletion}
                 onToggle={() => onToggleCompletion()}
-                onMarkYesterday={() => onToggleCompletion(yesterdayIso())}
+                onMarkDate={(date) => onToggleCompletion(date)}
               />
               <Button
                 type="button"
@@ -189,14 +189,15 @@ function DailyDoneToggle({
   completedToday,
   pending,
   onToggle,
-  onMarkYesterday,
+  onMarkDate,
 }: {
   completedToday: boolean;
   pending: boolean;
   onToggle: () => void;
-  onMarkYesterday: () => void;
+  onMarkDate: (date: string) => void;
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [customDate, setCustomDate] = useState("");
 
   if (completedToday) {
     return (
@@ -233,7 +234,7 @@ function DailyDoneToggle({
             className="fixed inset-0 z-40 cursor-default"
             onClick={() => setPickerOpen(false)}
           />
-          <div className="absolute right-0 top-11 z-50 flex flex-col gap-1 rounded-lg border border-border bg-surface-1 p-1.5 shadow-lg">
+          <div className="absolute right-0 top-11 z-50 flex w-56 flex-col gap-1 rounded-lg border border-border bg-surface-1 p-1.5 shadow-lg">
             <button
               type="button"
               onClick={() => {
@@ -248,12 +249,34 @@ function DailyDoneToggle({
               type="button"
               onClick={() => {
                 setPickerOpen(false);
-                onMarkYesterday();
+                onMarkDate(yesterdayIso());
               }}
               className="whitespace-nowrap rounded-md px-3 py-1.5 text-left font-label text-label-md text-text-1 hover:bg-surface-3"
             >
               Marcar de ayer
             </button>
+            <div className="flex items-center gap-1 border-t border-border/60 px-1 pt-1.5">
+              <input
+                type="date"
+                value={customDate}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(e) => setCustomDate(e.target.value)}
+                className="min-w-0 flex-1 rounded-md border border-border bg-surface-1 px-2 py-1 text-label-md text-text-1 focus:border-primary focus:outline-none"
+              />
+              <button
+                type="button"
+                disabled={!customDate}
+                onClick={() => {
+                  if (!customDate) return;
+                  setPickerOpen(false);
+                  onMarkDate(customDate);
+                  setCustomDate("");
+                }}
+                className="shrink-0 rounded-md bg-primary px-2 py-1 font-label text-label-md text-primary-foreground disabled:opacity-40"
+              >
+                Marcar
+              </button>
+            </div>
           </div>
         </>
       )}
