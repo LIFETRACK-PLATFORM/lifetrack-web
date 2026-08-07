@@ -627,12 +627,12 @@ export function PlanDetailView({
                         mediaUrl={ex.image}
                         name={ex.name}
                       />
-                      <div className="flex flex-1 flex-col justify-center">
-                        <div className="mb-1 flex items-start justify-between">
+                      <div className="flex min-w-0 flex-1 flex-col justify-center">
+                        <div className="mb-1 flex items-start justify-between gap-2">
                           <span className="rounded bg-primary/20 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
                             {ex.category}
                           </span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex shrink-0 items-center gap-2">
                             {ex.completed && (
                               <span className="font-label text-label-md font-bold text-primary">
                                 COMPLETADO
@@ -645,10 +645,10 @@ export function PlanDetailView({
                             />
                           </div>
                         </div>
-                        <h4 className="mb-1 text-body-lg font-semibold text-text-1">
+                        <h4 className="mb-1 truncate text-body-lg font-semibold text-text-1">
                           {ex.name}
                         </h4>
-                        <div className="flex items-center gap-4 font-label text-label-md text-text-3">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-label text-label-md text-text-3">
                           <div className="flex items-center gap-1">
                             <Icon name="repeat" className="text-[16px]" />
                             {ex.sets} series

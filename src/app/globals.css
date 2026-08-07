@@ -252,3 +252,12 @@
     padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 }
+
+
+button {
+  cursor: pointer;
+}
+
+button[disabled] {
+  cursor: default;
+}
