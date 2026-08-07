@@ -123,6 +123,7 @@ export function mapProgressToPlan(
         level: p.level,
         note: p.note,
       })),
+      weeklyDays: weeklySummary.days,
       weeklyCompliancePercent: weeklySummary.weeklyCompliancePercent,
       streakDays: weeklySummary.streakDays,
       completedTodayCount: completedToday,
