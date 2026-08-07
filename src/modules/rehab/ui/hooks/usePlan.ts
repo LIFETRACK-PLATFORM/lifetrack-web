@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RehabPlan } from "../../domain/RehabPlan";
 import {
   AddAppointmentInput,
@@ -124,25 +124,63 @@ export function usePlan(repository: RehabRepository, planId: string) {
     };
   }, [repository, planId, applyPlan]);
 
-  const adjust = useCallback(
-    async (exerciseId: string, delta: number, target: number) => {
-      if (!plan) return;
-      const prev = counts[exerciseId] ?? 0;
-      const next = Math.max(0, Math.min(target, prev + delta));
-      setCounts((current) => ({ ...current, [exerciseId]: next }));
-      setSaveError(null);
+  const ADJUST_DEBOUNCE_MS = 500;
+  const pendingProgressRef = useRef<Record<string, number>>({});
+  const progressTimersRef = useRef<
+    Record<string, ReturnType<typeof setTimeout>>
+  >({});
+
+  const commitProgress = useCallback(
+    async (exerciseId: string) => {
+      const value = pendingProgressRef.current[exerciseId];
+      delete pendingProgressRef.current[exerciseId];
+      delete progressTimersRef.current[exerciseId];
+      if (value === undefined || !plan) return;
 
       try {
         const useCase = new UpdateExerciseProgressUseCase(repository);
-        await useCase.execute(plan.id, exerciseId, next);
+        await useCase.execute(plan.id, exerciseId, value);
       } catch (err) {
-        setCounts((current) => ({ ...current, [exerciseId]: prev }));
         setSaveError(
           err instanceof Error ? err.message : "No se pudo guardar progreso",
         );
       }
     },
-    [counts, plan, repository],
+    [plan, repository],
+  );
+
+  useEffect(() => {
+    const timers = progressTimersRef.current;
+    return () => {
+      // Al desmontar, tira los timers pendientes en vez de dejarlos disparar
+      // sobre un componente ya desmontado.
+      Object.values(timers).forEach(clearTimeout);
+    };
+  }, []);
+
+  // Cada tap actualiza el contador al toque (optimista) pero solo se manda
+  // el request a la API 500ms despues del ultimo tap, para no pegarle a la
+  // API una vez por cada click si el usuario toca varias veces seguidas.
+  const adjust = useCallback(
+    (exerciseId: string, delta: number, target: number) => {
+      if (!plan) return;
+      setSaveError(null);
+      setCounts((current) => {
+        const prev = current[exerciseId] ?? 0;
+        const next = Math.max(0, Math.min(target, prev + delta));
+
+        pendingProgressRef.current[exerciseId] = next;
+        if (progressTimersRef.current[exerciseId]) {
+          clearTimeout(progressTimersRef.current[exerciseId]);
+        }
+        progressTimersRef.current[exerciseId] = setTimeout(() => {
+          void commitProgress(exerciseId);
+        }, ADJUST_DEBOUNCE_MS);
+
+        return { ...current, [exerciseId]: next };
+      });
+    },
+    [plan, commitProgress],
   );
 
   const addExercise = useCallback(
