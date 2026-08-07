@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import { VaultRepository } from "../../domain/VaultRepository";
 import { VaultItem } from "../../domain/VaultItem";
+import { groupVaultItemsByDomain } from "../../domain/extractDomain";
 import { createVaultRepository } from "../../infrastructure/createVaultRepository";
 import {
   VaultSessionProvider,
@@ -33,6 +34,23 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
   const [editingItem, setEditingItem] = useState<VaultItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredItems = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return items;
+
+    return items.filter(
+      (item) =>
+        item.site.toLowerCase().includes(query) ||
+        item.username.toLowerCase().includes(query),
+    );
+  }, [items, searchQuery]);
+
+  const groupedItems = useMemo(
+    () => groupVaultItemsByDomain(filteredItems),
+    [filteredItems],
+  );
 
   const closeDialog = () => {
     setOpenDialog(null);
@@ -98,6 +116,22 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
         </header>
 
         <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
+          {!loading && !error && items.length > 0 && (
+            <div className="relative mb-4">
+              <Icon
+                name="search"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-text-3"
+              />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por sitio o usuario…"
+                className="w-full rounded-lg border border-border bg-surface-1 py-2.5 pl-10 pr-3 text-body-md text-text-1 placeholder:text-text-3 focus:border-primary focus:outline-none"
+              />
+            </div>
+          )}
+
           {loading && (
             <p className="text-body-md text-text-3">Cargando contraseñas…</p>
           )}
@@ -109,22 +143,45 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
           )}
 
           {!loading && !error && (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <VaultItemCard
-                  key={item.id}
-                  item={item}
-                  onReveal={revealPassword}
-                  onEdit={(vaultItem) => {
-                    setEditingItem(vaultItem);
-                    setOpenDialog("edit");
-                  }}
-                  onDelete={deleteItem}
-                />
+            <div className="space-y-6">
+              {groupedItems.map((group) => (
+                <div key={group.domain}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <Icon
+                      name="encrypted"
+                      className="text-[16px] text-primary"
+                    />
+                    <h3 className="font-label text-label-md font-semibold uppercase tracking-wide text-text-3">
+                      {group.domain}
+                    </h3>
+                    <span className="rounded-full bg-surface-3 px-2 py-0.5 font-label text-label-md text-text-3">
+                      {group.items.length}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {group.items.map((item) => (
+                      <VaultItemCard
+                        key={item.id}
+                        item={item}
+                        onReveal={revealPassword}
+                        onEdit={(vaultItem) => {
+                          setEditingItem(vaultItem);
+                          setOpenDialog("edit");
+                        }}
+                        onDelete={deleteItem}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
               {items.length === 0 && (
                 <p className="py-8 text-center text-body-md text-text-3">
                   Todavía no guardaste ninguna contraseña. Creá la primera.
+                </p>
+              )}
+              {items.length > 0 && filteredItems.length === 0 && (
+                <p className="py-8 text-center text-body-md text-text-3">
+                  Ninguna contraseña coincide con tu búsqueda.
                 </p>
               )}
             </div>
