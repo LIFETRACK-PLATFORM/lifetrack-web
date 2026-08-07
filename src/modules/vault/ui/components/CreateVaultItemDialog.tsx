@@ -8,6 +8,8 @@ import {
   normalizeVaultCategory,
 } from "../../domain/vaultCategories";
 
+const CUSTOM_CATEGORY_OPTION = "__custom__";
+
 export function CreateVaultItemDialog({
   onClose,
   onSubmit,
@@ -28,10 +30,20 @@ export function CreateVaultItemDialog({
   mode?: "create" | "edit";
   initial?: { site: string; username: string; category?: string };
 }) {
+  const initialCategory = normalizeVaultCategory(
+    initial?.category ?? DEFAULT_VAULT_CATEGORY,
+  );
+  const initialIsCustom = !(VAULT_CATEGORIES as readonly string[]).includes(
+    initialCategory,
+  );
+
   const [site, setSite] = useState(initial?.site ?? "");
   const [username, setUsername] = useState(initial?.username ?? "");
-  const [category, setCategory] = useState(
-    normalizeVaultCategory(initial?.category ?? DEFAULT_VAULT_CATEGORY),
+  const [categorySelection, setCategorySelection] = useState(
+    initialIsCustom ? CUSTOM_CATEGORY_OPTION : initialCategory,
+  );
+  const [customCategory, setCustomCategory] = useState(
+    initialIsCustom ? initialCategory : "",
   );
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -53,6 +65,15 @@ export function CreateVaultItemDialog({
       setClientError("La contraseña es obligatoria.");
       return;
     }
+    if (categorySelection === CUSTOM_CATEGORY_OPTION && !customCategory.trim()) {
+      setClientError("Ingresá un nombre para la nueva categoría.");
+      return;
+    }
+
+    const category =
+      categorySelection === CUSTOM_CATEGORY_OPTION
+        ? customCategory.trim()
+        : categorySelection;
 
     const success = await onSubmit(
       site.trim(),
@@ -98,8 +119,8 @@ export function CreateVaultItemDialog({
               Categoría
             </label>
             <select
-              value={category}
-              onChange={(e) => setCategory(normalizeVaultCategory(e.target.value))}
+              value={categorySelection}
+              onChange={(e) => setCategorySelection(e.target.value)}
               className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
             >
               {VAULT_CATEGORIES.map((option) => (
@@ -107,7 +128,20 @@ export function CreateVaultItemDialog({
                   {option}
                 </option>
               ))}
+              <option value={CUSTOM_CATEGORY_OPTION}>
+                + Crear categoría…
+              </option>
             </select>
+            {categorySelection === CUSTOM_CATEGORY_OPTION && (
+              <input
+                type="text"
+                value={customCategory}
+                onChange={(e) => setCustomCategory(e.target.value)}
+                className="mt-2 w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+                placeholder="Ej. Videojuegos"
+                autoFocus
+              />
+            )}
           </div>
 
           <div>
