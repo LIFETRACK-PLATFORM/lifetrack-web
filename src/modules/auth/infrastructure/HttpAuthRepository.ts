@@ -144,12 +144,14 @@ export class HttpAuthRepository implements AuthRepository {
       userId: string;
       email: string;
       roles: string[];
+      provider: string;
     };
 
     return new CurrentUser({
       userId: data.userId,
       email: data.email,
       roles: data.roles,
+      provider: data.provider,
     });
   }
 

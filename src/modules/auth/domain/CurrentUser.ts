@@ -4,6 +4,7 @@ interface CurrentUserProps {
   userId: string;
   email: string;
   roles: string[];
+  provider: string;
 }
 
 export class CurrentUser extends ValueObject<CurrentUserProps> {
@@ -21,5 +22,9 @@ export class CurrentUser extends ValueObject<CurrentUserProps> {
 
   get roles(): string[] {
     return this.props.roles;
+  }
+
+  get provider(): string {
+    return this.props.provider;
   }
 }
