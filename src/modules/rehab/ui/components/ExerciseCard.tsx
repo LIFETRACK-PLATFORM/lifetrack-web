@@ -42,15 +42,18 @@ export function ExerciseCard({
 }) {
   const target = exercise.target;
   const repsGoalReached = current >= target && target > 0;
+  const isDoneToday = exercise.completedToday;
 
   return (
     <article
       id={exerciseDomId(exercise.id)}
       className={`rounded-xl border bg-surface-1 p-3 transition-all sm:p-4 ${
-        exercise.completedToday
-          ? "border-primary/30 bg-primary/5"
-          : "border-border"
-      } ${repsGoalReached ? "ring-1 ring-success/30" : ""} ${
+        isDoneToday
+          ? "border-success/35 bg-success/5"
+          : exercise.urgent
+            ? "border-error/35 bg-error/5"
+            : "border-warning/25 bg-warning/5"
+      } ${repsGoalReached && !isDoneToday ? "ring-1 ring-primary/25" : ""} ${
         highlighted
           ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
           : ""
@@ -72,9 +75,15 @@ export function ExerciseCard({
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 space-y-1">
-              <span className="inline-block rounded bg-primary/15 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
-                {exercise.category}
-              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-block rounded bg-primary/15 px-2 py-[2px] text-[10px] font-bold uppercase tracking-wider text-primary">
+                  {exercise.category}
+                </span>
+                <ExerciseDayStatus
+                  completedToday={isDoneToday}
+                  urgent={exercise.urgent}
+                />
+              </div>
               <h4 className="truncate text-body-lg font-semibold text-text-1">
                 {exercise.name}
               </h4>
@@ -129,6 +138,39 @@ export function ExerciseCard({
   );
 }
 
+function ExerciseDayStatus({
+  completedToday,
+  urgent,
+}: {
+  completedToday: boolean;
+  urgent: boolean;
+}) {
+  if (completedToday) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/15 px-2 py-0.5 text-[11px] font-semibold text-success">
+        <Icon name="check_circle" className="text-[13px]" />
+        Realizado
+      </span>
+    );
+  }
+
+  if (urgent) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-error/40 bg-error/15 px-2 py-0.5 text-[11px] font-semibold text-error">
+        <Icon name="priority_high" className="text-[13px]" />
+        Vencido
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning">
+      <Icon name="radio_button_unchecked" className="text-[13px]" />
+      Pendiente
+    </span>
+  );
+}
+
 function DailyDoneToggle({
   completedToday,
   pending,
@@ -147,8 +189,8 @@ function DailyDoneToggle({
       aria-label={completedToday ? "Hecho hoy" : "Marcar hecho hoy"}
       className={`flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-95 disabled:opacity-60 ${
         completedToday
-          ? "bg-primary text-primary-foreground"
-          : "bg-surface-3 text-text-3 hover:bg-surface-4"
+          ? "bg-success/20 text-success hover:bg-success/30"
+          : "bg-warning/15 text-warning hover:bg-warning/25"
       }`}
     >
       <Icon
