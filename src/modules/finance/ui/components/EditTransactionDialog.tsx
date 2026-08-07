@@ -2,60 +2,41 @@
 
 import { useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
-import { AccountType } from "@/modules/finance/domain/Account";
-import {
-  AccountCurrency,
-  CreateAccountInput,
-} from "@/modules/finance/domain/FinanceRepository";
+import { Transaction } from "@/modules/finance/domain/Transaction";
+import { UpdateTransactionInput } from "@/modules/finance/domain/FinanceRepository";
 
-const CURRENCIES: { value: AccountCurrency; label: string }[] = [
-  { value: "PEN", label: "PEN — Soles" },
-  { value: "USD", label: "USD — Dólares" },
-];
-
-const ACCOUNT_TYPES: { value: AccountType; label: string }[] = [
-  { value: "CASH", label: "Efectivo" },
-  { value: "BANK", label: "Banco" },
-  { value: "CARD", label: "Tarjeta" },
-  { value: "OTHER", label: "Otro" },
-];
-
-export function CreateAccountDialog({
+export function EditTransactionDialog({
+  transaction,
   onClose,
   onSubmit,
   submitting,
   error,
 }: {
+  transaction: Transaction;
   onClose: () => void;
-  onSubmit: (input: CreateAccountInput) => Promise<boolean>;
+  onSubmit: (input: UpdateTransactionInput) => Promise<boolean>;
   submitting: boolean;
   error: string | null;
 }) {
-  const [name, setName] = useState("");
-  const [type, setType] = useState<AccountType>("BANK");
-  const [currency, setCurrency] = useState<AccountCurrency>("PEN");
-  const [initialBalance, setInitialBalance] = useState("0");
+  const [amount, setAmount] = useState(String(transaction.amount));
+  const [description, setDescription] = useState(transaction.description ?? "");
+  const [occurredAt, setOccurredAt] = useState(
+    transaction.occurredAt.slice(0, 10),
+  );
   const [clientError, setClientError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setClientError(null);
-
-    if (!name.trim()) {
-      setClientError("El nombre de la cuenta es obligatorio.");
+    const value = Number(amount);
+    if (Number.isNaN(value) || value <= 0) {
+      setClientError("El monto debe ser un número mayor a 0.");
       return;
     }
-    const balance = Number(initialBalance);
-    if (Number.isNaN(balance) || balance < 0) {
-      setClientError("El balance inicial debe ser un número mayor o igual a 0.");
-      return;
-    }
-
     const success = await onSubmit({
-      name: name.trim(),
-      type,
-      currency,
-      initialBalance: balance,
+      amount: value,
+      description: description.trim() || undefined,
+      occurredAt: new Date(occurredAt).toISOString(),
     });
     if (success) onClose();
   };
@@ -65,7 +46,7 @@ export function CreateAccountDialog({
       <div className="w-full max-w-md rounded-xl border border-border bg-surface-1 p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-headline-md font-semibold text-text-1">
-            Nueva cuenta
+            Editar transacción
           </h3>
           <button
             type="button"
@@ -77,74 +58,46 @@ export function CreateAccountDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="mb-1 block font-label text-label-md text-text-3">
-              Nombre
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-              placeholder="Ej. Ahorros"
-            />
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">
-                Tipo
+                Monto
               </label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value as AccountType)}
+              <input
+                type="number"
+                min={0.01}
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
                 className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-              >
-                {ACCOUNT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">
-                Moneda
+                Fecha
               </label>
-              <select
-                value={currency}
-                onChange={(e) =>
-                  setCurrency(e.target.value as AccountCurrency)
-                }
+              <input
+                type="date"
+                value={occurredAt}
+                onChange={(e) => setOccurredAt(e.target.value)}
                 className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-              >
-                {CURRENCIES.map((c) => (
-                  <option key={c.value} value={c.value}>
-                    {c.label}
-                  </option>
-                ))}
-              </select>
+              />
             </div>
           </div>
-
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">
-              Balance inicial
+              Descripción
             </label>
             <input
-              type="number"
-              min={0}
-              step="0.01"
-              value={initialBalance}
-              onChange={(e) => setInitialBalance(e.target.value)}
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
             />
           </div>
-
           {(clientError || error) && (
             <p className="text-body-md text-error">{clientError ?? error}</p>
           )}
-
           <div className="flex justify-end gap-2 pt-2">
             <button
               type="button"
@@ -158,7 +111,7 @@ export function CreateAccountDialog({
               disabled={submitting}
               className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
             >
-              {submitting ? "Guardando…" : "Crear cuenta"}
+              {submitting ? "Guardando…" : "Guardar"}
             </button>
           </div>
         </form>
