@@ -14,6 +14,7 @@ export function BottomNav({
   const pathname = usePathname();
   const rehabActive = pathname.startsWith("/rehab");
   const financeActive = pathname.startsWith("/finance");
+  const vaultActive = pathname.startsWith("/vault");
   const profileActive = pathname.startsWith("/profile") || active === "profile";
 
   return (
@@ -60,6 +61,22 @@ export function BottomNav({
           Finanzas
         </span>
         {financeActive && <span className="mt-1 h-1 w-1 rounded-full bg-primary" />}
+      </Link>
+      <Link
+        href="/vault"
+        className={`relative flex flex-col items-center justify-center rounded-[10px] p-2 transition-colors active:scale-95 ${
+          vaultActive ? "text-primary" : "text-text-3"
+        }`}
+      >
+        <Icon name="encrypted" className="text-[22px]" />
+        <span
+          className={`font-label mt-1 text-label-md ${
+            vaultActive ? "font-semibold" : ""
+          }`}
+        >
+          Bóveda
+        </span>
+        {vaultActive && <span className="mt-1 h-1 w-1 rounded-full bg-primary" />}
       </Link>
       <div className="flex flex-col items-center justify-center rounded-[10px] p-2 text-text-3">
         <ThemeToggle size="icon-sm" className="h-auto w-auto p-0" />
