@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
-import { AddExerciseInput } from "@/modules/rehab/domain/RehabRepository";
+import {
+  AddExerciseInput,
+  ExerciseMetricType,
+} from "@/modules/rehab/domain/RehabRepository";
 
 const WEEKDAYS = [
   { value: 0, label: "D" },
@@ -31,13 +34,19 @@ export function ExerciseFormDialog({
 }) {
   const isEdit = Boolean(exerciseId);
   const [name, setName] = useState(initial?.name ?? "");
+  const [metricType, setMetricType] = useState<ExerciseMetricType>(
+    initial?.metricType ?? "REPS",
+  );
   const [targetSets, setTargetSets] = useState(
     initial ? String(initial.targetSets) : "",
   );
   const [targetReps, setTargetReps] = useState(
     initial ? String(initial.targetReps) : "",
   );
-  const [phase, setPhase] = useState(initial ? String(initial.phase) : "");
+  const [targetDurationMinutes, setTargetDurationMinutes] = useState(
+    initial?.targetDurationMinutes ? String(initial.targetDurationMinutes) : "",
+  );
+  const [notes, setNotes] = useState(initial?.notes ?? "");
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>(
     initial?.daysOfWeek ?? [],
   );
@@ -55,36 +64,55 @@ export function ExerciseFormDialog({
     e.preventDefault();
     setClientError(null);
 
-    const sets = Number(targetSets);
-    const reps = Number(targetReps);
-    const phaseValue = Number(phase);
-
     if (!name.trim()) {
       setClientError("El nombre del ejercicio es obligatorio.");
       return;
     }
-    if (!Number.isInteger(sets) || sets < 1) {
-      setClientError("Los sets objetivo deben ser un número entero mayor a 0.");
-      return;
-    }
-    if (!Number.isInteger(reps) || reps < 1) {
-      setClientError(
-        "Las repeticiones objetivo deben ser un número entero mayor a 0.",
-      );
-      return;
-    }
-    if (!Number.isInteger(phaseValue) || phaseValue < 1) {
-      setClientError("La fase debe ser un número entero mayor a 0.");
-      return;
+
+    let input: AddExerciseInput;
+    if (metricType === "DURATION") {
+      const minutes = Number(targetDurationMinutes);
+      if (!Number.isInteger(minutes) || minutes < 1) {
+        setClientError(
+          "Los minutos objetivo deben ser un número entero mayor a 0.",
+        );
+        return;
+      }
+      input = {
+        name: name.trim(),
+        metricType,
+        targetSets: 1,
+        targetReps: 1,
+        targetDurationMinutes: minutes,
+        notes: notes.trim() || undefined,
+        daysOfWeek,
+      };
+    } else {
+      const sets = Number(targetSets);
+      const reps = Number(targetReps);
+      if (!Number.isInteger(sets) || sets < 1) {
+        setClientError(
+          "Los sets objetivo deben ser un número entero mayor a 0.",
+        );
+        return;
+      }
+      if (!Number.isInteger(reps) || reps < 1) {
+        setClientError(
+          "Las repeticiones objetivo deben ser un número entero mayor a 0.",
+        );
+        return;
+      }
+      input = {
+        name: name.trim(),
+        metricType,
+        targetSets: sets,
+        targetReps: reps,
+        notes: notes.trim() || undefined,
+        daysOfWeek,
+      };
     }
 
-    const success = await onSubmit({
-      name: name.trim(),
-      targetSets: sets,
-      targetReps: reps,
-      phase: phaseValue,
-      daysOfWeek,
-    });
+    const success = await onSubmit(input);
     if (success) onClose();
   };
 
@@ -118,43 +146,89 @@ export function ExerciseFormDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="mb-1 block font-label text-label-md text-text-3">
-                Sets objetivo
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={targetSets}
-                onChange={(e) => setTargetSets(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block font-label text-label-md text-text-3">
-                Reps objetivo
-              </label>
-              <input
-                type="number"
-                min={1}
-                value={targetReps}
-                onChange={(e) => setTargetReps(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-              />
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">
+              Se mide en
+            </label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setMetricType("REPS")}
+                className={`flex-1 rounded-lg py-2 font-label text-label-md transition-colors ${
+                  metricType === "REPS"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-surface-3 text-text-3 hover:bg-surface-4"
+                }`}
+              >
+                Series y repeticiones
+              </button>
+              <button
+                type="button"
+                onClick={() => setMetricType("DURATION")}
+                className={`flex-1 rounded-lg py-2 font-label text-label-md transition-colors ${
+                  metricType === "DURATION"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-surface-3 text-text-3 hover:bg-surface-4"
+                }`}
+              >
+                Duración (minutos)
+              </button>
             </div>
           </div>
 
+          {metricType === "REPS" ? (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block font-label text-label-md text-text-3">
+                  Sets objetivo
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={targetSets}
+                  onChange={(e) => setTargetSets(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block font-label text-label-md text-text-3">
+                  Reps objetivo
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  value={targetReps}
+                  onChange={(e) => setTargetReps(e.target.value)}
+                  className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+                />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="mb-1 block font-label text-label-md text-text-3">
+                Minutos objetivo
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={targetDurationMinutes}
+                onChange={(e) => setTargetDurationMinutes(e.target.value)}
+                className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+                placeholder="Ej. 20"
+              />
+            </div>
+          )}
+
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">
-              Fase
+              Notas (opcional)
             </label>
-            <input
-              type="number"
-              min={1}
-              value={phase}
-              onChange={(e) => setPhase(e.target.value)}
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
               className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+              placeholder="Ej. Usar banda mediana, mantener espalda recta"
             />
           </div>
 

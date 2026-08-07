@@ -17,6 +17,7 @@ import { UpdateExerciseUseCase } from "../../application/UpdateExerciseUseCase";
 import { MarkExerciseCompletionUseCase } from "../../application/MarkExerciseCompletionUseCase";
 import { UpdateRecoveryPlanStatusUseCase } from "../../application/UpdateRecoveryPlanStatusUseCase";
 import { AddAppointmentUseCase } from "../../application/AddAppointmentUseCase";
+import { UpdateAppointmentUseCase } from "../../application/UpdateAppointmentUseCase";
 import { DeleteAppointmentUseCase } from "../../application/DeleteAppointmentUseCase";
 import { MarkAppointmentAttendanceUseCase } from "../../application/MarkAppointmentAttendanceUseCase";
 import { AddPainLogUseCase } from "../../application/AddPainLogUseCase";
@@ -50,6 +51,10 @@ export function usePlan(repository: RehabRepository, planId: string) {
     null,
   );
   const [addingAppointment, setAddingAppointment] = useState(false);
+  const [updatingAppointment, setUpdatingAppointment] = useState(false);
+  const [updateAppointmentError, setUpdateAppointmentError] = useState<
+    string | null
+  >(null);
   const [deletingAppointmentId, setDeletingAppointmentId] = useState<
     string | null
   >(null);
@@ -262,6 +267,29 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [plan, repository, refresh],
   );
 
+  const updateAppointment = useCallback(
+    async (appointmentId: string, input: AddAppointmentInput) => {
+      if (!plan) return false;
+      setUpdatingAppointment(true);
+      setUpdateAppointmentError(null);
+
+      try {
+        const useCase = new UpdateAppointmentUseCase(repository);
+        await useCase.execute(appointmentId, input);
+        await refresh();
+        return true;
+      } catch (err) {
+        setUpdateAppointmentError(
+          err instanceof Error ? err.message : "No se pudo actualizar la cita",
+        );
+        return false;
+      } finally {
+        setUpdatingAppointment(false);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
   const markAppointmentAttendance = useCallback(
     async (appointmentId: string, attended: boolean) => {
       if (!plan) return;
@@ -413,6 +441,9 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addAppointment,
     addingAppointment,
     addAppointmentError,
+    updateAppointment,
+    updatingAppointment,
+    updateAppointmentError,
     deleteAppointment,
     deletingAppointmentId,
     deleteAppointmentError,

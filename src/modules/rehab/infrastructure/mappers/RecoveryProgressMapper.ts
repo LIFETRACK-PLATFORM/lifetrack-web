@@ -22,24 +22,33 @@ function mapExercise(
   todayById: Map<string, TodayExerciseDto>,
 ): Exercise {
   const current = sumLogsReps(dto.logs);
-  const target = dto.targetSets * dto.targetReps;
+  const isDuration = dto.metricType === "DURATION";
+  const target = isDuration
+    ? dto.targetDurationMinutes ?? 0
+    : dto.targetSets * dto.targetReps;
+  const detail = isDuration
+    ? `${dto.targetDurationMinutes ?? 0} min`
+    : `${dto.targetSets} sets × ${dto.targetReps} reps`;
   const today = todayById.get(dto.exerciseId);
   return new Exercise(
     {
       name: dto.name,
-      detail: `${dto.targetSets} sets × ${dto.targetReps} reps`,
+      detail,
       icon: "fitness_center",
       current,
       target,
       completed: current >= target && target > 0,
-      category: `phase-${dto.phase}`,
-      phase: dto.phase,
+      metricType: dto.metricType,
+      targetDurationMinutes: dto.targetDurationMinutes ?? null,
+      notes: dto.notes ?? null,
       sets: dto.targetSets,
       reps: dto.targetReps,
       image: DEFAULT_EXERCISE_IMAGE,
       daysOfWeek: dto.daysOfWeek ?? [],
       scheduledToday: today?.scheduledToday ?? false,
-      completedToday: today?.completedToday ?? false,
+      // completedToday viene directo del progreso (cubre todos los ejercicios,
+      // no solo los "due" hoy/ayer que devuelve GetTodayExercises).
+      completedToday: dto.completedToday,
       urgent: today?.urgent ?? false,
     },
     dto.exerciseId,
@@ -54,9 +63,11 @@ function mapAppointment(dto: RecoveryProgressDto["appointments"][number]): Appoi
     {
       month,
       day,
-      title: dto.provider,
+      title: dto.title ?? dto.provider,
       detail:
         dto.notes ?? (dto.type === "THERAPY" ? "Sesión de terapia" : "Cita médica"),
+      provider: dto.provider,
+      notes: dto.notes ?? null,
       type: dto.type,
       date: dto.date,
       attended: dto.attended ?? null,
@@ -81,13 +92,16 @@ export function mapProgressToPlan(
     );
   const latestExtension =
     extensionMeasurements[extensionMeasurements.length - 1];
-  const latestPain = dto.painLogs?.[dto.painLogs.length - 1];
+  const sortedPainLogs = [...(dto.painLogs ?? [])].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+  const latestPain = sortedPainLogs[sortedPainLogs.length - 1];
 
   return new RehabPlan(
     {
       titleMobile: dto.injuryType,
       titleWeb: `${dto.bodyPart} Recovery`,
-      phaseLabel: `Phase ${dto.exercises[0]?.phase ?? 1}`,
+      phaseLabel: "Plan de recuperación",
       dayProgress: dto.status,
       status: dto.status as RehabPlan["status"],
       weekLabel: new Date(dto.surgeryDate).toLocaleDateString(),
@@ -104,6 +118,11 @@ export function mapProgressToPlan(
           : "Sin mediciones aún",
         painLevel: latestPain ? `${latestPain.level}/10` : "Sin registrar",
       },
+      painHistory: sortedPainLogs.map((p) => ({
+        date: p.date,
+        level: p.level,
+        note: p.note,
+      })),
       weeklyCompliancePercent: weeklySummary.weeklyCompliancePercent,
       streakDays: weeklySummary.streakDays,
       completedTodayCount: completedToday,
@@ -153,7 +172,7 @@ export function mapProgressToDashboard(
       recoveryScore: weeklySummary.weeklyCompliancePercent,
       streakDays: weeklySummary.streakDays,
       phase: {
-        name: `Phase ${progress.exercises[0]?.phase ?? 1}`,
+        name: "Plan de recuperación",
         percent: weeklySummary.weeklyCompliancePercent,
         description: `Recovery plan status: ${planSummary.status}`,
       },

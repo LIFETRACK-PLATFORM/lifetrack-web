@@ -7,6 +7,8 @@ interface AppointmentProps {
   day: string;
   title: string;
   detail: string;
+  provider: string;
+  notes: string | null;
   type: AppointmentType;
   date: string;
   attended: boolean | null;
@@ -31,6 +33,14 @@ export class Appointment extends Entity<AppointmentProps> {
 
   get detail(): string {
     return this.props.detail;
+  }
+
+  get provider(): string {
+    return this.props.provider;
+  }
+
+  get notes(): string | null {
+    return this.props.notes;
   }
 
   get type(): AppointmentType {

@@ -26,6 +26,7 @@ import { Appointment } from "@/modules/rehab/domain/Appointment";
 import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
 import { exerciseDomId } from "@/modules/rehab/ui/rehabRoutes";
 import type { RecoveryPlanStatus } from "@/modules/rehab/domain/RehabRepository";
+import type { PainLogPoint } from "@/modules/rehab/domain/RehabPlan";
 import type { StatusBadgeStatus } from "@/components/ui/badge";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import Image from "next/image";
@@ -49,6 +50,8 @@ export function PlanDetailView({
   const [isAddExerciseOpen, setIsAddExerciseOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [isAddAppointmentOpen, setIsAddAppointmentOpen] = useState(false);
+  const [editingAppointment, setEditingAppointment] =
+    useState<Appointment | null>(null);
   const [painLevel, setPainLevel] = useState("3");
   const [painNote, setPainNote] = useState("");
   const [extensionDegrees, setExtensionDegrees] = useState("");
@@ -83,6 +86,9 @@ export function PlanDetailView({
     addAppointment,
     addingAppointment,
     addAppointmentError,
+    updateAppointment,
+    updatingAppointment,
+    updateAppointmentError,
     deleteAppointment,
     deletingAppointmentId,
     deleteAppointmentError,
@@ -368,6 +374,7 @@ export function PlanDetailView({
                   onMarkAttendance={(attended) =>
                     void markAppointmentAttendance(apt.id, attended)
                   }
+                  onEdit={() => setEditingAppointment(apt)}
                   onDelete={() => void deleteAppointment(apt.id)}
                 />
               ))}
@@ -417,17 +424,10 @@ export function PlanDetailView({
                 submitting={addingMeasurement}
                 error={addMeasurementError}
               />
-              <div className="flex items-center justify-between rounded-xl border border-border bg-surface-1 p-6">
-                <div>
-                  <span className="font-label text-label-md text-text-3">
-                    Último dolor registrado
-                  </span>
-                  <p className="font-metric text-metric-xl text-error">
-                    {plan.metrics.painLevel}
-                  </p>
-                </div>
-                <Icon name="trending_down" className="text-[40px] text-error" />
-              </div>
+              <PainHistoryCard
+                painLevel={plan.metrics.painLevel}
+                history={plan.painHistory}
+              />
               <PainLogForm
                 painLevel={painLevel}
                 setPainLevel={setPainLevel}
@@ -606,6 +606,7 @@ export function PlanDetailView({
                       onMarkAttendance={(attended) =>
                         void markAppointmentAttendance(apt.id, attended)
                       }
+                      onEdit={() => setEditingAppointment(apt)}
                       onDelete={() => void deleteAppointment(apt.id)}
                     />
                   ))}
@@ -638,20 +639,11 @@ export function PlanDetailView({
                       <div className="h-full flex-1 rounded-t-sm bg-primary" />
                     </div>
                   </div>
-                  <div className="flex items-center justify-between rounded-xl border border-border/30 bg-surface-1 p-6">
-                    <div>
-                      <span className="font-label text-label-md text-text-3">
-                        Último dolor registrado
-                      </span>
-                      <p className="font-metric text-metric-xl text-error">
-                        {plan.metrics.painLevel}
-                      </p>
-                    </div>
-                    <Icon
-                      name="trending_down"
-                      className="text-[40px] text-error"
-                    />
-                  </div>
+                  <PainHistoryCard
+                    painLevel={plan.metrics.painLevel}
+                    history={plan.painHistory}
+                    className="border-border/30"
+                  />
                   <div className="md:col-span-2 space-y-4">
                     <ExtensionForm
                       value={extensionDegrees}
@@ -747,9 +739,12 @@ export function PlanDetailView({
           exerciseId={editingExercise.id}
           initial={{
             name: editingExercise.name,
+            metricType: editingExercise.metricType,
             targetSets: editingExercise.sets,
             targetReps: editingExercise.reps,
-            phase: editingExercise.phase,
+            targetDurationMinutes:
+              editingExercise.targetDurationMinutes ?? undefined,
+            notes: editingExercise.notes ?? undefined,
             daysOfWeek: editingExercise.daysOfWeek,
           }}
           onClose={() => setEditingExercise(null)}
@@ -765,6 +760,25 @@ export function PlanDetailView({
           onSubmit={addAppointment}
           submitting={addingAppointment}
           error={addAppointmentError}
+        />
+      )}
+      {editingAppointment && (
+        <AddAppointmentDialog
+          key={editingAppointment.id}
+          appointmentId={editingAppointment.id}
+          initial={{
+            title: editingAppointment.title,
+            date: editingAppointment.date,
+            provider: editingAppointment.provider,
+            type: editingAppointment.type,
+            notes: editingAppointment.notes ?? undefined,
+          }}
+          onClose={() => setEditingAppointment(null)}
+          onSubmit={(input) =>
+            updateAppointment(editingAppointment.id, input)
+          }
+          submitting={updatingAppointment}
+          error={updateAppointmentError}
         />
       )}
     </>
@@ -842,8 +856,65 @@ function PlanDetailSkeleton() {
   );
 }
 
+function PainHistoryCard({
+  painLevel,
+  history,
+  className = "border-border",
+}: {
+  painLevel: string;
+  history: PainLogPoint[];
+  className?: string;
+}) {
+  const recent = history.slice(-10);
+  return (
+    <div className={`rounded-xl border bg-surface-1 p-6 ${className}`}>
+      <div className="mb-3 flex items-center justify-between">
+        <span className="font-label text-label-md text-text-3">
+          Último dolor registrado
+        </span>
+        <span className="font-metric text-metric-xl text-error">
+          {painLevel}
+        </span>
+      </div>
+      {recent.length > 0 ? (
+        <div className="flex h-24 items-end gap-1.5">
+          {recent.map((point) => (
+            <div
+              key={point.date}
+              className="flex flex-1 flex-col items-center gap-1"
+            >
+              <div
+                className="w-full rounded-t-sm bg-error/70"
+                style={{ height: `${Math.max((point.level / 10) * 100, 4)}%` }}
+                title={`${point.level}/10 · ${new Date(point.date).toLocaleDateString("es-PE", { day: "numeric", month: "short" })}`}
+              />
+              <span className="text-[10px] text-text-3">
+                {new Date(point.date).toLocaleDateString("es-PE", {
+                  day: "numeric",
+                  month: "short",
+                })}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-body-md text-text-3">
+          Todavía no hay registros de dolor.
+        </p>
+      )}
+    </div>
+  );
+}
+
 function isPastOrToday(dateIso: string): boolean {
   return new Date(dateIso).getTime() <= Date.now();
+}
+
+function formatAppointmentTime(dateIso: string): string {
+  return new Date(dateIso).toLocaleTimeString("es-PE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function AppointmentListItem({
@@ -851,12 +922,14 @@ function AppointmentListItem({
   pendingAttendance,
   deleting,
   onMarkAttendance,
+  onEdit,
   onDelete,
 }: {
   apt: Appointment;
   pendingAttendance: boolean;
   deleting: boolean;
   onMarkAttendance: (attended: boolean) => void;
+  onEdit: () => void;
   onDelete: () => void;
 }) {
   return (
@@ -865,6 +938,9 @@ function AppointmentListItem({
         <div className="flex min-w-[64px] shrink-0 flex-col items-center rounded-lg bg-surface-3 px-3 py-2 text-text-1">
           <span className="font-label text-label-md font-bold">{apt.month}</span>
           <span className="font-metric text-[24px] sm:text-[28px]">{apt.day}</span>
+          <span className="font-label text-[11px] text-text-3">
+            {formatAppointmentTime(apt.date)}
+          </span>
         </div>
         <div className="min-w-0 flex-1">
           <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -885,11 +961,22 @@ function AppointmentListItem({
           )}
         </div>
       </div>
-      <DeleteAppointmentButton
-        title={apt.title}
-        deleting={deleting}
-        onConfirm={onDelete}
-      />
+      <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={onEdit}
+          aria-label={`Editar cita ${apt.title}`}
+        >
+          <Icon name="edit" className="text-[18px] text-text-3" />
+        </Button>
+        <DeleteAppointmentButton
+          title={apt.title}
+          deleting={deleting}
+          onConfirm={onDelete}
+        />
+      </div>
     </div>
   );
 }

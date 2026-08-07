@@ -8,6 +8,12 @@ interface PlanMetrics {
   painLevel: string;
 }
 
+export interface PainLogPoint {
+  date: string;
+  level: number;
+  note?: string;
+}
+
 interface RehabPlanProps {
   titleMobile: string;
   titleWeb: string;
@@ -20,6 +26,7 @@ interface RehabPlanProps {
   exercises: Exercise[];
   appointments: Appointment[];
   metrics: PlanMetrics;
+  painHistory: PainLogPoint[];
   weeklyCompliancePercent: number;
   streakDays: number;
   completedTodayCount: number;
@@ -73,6 +80,10 @@ export class RehabPlan extends Entity<RehabPlanProps> {
 
   get metrics(): PlanMetrics {
     return this.props.metrics;
+  }
+
+  get painHistory(): PainLogPoint[] {
+    return this.props.painHistory;
   }
 
   get weeklyCompliancePercent(): number {
