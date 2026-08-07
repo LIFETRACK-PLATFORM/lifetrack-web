@@ -12,7 +12,6 @@ import { DashboardSummary } from "@/modules/rehab/domain/DashboardSummary";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { useDashboard } from "@/modules/rehab/ui/hooks/useDashboard";
 import { planExerciseHref } from "@/modules/rehab/ui/rehabRoutes";
-import { FinanceMonthWidget } from "@/modules/finance/ui/components/FinanceMonthWidget";
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
@@ -161,7 +160,6 @@ export function DashboardView({
 
   const displayName = authUser.email.split("@")[0] ?? authUser.email;
   const showPlanTitle = dashboards.length > 1;
-  const primaryPlanId = dashboards[0].planId;
 
   return (
     <>
@@ -197,18 +195,10 @@ export function DashboardView({
         </header>
 
         <main className="mt-20 space-y-10 px-5">
-          <FinanceMonthWidget />
           {dashboards.map((d) => (
             <MobilePlanSection key={d.planId} d={d} showTitle={showPlanTitle} />
           ))}
         </main>
-
-        <Link
-          href={`/rehab/plans/${primaryPlanId}`}
-          className="fixed bottom-24 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground  transition-transform active:scale-90"
-        >
-          <Icon name="add" className="text-[32px]" />
-        </Link>
       </div>
 
       {/* Web */}
@@ -247,7 +237,6 @@ export function DashboardView({
             </header>
 
             <div className="space-y-10">
-              <FinanceMonthWidget />
               {dashboards.map((d) => (
                 <WebPlanSection key={d.planId} d={d} showTitle={showPlanTitle} />
               ))}
@@ -598,11 +587,12 @@ function WebPlanSection({
   showTitle: boolean;
 }) {
   return (
-    <div className="grid grid-cols-12 gap-6">
+    <div className="space-y-6 border-b border-border/20 pb-10 last:border-b-0 last:pb-0">
       {showTitle && (
-        <h3 className="col-span-12 text-headline-md text-text-1">{d.focusTitle}</h3>
+        <h3 className="text-headline-md text-text-1">{d.focusTitle}</h3>
       )}
-      <div className="col-span-12 space-y-6 lg:col-span-7">
+      <div className="grid grid-cols-12 gap-6">
+        <div className="col-span-12 space-y-6 lg:col-span-7">
         <section className="relative overflow-hidden rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
           <div className="absolute right-0 top-0 p-6">
             <span className="rounded-full bg-primary px-4 py-1 font-label text-label-md text-primary-foreground">
@@ -717,7 +707,7 @@ function WebPlanSection({
             )}
           </div>
         </section>
-      </div>
+        </div>
 
       <div className="col-span-12 space-y-6 lg:col-span-5">
         <section className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
@@ -760,6 +750,7 @@ function WebPlanSection({
           Abrir plan de recuperación
           <Icon name="arrow_forward" />
         </Link>
+      </div>
       </div>
     </div>
   );
