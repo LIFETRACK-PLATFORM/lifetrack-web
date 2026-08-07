@@ -3,6 +3,10 @@ import { RehabPlan } from "../domain/RehabPlan";
 import { Exercise } from "../domain/Exercise";
 import { Appointment } from "../domain/Appointment";
 import {
+  getProtocolStatsForDate,
+  todayDateIso,
+} from "../domain/protocolSchedule";
+import {
   AddAppointmentInput,
   AddExerciseInput,
   AddMeasurementInput,
@@ -160,7 +164,7 @@ const plans: Record<string, RehabPlan> = {
             image:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuAf_46SdyqTYUqWaQ4aLdBI5aEVEng_vX6_gEA2uzS9xfjd4io5jHwukBeg8j7RR3mr2SsgkpWSZig6fuV3KBNZ_NOH94yw5WNEdDD259FrYxosJ5sVMBrZ1DLxO5emmh2Ccm62sKTIUYpZrv62OnDNILY5sKQVRBr8IOXrx40vZqDx_6mJuIh6YaKZXiNCMp5iE4rI7HK_GPP5HndU5OX7k9O6wKPGKu2v27sUwOnA68gwl33pV0QMmA",
             daysOfWeek: [],
-            completions: [],
+            completions: [todayDateIso()],
             scheduledToday: true,
             completedToday: true,
             urgent: false,
@@ -223,6 +227,65 @@ const plans: Record<string, RehabPlan> = {
   ),
 };
 
+function syncPlanTodayStats(plan: RehabPlan): RehabPlan {
+  const today = todayDateIso();
+  const stats = getProtocolStatsForDate(plan.exercises, today);
+  return new RehabPlan(
+    {
+      titleMobile: plan.titleMobile,
+      titleWeb: plan.titleWeb,
+      phaseLabel: plan.phaseLabel,
+      dayProgress: plan.dayProgress,
+      weekLabel: plan.weekLabel,
+      statusMessage: plan.statusMessage,
+      status: plan.status,
+      remainingToday: stats.remaining,
+      exercises: plan.exercises,
+      appointments: plan.appointments,
+      metrics: plan.metrics,
+      painHistory: plan.painHistory,
+      weeklyDays: plan.weeklyDays,
+      weeklyCompliancePercent: plan.weeklyCompliancePercent,
+      streakDays: plan.streakDays,
+      completedTodayCount: stats.completed,
+      scheduledTodayCount: stats.due,
+    },
+    plan.id,
+  );
+}
+
+function replaceExerciseInPlan(
+  plan: RehabPlan,
+  exerciseId: string,
+  nextExercise: Exercise,
+): RehabPlan {
+  const exercises = plan.exercises.map((exercise) =>
+    exercise.id === exerciseId ? nextExercise : exercise,
+  );
+  return new RehabPlan(
+    {
+      titleMobile: plan.titleMobile,
+      titleWeb: plan.titleWeb,
+      phaseLabel: plan.phaseLabel,
+      dayProgress: plan.dayProgress,
+      weekLabel: plan.weekLabel,
+      statusMessage: plan.statusMessage,
+      status: plan.status,
+      remainingToday: plan.remainingToday,
+      exercises,
+      appointments: plan.appointments,
+      metrics: plan.metrics,
+      painHistory: plan.painHistory,
+      weeklyDays: plan.weeklyDays,
+      weeklyCompliancePercent: plan.weeklyCompliancePercent,
+      streakDays: plan.streakDays,
+      completedTodayCount: plan.completedTodayCount,
+      scheduledTodayCount: plan.scheduledTodayCount,
+    },
+    plan.id,
+  );
+}
+
 export class MockRehabRepository implements RehabRepository {
   async getDashboard(): Promise<DashboardSummary[]> {
     return [dashboard];
@@ -231,7 +294,9 @@ export class MockRehabRepository implements RehabRepository {
   async getPlan(id: string): Promise<RehabPlan> {
     const plan = plans[id];
     if (!plan) throw new Error(`Plan no encontrado: ${id}`);
-    return plan;
+    const synced = syncPlanTodayStats(plan);
+    plans[id] = synced;
+    return synced;
   }
 
   async updateExerciseProgress(
@@ -241,10 +306,51 @@ export class MockRehabRepository implements RehabRepository {
   ): Promise<void> {}
 
   async markExerciseCompletion(
-    _exerciseId: string,
-    _date: string,
-    _completed: boolean,
-  ): Promise<void> {}
+    exerciseId: string,
+    date: string,
+    completed: boolean,
+  ): Promise<void> {
+    const dateOnly = date.slice(0, 10);
+    const today = todayDateIso();
+
+    for (const [planId, plan] of Object.entries(plans)) {
+      const current = plan.exercises.find((exercise) => exercise.id === exerciseId);
+      if (!current) continue;
+
+      const completions = completed
+        ? current.completions.includes(dateOnly)
+          ? current.completions
+          : [...current.completions, dateOnly]
+        : current.completions.filter((entry) => entry !== dateOnly);
+
+      const nextExercise = new Exercise(
+        {
+          name: current.name,
+          detail: current.detail,
+          icon: current.icon,
+          current: current.current,
+          target: current.target,
+          completed: current.completed,
+          metricType: current.metricType,
+          targetDurationMinutes: current.targetDurationMinutes,
+          notes: current.notes,
+          sets: current.sets,
+          reps: current.reps,
+          image: current.image,
+          daysOfWeek: current.daysOfWeek,
+          completions,
+          scheduledToday: current.scheduledToday,
+          completedToday: completions.includes(today),
+          urgent: current.urgent,
+        },
+        exerciseId,
+      );
+
+      const withExercise = replaceExerciseInPlan(plan, exerciseId, nextExercise);
+      plans[planId] = syncPlanTodayStats(withExercise);
+      return;
+    }
+  }
 
   async createPlan(input: {
     bodyPart: string;
