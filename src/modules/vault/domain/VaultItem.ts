@@ -3,6 +3,7 @@ import { Entity } from "@/shared/domain/building-blocks/Entity";
 interface VaultItemProps {
   site: string;
   username: string;
+  category: string;
   encryptedBlob?: string;
   iv: string;
   salt: string;
@@ -22,6 +23,10 @@ export class VaultItem extends Entity<VaultItemProps> {
 
   get username(): string {
     return this.props.username;
+  }
+
+  get category(): string {
+    return this.props.category;
   }
 
   get encryptedBlob(): string | undefined {

@@ -4,7 +4,12 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import { VaultRepository } from "../../domain/VaultRepository";
 import { VaultItem } from "../../domain/VaultItem";
-import { groupVaultItemsByDomain } from "../../domain/extractDomain";
+import { groupVaultItemsByCategory } from "../../domain/groupVaultItemsByCategory";
+import {
+  VAULT_CATEGORIES,
+  VAULT_CATEGORY_ICONS,
+  normalizeVaultCategory,
+} from "../../domain/vaultCategories";
 import { createVaultRepository } from "../../infrastructure/createVaultRepository";
 import {
   VaultSessionProvider,
@@ -35,22 +40,40 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return items;
 
-    return items.filter(
-      (item) =>
+    return items.filter((item) => {
+      const category = normalizeVaultCategory(item.category);
+      const matchesCategory =
+        !selectedCategory || category === selectedCategory;
+      if (!matchesCategory) return false;
+
+      if (!query) return true;
+
+      return (
         item.site.toLowerCase().includes(query) ||
-        item.username.toLowerCase().includes(query),
-    );
-  }, [items, searchQuery]);
+        item.username.toLowerCase().includes(query) ||
+        category.toLowerCase().includes(query)
+      );
+    });
+  }, [items, searchQuery, selectedCategory]);
 
   const groupedItems = useMemo(
-    () => groupVaultItemsByDomain(filteredItems),
+    () => groupVaultItemsByCategory(filteredItems),
     [filteredItems],
   );
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const item of items) {
+      const category = normalizeVaultCategory(item.category);
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
+    return counts;
+  }, [items]);
 
   const closeDialog = () => {
     setOpenDialog(null);
@@ -117,19 +140,59 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
 
         <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
           {!loading && !error && items.length > 0 && (
-            <div className="relative mb-4">
-              <Icon
-                name="search"
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-text-3"
-              />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por sitio o usuario…"
-                className="w-full rounded-lg border border-border bg-surface-1 py-2.5 pl-10 pr-3 text-body-md text-text-1 placeholder:text-text-3 focus:border-primary focus:outline-none"
-              />
-            </div>
+            <>
+              <div className="relative mb-4">
+                <Icon
+                  name="search"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-text-3"
+                />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por sitio, usuario o categoría…"
+                  className="w-full rounded-lg border border-border bg-surface-1 py-2.5 pl-10 pr-3 text-body-md text-text-1 placeholder:text-text-3 focus:border-primary focus:outline-none"
+                />
+              </div>
+
+              <div className="mb-6 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory(null)}
+                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-label text-label-md transition-colors ${
+                    selectedCategory === null
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-surface-2 text-text-2 hover:bg-surface-3"
+                  }`}
+                >
+                  Todas
+                  <span className="opacity-80">({items.length})</span>
+                </button>
+                {VAULT_CATEGORIES.filter((category) =>
+                  categoryCounts.has(category),
+                ).map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setSelectedCategory(category)}
+                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-label text-label-md transition-colors ${
+                      selectedCategory === category
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-surface-2 text-text-2 hover:bg-surface-3"
+                    }`}
+                  >
+                    <Icon
+                      name={VAULT_CATEGORY_ICONS[category]}
+                      className="text-[14px]"
+                    />
+                    {category}
+                    <span className="opacity-80">
+                      ({categoryCounts.get(category)})
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
           )}
 
           {loading && (
@@ -145,14 +208,14 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
           {!loading && !error && (
             <div className="space-y-6">
               {groupedItems.map((group) => (
-                <div key={group.domain}>
+                <div key={group.category}>
                   <div className="mb-3 flex items-center gap-2">
                     <Icon
-                      name="encrypted"
+                      name={VAULT_CATEGORY_ICONS[normalizeVaultCategory(group.category)]}
                       className="text-[16px] text-primary"
                     />
                     <h3 className="font-label text-label-md font-semibold uppercase tracking-wide text-text-3">
-                      {group.domain}
+                      {group.category}
                     </h3>
                     <span className="rounded-full bg-surface-3 px-2 py-0.5 font-label text-label-md text-text-3">
                       {group.items.length}
@@ -181,7 +244,7 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
               )}
               {items.length > 0 && filteredItems.length === 0 && (
                 <p className="py-8 text-center text-body-md text-text-3">
-                  Ninguna contraseña coincide con tu búsqueda.
+                  Ninguna contraseña coincide con tu búsqueda o filtro.
                 </p>
               )}
             </div>
@@ -195,11 +258,11 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
           onClose={closeDialog}
           submitting={submitting}
           error={submitError}
-          onSubmit={async (site, username, password) => {
+          onSubmit={async (site, username, password, category) => {
             setSubmitting(true);
             setSubmitError(null);
             try {
-              await createItem(site, username, password);
+              await createItem(site, username, password, category);
               return true;
             } catch (err) {
               setSubmitError(
@@ -221,15 +284,22 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
           initial={{
             site: editingItem.site,
             username: editingItem.username,
+            category: editingItem.category,
           }}
           onClose={closeDialog}
           submitting={submitting}
           error={submitError}
-          onSubmit={async (site, username, password) => {
+          onSubmit={async (site, username, password, category) => {
             setSubmitting(true);
             setSubmitError(null);
             try {
-              await updateItem(editingItem.id, site, username, password);
+              await updateItem(
+                editingItem.id,
+                site,
+                username,
+                password,
+                category,
+              );
               return true;
             } catch (err) {
               setSubmitError(

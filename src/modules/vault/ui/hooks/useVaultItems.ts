@@ -57,10 +57,15 @@ export function useVaultItems(
   const visibleItems = masterKey ? items : [];
 
   const createItem = useCallback(
-    async (site: string, username: string, password: string) => {
+    async (
+      site: string,
+      username: string,
+      password: string,
+      category?: string,
+    ) => {
       if (!masterKey) throw new Error("La bóveda está bloqueada.");
       const useCase = new CreateVaultItemUseCase(repository);
-      await useCase.execute({ site, username, password, masterKey });
+      await useCase.execute({ site, username, password, category, masterKey });
       reload();
     },
     [repository, masterKey, reload],
@@ -72,10 +77,18 @@ export function useVaultItems(
       site: string,
       username: string,
       password: string,
+      category?: string,
     ) => {
       if (!masterKey) throw new Error("La bóveda está bloqueada.");
       const useCase = new UpdateVaultItemUseCase(repository);
-      await useCase.execute({ itemId, site, username, password, masterKey });
+      await useCase.execute({
+        itemId,
+        site,
+        username,
+        password,
+        category,
+        masterKey,
+      });
       reload();
     },
     [repository, masterKey, reload],

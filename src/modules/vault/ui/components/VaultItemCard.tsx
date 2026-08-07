@@ -3,8 +3,36 @@
 import { useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import { VaultItem } from "../../domain/VaultItem";
-import { normalizeSiteForCopy } from "../../domain/extractDomain";
+import { formatSiteLabel, getSiteHref } from "../../domain/formatSiteLabel";
+import {
+  VAULT_CATEGORY_ICONS,
+  normalizeVaultCategory,
+} from "../../domain/vaultCategories";
 import { CopyField } from "./CopyField";
+
+function formatRelativeDate(isoDate?: string): string | null {
+  if (!isoDate) return null;
+
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const diffMs = Date.now() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return "Actualizado hoy";
+  if (diffDays === 1) return "Actualizado ayer";
+  if (diffDays < 7) return `Actualizado hace ${diffDays} días`;
+  if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return `Actualizado hace ${weeks} semana${weeks > 1 ? "s" : ""}`;
+  }
+
+  return `Actualizado el ${date.toLocaleDateString("es", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })}`;
+}
 
 export function VaultItemCard({
   item,
@@ -22,6 +50,11 @@ export function VaultItemCard({
   const [revealError, setRevealError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const category = normalizeVaultCategory(item.category);
+  const siteLabel = formatSiteLabel(item.site);
+  const siteHref = getSiteHref(item.site);
+  const updatedLabel = formatRelativeDate(item.updatedAt);
 
   const handleReveal = async () => {
     if (revealed !== null) {
@@ -47,7 +80,7 @@ export function VaultItemCard({
   };
 
   const handleDelete = async () => {
-    if (!confirm(`¿Eliminar la contraseña de ${item.site}?`)) return;
+    if (!confirm(`¿Eliminar la contraseña de ${siteLabel}?`)) return;
     setDeleting(true);
     try {
       await onDelete(item.id);
@@ -58,41 +91,33 @@ export function VaultItemCard({
 
   return (
     <div className="rounded-lg border border-border/30 bg-surface-2 p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1 space-y-3">
-          <CopyField
-            label="Sitio"
-            value={normalizeSiteForCopy(item.site)}
-            mono
-          />
-
-          <CopyField label="Usuario" value={item.username} mono />
-
-          {revealed !== null && (
-            <div className="space-y-2">
-              <CopyField
-                label="Contraseña"
-                value={revealed}
-                mono
-                masked
-                visible={showPassword}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="inline-flex items-center gap-1 font-label text-label-md text-text-3 transition-colors hover:text-text-1"
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            {siteHref ? (
+              <a
+                href={siteHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate font-label text-label-lg font-semibold text-primary hover:underline"
               >
-                <Icon
-                  name={showPassword ? "visibility_off" : "visibility"}
-                  className="text-[16px]"
-                />
-                {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              </button>
-            </div>
-          )}
-
-          {revealError && (
-            <p className="text-body-md text-error">{revealError}</p>
+                {siteLabel}
+              </a>
+            ) : (
+              <h4 className="truncate font-label text-label-lg font-semibold text-text-1">
+                {siteLabel}
+              </h4>
+            )}
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 font-label text-label-md text-primary">
+              <Icon
+                name={VAULT_CATEGORY_ICONS[category]}
+                className="text-[14px]"
+              />
+              {category}
+            </span>
+          </div>
+          {updatedLabel && (
+            <p className="font-label text-label-md text-text-3">{updatedLabel}</p>
           )}
         </div>
 
@@ -128,6 +153,37 @@ export function VaultItemCard({
             <Icon name="trash" className="text-[18px]" />
           </button>
         </div>
+      </div>
+
+      <div className="space-y-3">
+        <CopyField label="Usuario" value={item.username} mono />
+
+        {revealed !== null && (
+          <div className="space-y-2">
+            <CopyField
+              label="Contraseña"
+              value={revealed}
+              mono
+              masked
+              visible={showPassword}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="inline-flex items-center gap-1 font-label text-label-md text-text-3 transition-colors hover:text-text-1"
+            >
+              <Icon
+                name={showPassword ? "visibility_off" : "visibility"}
+                className="text-[16px]"
+              />
+              {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            </button>
+          </div>
+        )}
+
+        {revealError && (
+          <p className="text-body-md text-error">{revealError}</p>
+        )}
       </div>
     </div>
   );

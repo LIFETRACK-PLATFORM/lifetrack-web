@@ -3,6 +3,7 @@ import { VaultItem } from "./VaultItem";
 export interface CreateVaultItemInput {
   site: string;
   username: string;
+  category?: string;
   encryptedBlob: string;
   iv: string;
   salt: string;
@@ -12,6 +13,7 @@ export interface CreateVaultItemInput {
 export interface UpdateVaultItemInput {
   site: string;
   username: string;
+  category?: string;
   encryptedBlob: string;
   iv: string;
   salt: string;

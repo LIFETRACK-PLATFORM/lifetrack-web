@@ -9,6 +9,7 @@ import {
   BadgeCheck,
   Bell,
   BookOpen,
+  Briefcase,
   Calendar,
   Car,
   Check,
@@ -23,6 +24,7 @@ import {
   EyeOff,
   Film,
   Filter,
+  Folder,
   Gift,
   GraduationCap,
   HeartPulse,
@@ -56,6 +58,7 @@ import {
   TrendingUp,
   TriangleAlert,
   User,
+  Users,
   Utensils,
   Video,
   Wallet,
@@ -85,9 +88,11 @@ const ICON_MAP = {
   encrypted: Lock,
   error: CircleAlert,
   filter_list: Filter,
+  folder: Folder,
   film: Film,
   fitness_center: Dumbbell,
   gift: Gift,
+  groups: Users,
   graduation_cap: GraduationCap,
   heart_pulse: HeartPulse,
   history: History,
@@ -126,6 +131,7 @@ const ICON_MAP = {
   videocam: Video,
   visibility: Eye,
   visibility_off: EyeOff,
+  work: Briefcase,
 } as const satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICON_MAP;
