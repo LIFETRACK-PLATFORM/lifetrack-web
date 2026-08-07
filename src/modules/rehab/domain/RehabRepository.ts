@@ -67,6 +67,10 @@ export interface RehabRepository {
   addExercise(planId: string, input: AddExerciseInput): Promise<void>;
   deleteExercise(planId: string, exerciseId: string): Promise<void>;
   addAppointment(planId: string, input: AddAppointmentInput): Promise<void>;
+  markAppointmentAttendance(
+    appointmentId: string,
+    attended: boolean,
+  ): Promise<void>;
   addPainLog(planId: string, input: AddPainLogInput): Promise<void>;
   addMeasurement(planId: string, input: AddMeasurementInput): Promise<void>;
 }

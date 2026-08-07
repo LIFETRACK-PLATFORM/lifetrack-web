@@ -15,6 +15,7 @@ import { DeleteExerciseUseCase } from "../../application/DeleteExerciseUseCase";
 import { MarkExerciseCompletionUseCase } from "../../application/MarkExerciseCompletionUseCase";
 import { UpdateRecoveryPlanStatusUseCase } from "../../application/UpdateRecoveryPlanStatusUseCase";
 import { AddAppointmentUseCase } from "../../application/AddAppointmentUseCase";
+import { MarkAppointmentAttendanceUseCase } from "../../application/MarkAppointmentAttendanceUseCase";
 import { AddPainLogUseCase } from "../../application/AddPainLogUseCase";
 import { AddMeasurementUseCase } from "../../application/AddMeasurementUseCase";
 import { RehabApiError } from "../../infrastructure/http/rehabHttpClient";
@@ -42,6 +43,10 @@ export function usePlan(repository: RehabRepository, planId: string) {
     null,
   );
   const [addingAppointment, setAddingAppointment] = useState(false);
+  const [attendanceError, setAttendanceError] = useState<string | null>(null);
+  const [pendingAttendanceIds, setPendingAttendanceIds] = useState<Set<string>>(
+    new Set(),
+  );
   const [addPainLogError, setAddPainLogError] = useState<string | null>(null);
   const [addingPainLog, setAddingPainLog] = useState(false);
   const [addMeasurementError, setAddMeasurementError] = useState<string | null>(
@@ -219,6 +224,35 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [plan, repository, refresh],
   );
 
+  const markAppointmentAttendance = useCallback(
+    async (appointmentId: string, attended: boolean) => {
+      if (!plan) return;
+      setAttendanceError(null);
+      setPendingAttendanceIds((current) =>
+        new Set(current).add(appointmentId),
+      );
+
+      try {
+        const useCase = new MarkAppointmentAttendanceUseCase(repository);
+        await useCase.execute(appointmentId, attended);
+        await refresh();
+      } catch (err) {
+        setAttendanceError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo actualizar la asistencia",
+        );
+      } finally {
+        setPendingAttendanceIds((current) => {
+          const next = new Set(current);
+          next.delete(appointmentId);
+          return next;
+        });
+      }
+    },
+    [plan, repository, refresh],
+  );
+
   const addPainLog = useCallback(
     async (input: AddPainLogInput) => {
       if (!plan) return false;
@@ -315,6 +349,9 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addAppointment,
     addingAppointment,
     addAppointmentError,
+    markAppointmentAttendance,
+    attendanceError,
+    pendingAttendanceIds,
     addPainLog,
     addingPainLog,
     addPainLogError,

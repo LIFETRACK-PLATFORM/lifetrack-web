@@ -77,6 +77,9 @@ export function PlanDetailView({
     addAppointment,
     addingAppointment,
     addAppointmentError,
+    markAppointmentAttendance,
+    attendanceError,
+    pendingAttendanceIds,
     addPainLog,
     addingPainLog,
     addPainLogError,
@@ -445,10 +448,24 @@ export function PlanDetailView({
                     <p className="font-label text-label-md text-text-3">
                       {apt.detail}
                     </p>
+                    {isPastOrToday(apt.date) && (
+                      <div className="mt-2">
+                        <AppointmentAttendanceControl
+                          attended={apt.attended}
+                          pending={pendingAttendanceIds.has(apt.id)}
+                          onMark={(attended) =>
+                            void markAppointmentAttendance(apt.id, attended)
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                   <Icon name="chevron_right" className="text-text-3" />
                 </div>
               ))}
+              {attendanceError && (
+                <p className="text-body-md text-error">{attendanceError}</p>
+              )}
               <PainLogForm
                 painLevel={painLevel}
                 setPainLevel={setPainLevel}
@@ -739,9 +756,23 @@ export function PlanDetailView({
                         <p className="font-label text-label-md text-text-3">
                           {apt.detail}
                         </p>
+                        {isPastOrToday(apt.date) && (
+                          <div className="mt-2">
+                            <AppointmentAttendanceControl
+                              attended={apt.attended}
+                              pending={pendingAttendanceIds.has(apt.id)}
+                              onMark={(attended) =>
+                                void markAppointmentAttendance(apt.id, attended)
+                              }
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
+                  {attendanceError && (
+                    <p className="text-body-md text-error">{attendanceError}</p>
+                  )}
                 </div>
               )}
 
@@ -986,6 +1017,65 @@ function DailyCheckButton({
           ? "Hecho hoy"
           : "Marcar como hecho hoy"}
     </button>
+  );
+}
+
+function isPastOrToday(dateIso: string): boolean {
+  return new Date(dateIso).getTime() <= Date.now();
+}
+
+function AppointmentAttendanceControl({
+  attended,
+  pending,
+  onMark,
+}: {
+  attended: boolean | null;
+  pending: boolean;
+  onMark: (attended: boolean) => void;
+}) {
+  if (attended !== null) {
+    return (
+      <button
+        type="button"
+        onClick={() => onMark(!attended)}
+        disabled={pending}
+        className={`flex items-center gap-1 rounded-full px-2 py-1 font-label text-label-md transition-all active:scale-95 disabled:opacity-60 ${
+          attended ? "bg-primary/10 text-primary" : "bg-error/10 text-error"
+        }`}
+      >
+        <Icon
+          name={attended ? "check_circle" : "close"}
+          className="text-[16px]"
+        />
+        {attended ? "Asististe" : "No asististe"}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="font-label text-label-md text-text-3">
+        ¿Asististe?
+      </span>
+      <button
+        type="button"
+        onClick={() => onMark(true)}
+        disabled={pending}
+        className="rounded-full bg-primary/10 p-1.5 text-primary transition-all active:scale-95 disabled:opacity-60"
+        aria-label="Marcar como asistida"
+      >
+        <Icon name="check" className="text-[16px]" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onMark(false)}
+        disabled={pending}
+        className="rounded-full bg-error/10 p-1.5 text-error transition-all active:scale-95 disabled:opacity-60"
+        aria-label="Marcar como no asistida"
+      >
+        <Icon name="close" className="text-[16px]" />
+      </button>
+    </div>
   );
 }
 

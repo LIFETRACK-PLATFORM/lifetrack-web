@@ -178,6 +178,8 @@ const plans: Record<string, RehabPlan> = {
             title: "Evaluación de fisioterapia",
             detail: "09:00 a. m. • Centro Médico Apex",
             type: "THERAPY",
+            date: "2026-10-24T09:00:00.000Z",
+            attended: null,
           },
           "apt-1",
         ),
@@ -279,10 +281,36 @@ export class MockRehabRepository implements RehabRepository {
           title: input.provider,
           detail: input.notes ?? (input.type === "THERAPY" ? "Sesión de terapia" : "Cita médica"),
           type: input.type,
+          date: date.toISOString(),
+          attended: null,
         },
         `appointment-${Date.now()}`,
       ),
     );
+  }
+
+  async markAppointmentAttendance(
+    appointmentId: string,
+    attended: boolean,
+  ): Promise<void> {
+    for (const plan of Object.values(plans)) {
+      const idx = plan.appointments.findIndex((a) => a.id === appointmentId);
+      if (idx < 0) continue;
+      const current = plan.appointments[idx];
+      plan.appointments[idx] = new Appointment(
+        {
+          month: current.month,
+          day: current.day,
+          title: current.title,
+          detail: current.detail,
+          type: current.type,
+          date: current.date,
+          attended,
+        },
+        current.id,
+      );
+      return;
+    }
   }
 
   async addPainLog(_planId: string, _input: AddPainLogInput): Promise<void> {}

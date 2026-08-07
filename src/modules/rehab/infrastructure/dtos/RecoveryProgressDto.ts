@@ -38,6 +38,7 @@ export interface AppointmentDto {
   provider: string;
   type: AppointmentTypeDto;
   notes?: string;
+  attended?: boolean;
 }
 
 export interface MeasurementDto {
