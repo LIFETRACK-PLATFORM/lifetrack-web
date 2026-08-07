@@ -28,6 +28,7 @@ export default function AuthenticatedLayout({
   const showAppNav =
     pathname.startsWith("/rehab") ||
     pathname.startsWith("/finance") ||
+    pathname.startsWith("/vault") ||
     pathname.startsWith("/profile");
 
   useEffect(() => {

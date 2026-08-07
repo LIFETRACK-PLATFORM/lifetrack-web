@@ -17,6 +17,7 @@ export function SideNav({ user }: { user: SideNavUser }) {
   const pathname = usePathname();
   const rehabActive = pathname.startsWith("/rehab");
   const financeActive = pathname.startsWith("/finance");
+  const vaultActive = pathname.startsWith("/vault");
   const profileActive = pathname.startsWith("/profile");
 
   return (
@@ -64,6 +65,19 @@ export function SideNav({ user }: { user: SideNavUser }) {
           <Icon name="payments" className="text-[20px]" />
           <span className={`text-body-md ${financeActive ? "font-semibold" : ""}`}>
             Finanzas
+          </span>
+        </Link>
+        <Link
+          href="/vault"
+          className={`flex items-center gap-4 rounded-[10px] px-4 py-2.5 transition-colors ${
+            vaultActive
+              ? "bg-surface-2 text-primary"
+              : "text-text-3 hover:bg-surface-3 hover:text-text-1"
+          }`}
+        >
+          <Icon name="encrypted" className="text-[20px]" />
+          <span className={`text-body-md ${vaultActive ? "font-semibold" : ""}`}>
+            Bóveda
           </span>
         </Link>
         <Link
