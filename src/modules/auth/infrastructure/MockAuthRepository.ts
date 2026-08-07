@@ -47,4 +47,12 @@ export class MockAuthRepository implements AuthRepository {
       roles: ["USER"],
     });
   }
+
+  async linkAccount(_input: {
+    provider: string;
+    linkToken: string;
+    password: string;
+  }): Promise<void> {
+    await new Promise<void>((resolve) => setTimeout(resolve, 800));
+  }
 }

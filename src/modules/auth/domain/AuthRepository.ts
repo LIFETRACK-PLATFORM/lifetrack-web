@@ -11,4 +11,9 @@ export interface AuthRepository {
   confirmEmail(token: string): Promise<void>;
   resendVerification(email: string): Promise<void>;
   getCurrentUser(): Promise<CurrentUser>;
+  linkAccount(input: {
+    provider: string;
+    linkToken: string;
+    password: string;
+  }): Promise<void>;
 }

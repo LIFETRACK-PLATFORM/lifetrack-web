@@ -1,18 +1,18 @@
 "use client";
 
 import { Suspense } from "react";
-import { LoginView } from "@/modules/auth/ui/views/LoginView";
+import { LinkAccountView } from "@/modules/auth/ui/views/LinkAccountView";
 import { HttpAuthRepository } from "@/modules/auth/infrastructure/HttpAuthRepository";
 
-function LoginPageContent() {
+function LinkAccountPageContent() {
   const repository = new HttpAuthRepository();
-  return <LoginView repository={repository} />;
+  return <LinkAccountView repository={repository} />;
 }
 
-export default function LoginPage() {
+export default function LinkAccountPage() {
   return (
     <Suspense fallback={null}>
-      <LoginPageContent />
+      <LinkAccountPageContent />
     </Suspense>
   );
 }
