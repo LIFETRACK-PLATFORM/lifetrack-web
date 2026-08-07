@@ -105,7 +105,6 @@ export function PlanDetailView({
     }
 
     focusedExerciseRef.current = true;
-    setTab("exercises");
 
     const scrollTimer = window.setTimeout(() => {
       document
