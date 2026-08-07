@@ -46,7 +46,10 @@ export type MeasurementType =
   | "FLEXION_DEGREES"
   | "EXTENSION_DEGREES"
   | "QUAD_CIRCUMFERENCE_CM"
-  | "WEIGHT_KG";
+  | "WEIGHT_KG"
+  | "WAIST_CM"
+  | "HIP_CM"
+  | "NECK_CM";
 
 export interface AddMeasurementInput {
   type: MeasurementType;
