@@ -106,7 +106,9 @@ export function mapProgressToPlan(
     extensionMeasurements[extensionMeasurements.length - 1];
   const measurements: MeasurementPoint[] = (dto.measurements ?? [])
     .map((m) => ({
+      measurementId: m.measurementId,
       type: m.type as MeasurementType,
+      customLabel: m.customLabel,
       value: m.value,
       unit: m.unit,
       date: m.date,

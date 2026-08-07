@@ -8,6 +8,7 @@ import {
   RecoveryPlanStatus,
   RehabRepository,
   UpdateExerciseInput,
+  UpdateMeasurementInput,
 } from "../domain/RehabRepository";
 import type {
   GetTodayExercisesResponseDto,
@@ -204,6 +205,22 @@ export class HttpRehabRepository implements RehabRepository {
     await rehabFetchStrict(`/rehab/plans/${planId}/measurements`, {
       method: "POST",
       body: JSON.stringify(input),
+    });
+  }
+
+  async updateMeasurement(
+    measurementId: string,
+    input: UpdateMeasurementInput,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/measurements/${measurementId}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  }
+
+  async deleteMeasurement(measurementId: string): Promise<void> {
+    await rehabFetchStrict(`/rehab/measurements/${measurementId}`, {
+      method: "DELETE",
     });
   }
 

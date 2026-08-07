@@ -8,6 +8,7 @@ import {
   RecoveryPlanStatus,
   RehabRepository,
   UpdateExerciseInput,
+  UpdateMeasurementInput,
 } from "../../domain/RehabRepository";
 import { GetPlanUseCase } from "../../application/GetPlanUseCase";
 import { UpdateExerciseProgressUseCase } from "../../application/UpdateExerciseProgressUseCase";
@@ -22,6 +23,8 @@ import { DeleteAppointmentUseCase } from "../../application/DeleteAppointmentUse
 import { MarkAppointmentAttendanceUseCase } from "../../application/MarkAppointmentAttendanceUseCase";
 import { AddPainLogUseCase } from "../../application/AddPainLogUseCase";
 import { AddMeasurementUseCase } from "../../application/AddMeasurementUseCase";
+import { UpdateMeasurementUseCase } from "../../application/UpdateMeasurementUseCase";
+import { DeleteMeasurementUseCase } from "../../application/DeleteMeasurementUseCase";
 import { SetAdHocProtocolDayUseCase } from "../../application/SetAdHocProtocolDayUseCase";
 import { ClearAdHocProtocolDayUseCase } from "../../application/ClearAdHocProtocolDayUseCase";
 import { RehabApiError } from "../../infrastructure/http/rehabHttpClient";
@@ -73,6 +76,16 @@ export function usePlan(repository: RehabRepository, planId: string) {
     null,
   );
   const [addingMeasurement, setAddingMeasurement] = useState(false);
+  const [updateMeasurementError, setUpdateMeasurementError] = useState<
+    string | null
+  >(null);
+  const [updatingMeasurement, setUpdatingMeasurement] = useState(false);
+  const [deleteMeasurementError, setDeleteMeasurementError] = useState<
+    string | null
+  >(null);
+  const [deletingMeasurementId, setDeletingMeasurementId] = useState<
+    string | null
+  >(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [updateStatusError, setUpdateStatusError] = useState<string | null>(
     null,
@@ -434,6 +447,54 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [plan, repository, refresh],
   );
 
+  const updateMeasurement = useCallback(
+    async (measurementId: string, input: UpdateMeasurementInput) => {
+      setUpdatingMeasurement(true);
+      setUpdateMeasurementError(null);
+
+      try {
+        const useCase = new UpdateMeasurementUseCase(repository);
+        await useCase.execute(measurementId, input);
+        await refresh();
+        return true;
+      } catch (err) {
+        setUpdateMeasurementError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo actualizar la medición",
+        );
+        return false;
+      } finally {
+        setUpdatingMeasurement(false);
+      }
+    },
+    [repository, refresh],
+  );
+
+  const deleteMeasurement = useCallback(
+    async (measurementId: string) => {
+      setDeletingMeasurementId(measurementId);
+      setDeleteMeasurementError(null);
+
+      try {
+        const useCase = new DeleteMeasurementUseCase(repository);
+        await useCase.execute(measurementId);
+        await refresh();
+        return true;
+      } catch (err) {
+        setDeleteMeasurementError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo eliminar la medición",
+        );
+        return false;
+      } finally {
+        setDeletingMeasurementId(null);
+      }
+    },
+    [repository, refresh],
+  );
+
   const updateStatus = useCallback(
     async (status: RecoveryPlanStatus) => {
       if (!plan) return false;
@@ -550,6 +611,12 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addMeasurement,
     addingMeasurement,
     addMeasurementError,
+    updateMeasurement,
+    updatingMeasurement,
+    updateMeasurementError,
+    deleteMeasurement,
+    deletingMeasurementId,
+    deleteMeasurementError,
     setAdHocProtocolDay,
     clearAdHocProtocolDay,
     savingAdHocProtocol,
