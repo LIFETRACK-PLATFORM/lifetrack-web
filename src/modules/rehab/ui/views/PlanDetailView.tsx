@@ -949,7 +949,15 @@ function AppointmentListItem({
               status={apt.type === "THERAPY" ? "therapy" : "medical"}
             />
           </div>
-          <p className="font-label text-label-md text-text-3">{apt.detail}</p>
+          <p className="flex items-center gap-1 font-label text-label-md text-text-3">
+            <Icon name="person" className="text-[14px]" />
+            {apt.provider}
+          </p>
+          {apt.notes && (
+            <p className="font-label text-label-md text-text-3">
+              {apt.notes}
+            </p>
+          )}
           {isPastOrToday(apt.date) && (
             <div className="mt-2">
               <AppointmentAttendanceControl
