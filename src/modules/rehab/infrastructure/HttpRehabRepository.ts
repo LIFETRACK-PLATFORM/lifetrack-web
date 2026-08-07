@@ -7,6 +7,7 @@ import {
   AddPainLogInput,
   RecoveryPlanStatus,
   RehabRepository,
+  UpdateExerciseInput,
 } from "../domain/RehabRepository";
 import type {
   GetTodayExercisesResponseDto,
@@ -133,6 +134,17 @@ export class HttpRehabRepository implements RehabRepository {
     });
   }
 
+  async updateExercise(
+    _planId: string,
+    exerciseId: string,
+    input: UpdateExerciseInput,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/exercises/${exerciseId}`, {
+      method: "PATCH",
+      body: JSON.stringify(input),
+    });
+  }
+
   async deleteExercise(_planId: string, exerciseId: string): Promise<void> {
     await rehabFetchStrict(`/rehab/exercises/${exerciseId}`, {
       method: "DELETE",
@@ -156,6 +168,15 @@ export class HttpRehabRepository implements RehabRepository {
     await rehabFetchStrict(`/rehab/appointments/${appointmentId}/attendance`, {
       method: "PATCH",
       body: JSON.stringify({ attended }),
+    });
+  }
+
+  async deleteAppointment(
+    _planId: string,
+    appointmentId: string,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/appointments/${appointmentId}`, {
+      method: "DELETE",
     });
   }
 

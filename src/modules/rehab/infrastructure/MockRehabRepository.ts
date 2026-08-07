@@ -98,6 +98,7 @@ const plans: Record<string, RehabPlan> = {
             target: 10,
             completed: false,
             category: "Fuerza",
+            phase: 1,
             sets: 3,
             reps: 15,
             image:
@@ -118,6 +119,7 @@ const plans: Record<string, RehabPlan> = {
             target: 20,
             completed: false,
             category: "Movilidad",
+            phase: 1,
             sets: 2,
             reps: 10,
             image:
@@ -138,6 +140,7 @@ const plans: Record<string, RehabPlan> = {
             target: 10,
             completed: true,
             category: "Núcleo/Estabilidad",
+            phase: 1,
             sets: 3,
             reps: 12,
             image:
@@ -158,6 +161,7 @@ const plans: Record<string, RehabPlan> = {
             target: 15,
             completed: false,
             category: "Isométrico",
+            phase: 1,
             sets: 3,
             reps: 15,
             image:
@@ -244,6 +248,7 @@ export class MockRehabRepository implements RehabRepository {
         target,
         completed: false,
         category: `phase-${input.phase}`,
+        phase: input.phase,
         sets: input.targetSets,
         reps: input.targetReps,
         image: MOCK_EXERCISE_IMAGE,
@@ -263,6 +268,40 @@ export class MockRehabRepository implements RehabRepository {
     if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
     const idx = plan.exercises.findIndex((ex) => ex.id === exerciseId);
     if (idx >= 0) plan.exercises.splice(idx, 1);
+  }
+
+  async updateExercise(
+    planId: string,
+    exerciseId: string,
+    input: AddExerciseInput,
+  ): Promise<void> {
+    const plan = plans[planId];
+    if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
+    const idx = plan.exercises.findIndex((ex) => ex.id === exerciseId);
+    if (idx < 0) throw new Error(`Ejercicio no encontrado: ${exerciseId}`);
+
+    const target = input.targetSets * input.targetReps;
+    const current = plan.exercises[idx];
+    plan.exercises[idx] = new Exercise(
+      {
+        name: input.name,
+        detail: `${input.targetSets} series × ${input.targetReps} repeticiones`,
+        icon: current.icon,
+        current: Math.min(current.current, target),
+        target,
+        completed: current.current >= target && target > 0,
+        category: `phase-${input.phase}`,
+        phase: input.phase,
+        sets: input.targetSets,
+        reps: input.targetReps,
+        image: current.image,
+        daysOfWeek: input.daysOfWeek ?? [],
+        scheduledToday: current.scheduledToday,
+        completedToday: current.completedToday,
+        urgent: current.urgent,
+      },
+      exerciseId,
+    );
   }
 
   async addAppointment(
@@ -311,6 +350,13 @@ export class MockRehabRepository implements RehabRepository {
       );
       return;
     }
+  }
+
+  async deleteAppointment(planId: string, appointmentId: string): Promise<void> {
+    const plan = plans[planId];
+    if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
+    const idx = plan.appointments.findIndex((a) => a.id === appointmentId);
+    if (idx >= 0) plan.appointments.splice(idx, 1);
   }
 
   async addPainLog(_planId: string, _input: AddPainLogInput): Promise<void> {}
