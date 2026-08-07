@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatDateIsoCalendar,
   getExercisesDueOn,
   getProtocolStatsForDate,
   isCompletedOnDate,
@@ -52,5 +53,15 @@ describe("protocolSchedule", () => {
   it("identifica fechas futuras", () => {
     expect(isFutureDate("2026-08-08", "2026-08-07")).toBe(true);
     expect(isFutureDate("2026-08-07", "2026-08-07")).toBe(false);
+  });
+
+  it("formatea titulo sin corrimiento de zona horaria", () => {
+    expect(
+      formatDateIsoCalendar("2026-08-05", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }),
+    ).toMatch(/mi[eé]rcoles.*5.*agosto/i);
   });
 });

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDateIsoCalendar } from "@/modules/rehab/domain/protocolSchedule";
 import { Icon } from "@/shared/ui/Icon";
 import type { WeeklyDayPoint } from "@/modules/rehab/domain/RehabPlan";
 
@@ -20,7 +21,7 @@ export function WeeklyDaysStrip({
 
   return (
     <div className="rounded-xl border border-border bg-surface-1 px-3 py-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-1">
         {days.map((day, index) => {
           const isToday = day.date === todayIso;
           const isSelected = day.date === selectedDate;
@@ -32,27 +33,39 @@ export function WeeklyDaysStrip({
               : day.compliant
                 ? "done"
                 : "missed";
+          const dayNumber = formatDateIsoCalendar(day.date, { day: "numeric" });
+
+          let ringClass = "";
+          if (isSelected && isToday) {
+            ringClass = "ring-2 ring-primary ring-offset-1 ring-offset-surface-1";
+          } else if (isSelected) {
+            ringClass = "ring-2 ring-primary ring-offset-1 ring-offset-surface-1";
+          } else if (isToday) {
+            ringClass = "ring-2 ring-primary/35 ring-offset-1 ring-offset-surface-1";
+          }
 
           return (
             <button
               key={day.date}
               type="button"
               onClick={() => onSelectDate(day.date)}
-              className="flex flex-1 flex-col items-center gap-1.5"
-              title={`${day.date}${isRest ? " · sin ejercicios agendados" : ` · ${day.completed}/${day.due} completados`}`}
+              className="flex min-w-0 flex-1 flex-col items-center gap-0.5"
+              title={`${formatDateIsoCalendar(day.date, {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}${isRest ? " · sin ejercicios agendados" : ` · ${day.completed}/${day.due} completados`}`}
             >
-              <span className="font-label text-[11px] text-text-3">
+              <span className="font-label text-[10px] text-text-3">
                 {WEEKDAY_LETTERS[index]}
               </span>
               <div
-                className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] transition-transform active:scale-90 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full text-[12px] font-semibold transition-transform active:scale-90 ${ringClass} ${
                   status === "done"
                     ? "bg-success/20 text-success"
                     : status === "missed"
                       ? "bg-error/15 text-error"
-                      : "bg-surface-3 text-text-3"
-                } ${isToday ? "ring-2 ring-primary/40 ring-offset-1 ring-offset-surface-1" : ""} ${
-                  isSelected ? "ring-2 ring-primary ring-offset-1 ring-offset-surface-1" : ""
+                      : "bg-surface-3 text-text-2"
                 }`}
               >
                 {status === "done" && (
@@ -60,6 +73,9 @@ export function WeeklyDaysStrip({
                 )}
                 {status === "missed" && (
                   <Icon name="close" className="text-[14px]" />
+                )}
+                {status !== "done" && status !== "missed" && (
+                  <span>{dayNumber}</span>
                 )}
               </div>
             </button>

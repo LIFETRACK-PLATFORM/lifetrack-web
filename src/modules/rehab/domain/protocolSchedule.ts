@@ -15,6 +15,19 @@ export function todayDateIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+/** Formatea YYYY-MM-DD como día calendario UTC (sin corrimiento por zona horaria local). */
+export function formatDateIsoCalendar(
+  dateIso: string,
+  options: Intl.DateTimeFormatOptions,
+  locale = "es-PE",
+): string {
+  const [year, month, day] = dateIso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).toLocaleDateString(locale, {
+    ...options,
+    timeZone: "UTC",
+  });
+}
+
 export function isExerciseDueOnDate(
   exercise: ExerciseScheduleInfo,
   dateIso: string,
@@ -72,10 +85,11 @@ export function formatProtocolTitle(
     return "Protocolo de hoy";
   }
 
-  const formatted = new Date(`${dateIso}T00:00:00.000Z`).toLocaleDateString(
-    "es-PE",
-    { weekday: "long", day: "numeric", month: "long" },
-  );
+  const formatted = formatDateIsoCalendar(dateIso, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
   return `Protocolo del ${formatted}`;
 }
 
@@ -87,9 +101,10 @@ export function formatCompletionLabel(
     return "Completado hoy";
   }
 
-  const formatted = new Date(`${dateIso}T00:00:00.000Z`).toLocaleDateString(
-    "es-PE",
-    { weekday: "short", day: "numeric", month: "short" },
-  );
+  const formatted = formatDateIsoCalendar(dateIso, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
   return `Completado (${formatted})`;
 }
