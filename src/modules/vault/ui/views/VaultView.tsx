@@ -6,8 +6,8 @@ import { VaultRepository } from "../../domain/VaultRepository";
 import { VaultItem } from "../../domain/VaultItem";
 import { groupVaultItemsByCategory } from "../../domain/groupVaultItemsByCategory";
 import {
-  VAULT_CATEGORIES,
-  VAULT_CATEGORY_ICONS,
+  getCategoryIcon,
+  getCategorySortIndex,
   normalizeVaultCategory,
 } from "../../domain/vaultCategories";
 import { createVaultRepository } from "../../infrastructure/createVaultRepository";
@@ -74,6 +74,15 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
     }
     return counts;
   }, [items]);
+
+  const categoryList = useMemo(
+    () =>
+      Array.from(categoryCounts.keys()).sort((a, b) => {
+        const indexDiff = getCategorySortIndex(a) - getCategorySortIndex(b);
+        return indexDiff !== 0 ? indexDiff : a.localeCompare(b);
+      }),
+    [categoryCounts],
+  );
 
   const closeDialog = () => {
     setOpenDialog(null);
@@ -168,9 +177,7 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
                   Todas
                   <span className="opacity-80">({items.length})</span>
                 </button>
-                {VAULT_CATEGORIES.filter((category) =>
-                  categoryCounts.has(category),
-                ).map((category) => (
+                {categoryList.map((category) => (
                   <button
                     key={category}
                     type="button"
@@ -182,7 +189,7 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
                     }`}
                   >
                     <Icon
-                      name={VAULT_CATEGORY_ICONS[category]}
+                      name={getCategoryIcon(category)}
                       className="text-[14px]"
                     />
                     {category}
@@ -211,7 +218,7 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
                 <div key={group.category}>
                   <div className="mb-3 flex items-center gap-2">
                     <Icon
-                      name={VAULT_CATEGORY_ICONS[normalizeVaultCategory(group.category)]}
+                      name={getCategoryIcon(normalizeVaultCategory(group.category))}
                       className="text-[16px] text-primary"
                     />
                     <h3 className="font-label text-label-md font-semibold uppercase tracking-wide text-text-3">

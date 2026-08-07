@@ -5,7 +5,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { VaultItem } from "../../domain/VaultItem";
 import { formatSiteLabel, getSiteHref } from "../../domain/formatSiteLabel";
 import {
-  VAULT_CATEGORY_ICONS,
+  getCategoryIcon,
   normalizeVaultCategory,
 } from "../../domain/vaultCategories";
 import { CopyField } from "./CopyField";
@@ -110,7 +110,7 @@ export function VaultItemCard({
             )}
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 font-label text-label-md text-primary">
               <Icon
-                name={VAULT_CATEGORY_ICONS[category]}
+                name={getCategoryIcon(category)}
                 className="text-[14px]"
               />
               {category}

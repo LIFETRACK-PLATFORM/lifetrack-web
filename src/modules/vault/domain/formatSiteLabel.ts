@@ -1,13 +1,30 @@
+const DOMAIN_LIKE = /^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(?:[/?#].*)?$/i;
+
+function safeDecode(value: string): string {
+  let result = value;
+  for (let i = 0; i < 3; i++) {
+    let next: string;
+    try {
+      next = decodeURIComponent(result);
+    } catch {
+      break;
+    }
+    if (next === result) break;
+    result = next;
+  }
+  return result;
+}
+
+function looksLikeUrlOrDomain(value: string): boolean {
+  return value.includes("://") || DOMAIN_LIKE.test(value);
+}
+
 export function formatSiteLabel(site: string): string {
   const trimmed = site.trim();
   if (!trimmed) return trimmed;
 
-  let decoded = trimmed;
-  try {
-    decoded = decodeURIComponent(trimmed);
-  } catch {
-    decoded = trimmed;
-  }
+  const decoded = safeDecode(trimmed);
+  if (!looksLikeUrlOrDomain(decoded)) return decoded;
 
   try {
     const url = decoded.includes("://") ? decoded : `https://${decoded}`;
@@ -24,11 +41,8 @@ export function getSiteHref(site: string): string | null {
   const trimmed = site.trim();
   if (!trimmed) return null;
 
-  try {
-    const decoded = decodeURIComponent(trimmed);
-    if (decoded.includes("://")) return decoded;
-    return `https://${decoded}`;
-  } catch {
-    return trimmed.includes("://") ? trimmed : `https://${trimmed}`;
-  }
+  const decoded = safeDecode(trimmed);
+  if (!looksLikeUrlOrDomain(decoded)) return null;
+
+  return decoded.includes("://") ? decoded : `https://${decoded}`;
 }

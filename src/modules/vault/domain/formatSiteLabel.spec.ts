@@ -11,4 +11,10 @@ describe("formatSiteLabel", () => {
     expect(formatSiteLabel("github.com")).toBe("github.com");
     expect(formatSiteLabel("www.google.com")).toBe("google.com");
   });
+
+  it("muestra nombres que no son dominios tal cual, sin dejar %20 residual", () => {
+    expect(formatSiteLabel("xuper tv")).toBe("xuper tv");
+    expect(formatSiteLabel("xuper%20tv")).toBe("xuper tv");
+    expect(formatSiteLabel("xuper%2520tv")).toBe("xuper tv");
+  });
 });

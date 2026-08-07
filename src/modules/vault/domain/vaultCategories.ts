@@ -7,11 +7,11 @@ export const VAULT_CATEGORIES = [
   "Otros",
 ] as const;
 
-export type VaultCategory = (typeof VAULT_CATEGORIES)[number];
+export type VaultCategory = string;
 
 export const DEFAULT_VAULT_CATEGORY: VaultCategory = "Personal";
 
-export const VAULT_CATEGORY_ICONS: Record<VaultCategory, string> = {
+const PRESET_VAULT_CATEGORY_ICONS: Record<string, string> = {
   Personal: "person",
   Trabajo: "work",
   Finanzas: "payments",
@@ -20,15 +20,20 @@ export const VAULT_CATEGORY_ICONS: Record<VaultCategory, string> = {
   Otros: "folder",
 };
 
+const FALLBACK_CATEGORY_ICON = "folder";
+
+export function getCategoryIcon(category: string): string {
+  return PRESET_VAULT_CATEGORY_ICONS[category] ?? FALLBACK_CATEGORY_ICON;
+}
+
 export function normalizeVaultCategory(category?: string): VaultCategory {
   const trimmed = category?.trim();
-  if (trimmed && VAULT_CATEGORIES.includes(trimmed as VaultCategory)) {
-    return trimmed as VaultCategory;
-  }
-  return DEFAULT_VAULT_CATEGORY;
+  return trimmed || DEFAULT_VAULT_CATEGORY;
 }
 
 export function getCategorySortIndex(category: string): number {
-  const index = VAULT_CATEGORIES.indexOf(category as VaultCategory);
+  const index = VAULT_CATEGORIES.indexOf(
+    category as (typeof VAULT_CATEGORIES)[number],
+  );
   return index >= 0 ? index : VAULT_CATEGORIES.length;
 }
