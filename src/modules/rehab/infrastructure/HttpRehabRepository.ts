@@ -149,6 +149,16 @@ export class HttpRehabRepository implements RehabRepository {
     });
   }
 
+  async markAppointmentAttendance(
+    appointmentId: string,
+    attended: boolean,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/appointments/${appointmentId}/attendance`, {
+      method: "PATCH",
+      body: JSON.stringify({ attended }),
+    });
+  }
+
   async addPainLog(planId: string, input: AddPainLogInput): Promise<void> {
     await rehabFetchStrict(`/rehab/plans/${planId}/pain-logs`, {
       method: "POST",

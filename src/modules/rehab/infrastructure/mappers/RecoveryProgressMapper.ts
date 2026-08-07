@@ -57,6 +57,8 @@ function mapAppointment(dto: RecoveryProgressDto["appointments"][number]): Appoi
       detail:
         dto.notes ?? (dto.type === "THERAPY" ? "Sesión de terapia" : "Cita médica"),
       type: dto.type,
+      date: dto.date,
+      attended: dto.attended ?? null,
     },
     dto.appointmentId,
   );
