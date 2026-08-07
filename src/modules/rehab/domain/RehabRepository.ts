@@ -49,14 +49,18 @@ export type MeasurementType =
   | "WEIGHT_KG"
   | "WAIST_CM"
   | "HIP_CM"
-  | "NECK_CM";
+  | "NECK_CM"
+  | "OTHER";
 
 export interface AddMeasurementInput {
   type: MeasurementType;
+  customLabel?: string;
   value: number;
   unit: string;
   date: string;
 }
+
+export type UpdateMeasurementInput = AddMeasurementInput;
 
 export interface RehabRepository {
   /** Todos los planes activos del usuario, cada uno con su propio resumen. */
@@ -93,6 +97,11 @@ export interface RehabRepository {
   ): Promise<void>;
   addPainLog(planId: string, input: AddPainLogInput): Promise<void>;
   addMeasurement(planId: string, input: AddMeasurementInput): Promise<void>;
+  updateMeasurement(
+    measurementId: string,
+    input: UpdateMeasurementInput,
+  ): Promise<void>;
+  deleteMeasurement(measurementId: string): Promise<void>;
   setAdHocProtocolDay(
     planId: string,
     targetDate: string,

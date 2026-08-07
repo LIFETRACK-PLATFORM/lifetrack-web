@@ -18,11 +18,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { MeasurementPoint } from "@/modules/rehab/domain/RehabPlan";
-import type { MeasurementType } from "@/modules/rehab/domain/RehabRepository";
 import {
   MEASUREMENT_TYPES,
-  MEASUREMENT_TYPE_LABELS,
   MEASUREMENT_TYPE_UNITS,
+  measurementDisplayLabel,
 } from "@/modules/rehab/ui/lib/measurementLabels";
 import { formatDateIsoCalendar } from "@/modules/rehab/domain/protocolSchedule";
 
@@ -33,32 +32,53 @@ function formatShortDate(dateIso: string): string {
   });
 }
 
+/** Clave de serie: para OTHER, cada customLabel distinto es su propia serie
+ * (si no, "Muleta" y "Brazo" se mezclarían en un mismo trazo "Otro"). */
+function seriesKey(point: MeasurementPoint): string {
+  return point.type === "OTHER"
+    ? `OTHER:${point.customLabel ?? ""}`
+    : point.type;
+}
+
 export function MeasurementTrendChart({
   measurements,
 }: {
   measurements: MeasurementPoint[];
 }) {
-  const availableTypes = useMemo(
-    () =>
-      MEASUREMENT_TYPES.filter((type) =>
-        measurements.some((m) => m.type === type),
-      ),
-    [measurements],
-  );
+  const seriesByKey = useMemo(() => {
+    const map = new Map<string, MeasurementPoint>();
+    for (const m of measurements) {
+      if (!map.has(seriesKey(m))) map.set(seriesKey(m), m);
+    }
+    return map;
+  }, [measurements]);
 
-  const [selectedType, setSelectedType] = useState<MeasurementType | null>(
-    availableTypes[0] ?? null,
+  const availableKeys = useMemo(() => {
+    const known = MEASUREMENT_TYPES.filter((type) => type !== "OTHER").filter(
+      (type) => seriesByKey.has(type),
+    );
+    const custom = Array.from(seriesByKey.keys())
+      .filter((key) => key.startsWith("OTHER:"))
+      .sort((a, b) => a.localeCompare(b));
+    return [...known, ...custom];
+  }, [seriesByKey]);
+
+  const [selectedKey, setSelectedKey] = useState<string | null>(
+    availableKeys[0] ?? null,
   );
-  const activeType = selectedType ?? availableTypes[0] ?? null;
+  const activeKey = selectedKey ?? availableKeys[0] ?? null;
+  const activePoint = activeKey ? seriesByKey.get(activeKey) : undefined;
+  const activeLabel = activePoint ? measurementDisplayLabel(activePoint) : "";
+  const activeUnit = activePoint ? MEASUREMENT_TYPE_UNITS[activePoint.type] : "";
 
   const series = useMemo(
     () =>
-      activeType
+      activeKey
         ? measurements
-            .filter((m) => m.type === activeType)
+            .filter((m) => seriesKey(m) === activeKey)
             .map((m) => ({ date: m.date, value: m.value }))
         : [],
-    [measurements, activeType],
+    [measurements, activeKey],
   );
 
   return (
@@ -67,39 +87,39 @@ export function MeasurementTrendChart({
         <h4 className="font-label text-label-md text-text-3">
           Evolución de mediciones
         </h4>
-        {activeType && (
-          <Select
-            value={activeType}
-            onValueChange={(next) => setSelectedType(next as MeasurementType)}
-          >
+        {activeKey && (
+          <Select value={activeKey} onValueChange={setSelectedKey}>
             <SelectTrigger className="w-56">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {availableTypes.map((option) => (
-                <SelectItem key={option} value={option}>
-                  {MEASUREMENT_TYPE_LABELS[option]}
-                </SelectItem>
-              ))}
+              {availableKeys.map((key) => {
+                const point = seriesByKey.get(key);
+                return (
+                  <SelectItem key={key} value={key}>
+                    {point ? measurementDisplayLabel(point) : key}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         )}
       </div>
 
-      {!activeType && (
+      {!activeKey && (
         <p className="text-body-md text-text-3">
           Todavía no registraste ninguna medición.
         </p>
       )}
 
-      {activeType && series.length < 2 && (
+      {activeKey && series.length < 2 && (
         <p className="text-body-md text-text-3">
-          Registrá al menos dos mediciones de {MEASUREMENT_TYPE_LABELS[activeType]}{" "}
-          para ver la evolución en el tiempo.
+          Registrá al menos dos mediciones de {activeLabel} para ver la
+          evolución en el tiempo.
         </p>
       )}
 
-      {activeType && series.length >= 2 && (
+      {activeKey && series.length >= 2 && (
         <div className="h-56">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={series}>
@@ -111,13 +131,13 @@ export function MeasurementTrendChart({
               />
               <YAxis
                 tick={{ fill: "var(--text-3)", fontSize: 11 }}
-                unit={MEASUREMENT_TYPE_UNITS[activeType]}
+                unit={activeUnit}
               />
               <Tooltip
                 labelFormatter={(date) => formatShortDate(String(date))}
                 formatter={(value: unknown) => [
-                  `${value}${MEASUREMENT_TYPE_UNITS[activeType]}`,
-                  MEASUREMENT_TYPE_LABELS[activeType],
+                  `${value}${activeUnit}`,
+                  activeLabel,
                 ]}
               />
               <Line

@@ -77,6 +77,30 @@ describe("mapProgressToPlan", () => {
     ]);
   });
 
+  it("incluye measurementId y customLabel en el mapeo", () => {
+    const dto = buildDto({
+      measurements: [
+        {
+          measurementId: "m1",
+          recoveryPlanId: "plan-1",
+          type: "OTHER",
+          customLabel: "Muleta",
+          value: 1,
+          unit: "",
+          date: "2026-08-01T00:00:00.000Z",
+        },
+      ],
+    });
+
+    const plan = mapProgressToPlan(dto, today, weeklySummary);
+
+    expect(plan.measurements[0]).toMatchObject({
+      measurementId: "m1",
+      type: "OTHER",
+      customLabel: "Muleta",
+    });
+  });
+
   it("ordena measurements por fecha ascendente", () => {
     const dto = buildDto({
       measurements: [

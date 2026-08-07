@@ -23,7 +23,9 @@ export interface WeeklyDayPoint {
 }
 
 export interface MeasurementPoint {
+  measurementId: string;
   type: MeasurementType;
+  customLabel?: string;
   value: number;
   unit: string;
   date: string;

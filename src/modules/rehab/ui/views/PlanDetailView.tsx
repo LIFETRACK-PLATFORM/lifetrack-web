@@ -22,6 +22,7 @@ import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointme
 import { WeeklyDaysStrip } from "@/modules/rehab/ui/components/WeeklyDaysStrip";
 import { MeasurementForm } from "@/modules/rehab/ui/components/MeasurementForm";
 import { MeasurementTrendChart } from "@/modules/rehab/ui/components/MeasurementTrendChart";
+import { MeasurementHistoryList } from "@/modules/rehab/ui/components/MeasurementHistoryList";
 import {
   formatCompletionLabel,
   formatProtocolTitle,
@@ -42,8 +43,11 @@ import { Exercise } from "@/modules/rehab/domain/Exercise";
 import { Appointment } from "@/modules/rehab/domain/Appointment";
 import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
 import { exerciseDomId } from "@/modules/rehab/ui/rehabRoutes";
-import type { RecoveryPlanStatus } from "@/modules/rehab/domain/RehabRepository";
-import type { PainLogPoint } from "@/modules/rehab/domain/RehabPlan";
+import type {
+  AddMeasurementInput,
+  RecoveryPlanStatus,
+} from "@/modules/rehab/domain/RehabRepository";
+import type { MeasurementPoint, PainLogPoint } from "@/modules/rehab/domain/RehabPlan";
 import type { StatusBadgeStatus } from "@/components/ui/badge";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import Image from "next/image";
@@ -71,6 +75,8 @@ export function PlanDetailView({
     useState<Appointment | null>(null);
   const [painLevel, setPainLevel] = useState("3");
   const [painNote, setPainNote] = useState("");
+  const [editingMeasurement, setEditingMeasurement] =
+    useState<MeasurementPoint | null>(null);
   const todayIso = useMemo(() => todayDateIso(), []);
   const [viewingDate, setViewingDate] = useState(todayIso);
   const activeRepository = useMemo(
@@ -119,6 +125,12 @@ export function PlanDetailView({
     addMeasurement,
     addingMeasurement,
     addMeasurementError,
+    updateMeasurement,
+    updatingMeasurement,
+    updateMeasurementError,
+    deleteMeasurement,
+    deletingMeasurementId,
+    deleteMeasurementError,
     setAdHocProtocolDay,
     clearAdHocProtocolDay,
     savingAdHocProtocol,
@@ -209,6 +221,18 @@ export function PlanDetailView({
 
   const handleFinishBorrowedRoutine = () => {
     void clearAdHocProtocolDay(viewingDate);
+  };
+
+  const handleMeasurementSubmit = async (input: AddMeasurementInput) => {
+    if (editingMeasurement) {
+      const success = await updateMeasurement(
+        editingMeasurement.measurementId,
+        input,
+      );
+      if (success) setEditingMeasurement(null);
+      return success;
+    }
+    return addMeasurement(input);
   };
 
   const handleAddPainLog = async () => {
@@ -513,12 +537,24 @@ export function PlanDetailView({
                 </div>
               </div>
               <MeasurementTrendChart measurements={plan.measurements} />
-              <MeasurementForm
-                defaultType="EXTENSION_DEGREES"
-                onSubmit={(input) => addMeasurement(input)}
-                submitting={addingMeasurement}
-                error={addMeasurementError}
+              <MeasurementHistoryList
+                measurements={plan.measurements}
+                onEdit={setEditingMeasurement}
+                onDelete={deleteMeasurement}
+                deletingId={deletingMeasurementId}
               />
+              <MeasurementForm
+                key={editingMeasurement?.measurementId ?? "new"}
+                defaultType="EXTENSION_DEGREES"
+                initial={editingMeasurement ?? undefined}
+                onSubmit={handleMeasurementSubmit}
+                onCancel={() => setEditingMeasurement(null)}
+                submitting={editingMeasurement ? updatingMeasurement : addingMeasurement}
+                error={editingMeasurement ? updateMeasurementError : addMeasurementError}
+              />
+              {deleteMeasurementError && (
+                <p className="text-body-md text-error">{deleteMeasurementError}</p>
+              )}
               <PainHistoryCard
                 painLevel={plan.metrics.painLevel}
                 history={plan.painHistory}
@@ -835,13 +871,27 @@ export function PlanDetailView({
                   <div className="md:col-span-2">
                     <MeasurementTrendChart measurements={plan.measurements} />
                   </div>
+                  <div className="md:col-span-2">
+                    <MeasurementHistoryList
+                      measurements={plan.measurements}
+                      onEdit={setEditingMeasurement}
+                      onDelete={deleteMeasurement}
+                      deletingId={deletingMeasurementId}
+                    />
+                  </div>
                   <div className="md:col-span-2 space-y-4">
                     <MeasurementForm
+                      key={editingMeasurement?.measurementId ?? "new"}
                       defaultType="EXTENSION_DEGREES"
-                      onSubmit={(input) => addMeasurement(input)}
-                      submitting={addingMeasurement}
-                      error={addMeasurementError}
+                      initial={editingMeasurement ?? undefined}
+                      onSubmit={handleMeasurementSubmit}
+                      onCancel={() => setEditingMeasurement(null)}
+                      submitting={editingMeasurement ? updatingMeasurement : addingMeasurement}
+                      error={editingMeasurement ? updateMeasurementError : addMeasurementError}
                     />
+                    {deleteMeasurementError && (
+                      <p className="text-body-md text-error">{deleteMeasurementError}</p>
+                    )}
                     <PainLogForm
                       painLevel={painLevel}
                       setPainLevel={setPainLevel}

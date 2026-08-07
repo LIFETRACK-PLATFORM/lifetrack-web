@@ -13,6 +13,7 @@ import {
   AddPainLogInput,
   RecoveryPlanStatus,
   RehabRepository,
+  UpdateMeasurementInput,
 } from "../domain/RehabRepository";
 
 const MOCK_EXERCISE_IMAGE =
@@ -224,12 +225,12 @@ const plans: Record<string, RehabPlan> = {
         { date: "2026-08-06", level: 3 },
       ],
       measurements: [
-        { type: "EXTENSION_DEGREES", value: -2, unit: "°", date: "2026-07-28" },
-        { type: "EXTENSION_DEGREES", value: 0, unit: "°", date: "2026-08-06" },
-        { type: "WEIGHT_KG", value: 82, unit: "kg", date: "2026-07-28" },
-        { type: "WEIGHT_KG", value: 80.5, unit: "kg", date: "2026-08-06" },
-        { type: "WAIST_CM", value: 92, unit: "cm", date: "2026-07-28" },
-        { type: "WAIST_CM", value: 90, unit: "cm", date: "2026-08-06" },
+        { measurementId: "m-ext-1", type: "EXTENSION_DEGREES", value: -2, unit: "°", date: "2026-07-28" },
+        { measurementId: "m-ext-2", type: "EXTENSION_DEGREES", value: 0, unit: "°", date: "2026-08-06" },
+        { measurementId: "m-weight-1", type: "WEIGHT_KG", value: 82, unit: "kg", date: "2026-07-28" },
+        { measurementId: "m-weight-2", type: "WEIGHT_KG", value: 80.5, unit: "kg", date: "2026-08-06" },
+        { measurementId: "m-waist-1", type: "WAIST_CM", value: 92, unit: "cm", date: "2026-07-28" },
+        { measurementId: "m-waist-2", type: "WAIST_CM", value: 90, unit: "cm", date: "2026-08-06" },
       ],
     },
     "acl-recovery",
@@ -244,6 +245,7 @@ function clonePlan(
     completedTodayCount: number;
     scheduledTodayCount: number;
     adHocProtocolDays: Record<string, string>;
+    measurements: RehabPlan["measurements"];
   }> = {},
 ): RehabPlan {
   return new RehabPlan(
@@ -260,7 +262,7 @@ function clonePlan(
       appointments: plan.appointments,
       metrics: plan.metrics,
       painHistory: plan.painHistory,
-      measurements: plan.measurements,
+      measurements: overrides.measurements ?? plan.measurements,
       weeklyDays: plan.weeklyDays,
       weeklyCompliancePercent: plan.weeklyCompliancePercent,
       streakDays: plan.streakDays,
@@ -560,6 +562,47 @@ export class MockRehabRepository implements RehabRepository {
     if (input.type === "EXTENSION_DEGREES") {
       plan.metrics.kneeExtensionNote = `${input.value}${input.unit}`;
     }
+    plans[planId] = clonePlan(plan, {
+      measurements: [
+        ...plan.measurements,
+        { measurementId: crypto.randomUUID(), ...input },
+      ],
+    });
+  }
+
+  async updateMeasurement(
+    measurementId: string,
+    input: UpdateMeasurementInput,
+  ): Promise<void> {
+    for (const [planId, plan] of Object.entries(plans)) {
+      const idx = plan.measurements.findIndex(
+        (m) => m.measurementId === measurementId,
+      );
+      if (idx < 0) continue;
+      const measurements = [...plan.measurements];
+      measurements[idx] = { measurementId, ...input };
+      plans[planId] = clonePlan(plan, { measurements });
+      if (input.type === "EXTENSION_DEGREES") {
+        plan.metrics.kneeExtensionNote = `${input.value}${input.unit}`;
+      }
+      return;
+    }
+    throw new Error(`Medición no encontrada: ${measurementId}`);
+  }
+
+  async deleteMeasurement(measurementId: string): Promise<void> {
+    for (const [planId, plan] of Object.entries(plans)) {
+      const idx = plan.measurements.findIndex(
+        (m) => m.measurementId === measurementId,
+      );
+      if (idx < 0) continue;
+      const measurements = plan.measurements.filter(
+        (m) => m.measurementId !== measurementId,
+      );
+      plans[planId] = clonePlan(plan, { measurements });
+      return;
+    }
+    throw new Error(`Medición no encontrada: ${measurementId}`);
   }
 
   async setAdHocProtocolDay(

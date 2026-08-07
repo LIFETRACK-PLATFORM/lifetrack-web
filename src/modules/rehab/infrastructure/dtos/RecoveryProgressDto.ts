@@ -51,6 +51,7 @@ export interface MeasurementDto {
   measurementId: string;
   recoveryPlanId: string;
   type: string;
+  customLabel?: string;
   value: number;
   unit: string;
   date: string;
