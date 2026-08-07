@@ -25,6 +25,7 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
   const router = useRouter();
   const searchParams = useSearchParams();
   const oauthError = searchParams.get("error");
+  const oauthErrorReason = searchParams.get("reason");
   const [showPassword, setShowPassword] = useState(false);
   const activeRepository = useMemo(
     () => repository ?? new MockAuthRepository(),
@@ -33,7 +34,10 @@ export function LoginView({ repository }: { repository?: AuthRepository } = {}) 
   const { loading, success, error, isEmailNotVerified, login } =
     useLogin(activeRepository);
   const displayError =
-    error ?? (oauthError ? OAUTH_ERROR_MESSAGES[oauthError] ?? null : null);
+    error ??
+    (oauthError
+      ? (oauthErrorReason ?? OAUTH_ERROR_MESSAGES[oauthError] ?? null)
+      : null);
 
   function startOAuth(provider: "google" | "github") {
     window.location.href = oauthStartUrl(provider);
