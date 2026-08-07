@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import { VaultRepository } from "../../domain/VaultRepository";
 import { VaultItem } from "../../domain/VaultItem";
+import { groupVaultItemsByDomain } from "../../domain/extractDomain";
 import { createVaultRepository } from "../../infrastructure/createVaultRepository";
 import {
   VaultSessionProvider,
@@ -45,6 +46,11 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
         item.username.toLowerCase().includes(query),
     );
   }, [items, searchQuery]);
+
+  const groupedItems = useMemo(
+    () => groupVaultItemsByDomain(filteredItems),
+    [filteredItems],
+  );
 
   const closeDialog = () => {
     setOpenDialog(null);
@@ -137,18 +143,36 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
           )}
 
           {!loading && !error && (
-            <div className="space-y-3">
-              {filteredItems.map((item) => (
-                <VaultItemCard
-                  key={item.id}
-                  item={item}
-                  onReveal={revealPassword}
-                  onEdit={(vaultItem) => {
-                    setEditingItem(vaultItem);
-                    setOpenDialog("edit");
-                  }}
-                  onDelete={deleteItem}
-                />
+            <div className="space-y-6">
+              {groupedItems.map((group) => (
+                <div key={group.domain}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <Icon
+                      name="encrypted"
+                      className="text-[16px] text-primary"
+                    />
+                    <h3 className="font-label text-label-md font-semibold uppercase tracking-wide text-text-3">
+                      {group.domain}
+                    </h3>
+                    <span className="rounded-full bg-surface-3 px-2 py-0.5 font-label text-label-md text-text-3">
+                      {group.items.length}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {group.items.map((item) => (
+                      <VaultItemCard
+                        key={item.id}
+                        item={item}
+                        onReveal={revealPassword}
+                        onEdit={(vaultItem) => {
+                          setEditingItem(vaultItem);
+                          setOpenDialog("edit");
+                        }}
+                        onDelete={deleteItem}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
               {items.length === 0 && (
                 <p className="py-8 text-center text-body-md text-text-3">
