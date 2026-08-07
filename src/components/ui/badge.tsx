@@ -78,6 +78,7 @@ export type StatusBadgeStatus =
   | "pending"
   | "overdue"
   | "completed"
+  | "paused"
   | "therapy"
   | "medical"
 
@@ -89,6 +90,7 @@ const STATUS_CONFIG: Record<
   pending: { variant: "warning", label: "Pendiente" },
   overdue: { variant: "destructive", label: "Vencido" },
   completed: { variant: "secondary", label: "Completado" },
+  paused: { variant: "warning", label: "Pausado" },
   therapy: { variant: "default", label: "Terapia" },
   medical: { variant: "destructive", label: "Médica" },
 }

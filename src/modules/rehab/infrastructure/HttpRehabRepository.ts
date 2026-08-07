@@ -5,6 +5,7 @@ import {
   AddExerciseInput,
   AddMeasurementInput,
   AddPainLogInput,
+  RecoveryPlanStatus,
   RehabRepository,
 } from "../domain/RehabRepository";
 import type {
@@ -113,6 +114,16 @@ export class HttpRehabRepository implements RehabRepository {
       },
     );
     return result.recoveryPlanId;
+  }
+
+  async updatePlanStatus(
+    planId: string,
+    status: RecoveryPlanStatus,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/plans/${planId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
   }
 
   async addExercise(planId: string, input: AddExerciseInput): Promise<void> {

@@ -1,9 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Icon } from "@/shared/ui/Icon";
+import { Icon, type IconName } from "@/shared/ui/Icon";
 import { CategoryKind } from "@/modules/finance/domain/Category";
 import { CreateCategoryInput } from "@/modules/finance/domain/FinanceRepository";
+import {
+  CATEGORY_COLOR_OPTIONS,
+  CATEGORY_ICON_OPTIONS,
+  DEFAULT_COLOR_BY_KIND,
+  DEFAULT_ICON_BY_KIND,
+} from "@/modules/finance/domain/categoryIcons";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function CreateCategoryDialog({
   onClose,
@@ -18,7 +31,17 @@ export function CreateCategoryDialog({
 }) {
   const [name, setName] = useState("");
   const [kind, setKind] = useState<CategoryKind>("EXPENSE");
+  const [icon, setIcon] = useState<IconName>(DEFAULT_ICON_BY_KIND.EXPENSE);
+  const [iconTouched, setIconTouched] = useState(false);
+  const [color, setColor] = useState<string>(DEFAULT_COLOR_BY_KIND.EXPENSE);
+  const [colorTouched, setColorTouched] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
+
+  const handleKindChange = (nextKind: CategoryKind) => {
+    setKind(nextKind);
+    if (!iconTouched) setIcon(DEFAULT_ICON_BY_KIND[nextKind]);
+    if (!colorTouched) setColor(DEFAULT_COLOR_BY_KIND[nextKind]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +52,7 @@ export function CreateCategoryDialog({
       return;
     }
 
-    const success = await onSubmit({ name: name.trim(), kind });
+    const success = await onSubmit({ name: name.trim(), kind, icon, color });
     if (success) onClose();
   };
 
@@ -70,7 +93,7 @@ export function CreateCategoryDialog({
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setKind("EXPENSE")}
+                onClick={() => handleKindChange("EXPENSE")}
                 className={`flex-1 rounded-lg py-2 font-label text-label-md transition-colors ${
                   kind === "EXPENSE"
                     ? "bg-primary text-primary-foreground"
@@ -81,7 +104,7 @@ export function CreateCategoryDialog({
               </button>
               <button
                 type="button"
-                onClick={() => setKind("INCOME")}
+                onClick={() => handleKindChange("INCOME")}
                 className={`flex-1 rounded-lg py-2 font-label text-label-md transition-colors ${
                   kind === "INCOME"
                     ? "bg-primary text-primary-foreground"
@@ -90,6 +113,60 @@ export function CreateCategoryDialog({
               >
                 Ingreso
               </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">
+              Ícono
+            </label>
+            <Select
+              value={icon}
+              onValueChange={(value) => {
+                setIcon(value as IconName);
+                setIconTouched(true);
+              }}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Elegí un ícono" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_ICON_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    <Icon name={option.value} className="text-[16px]" />
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">
+              Color
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORY_COLOR_OPTIONS.map((hex) => (
+                <button
+                  key={hex}
+                  type="button"
+                  aria-label={hex}
+                  onClick={() => {
+                    setColor(hex);
+                    setColorTouched(true);
+                  }}
+                  className={`flex h-7 w-7 items-center justify-center rounded-full transition-transform ${
+                    color === hex
+                      ? "scale-110 ring-2 ring-primary ring-offset-2 ring-offset-surface-1"
+                      : ""
+                  }`}
+                  style={{ backgroundColor: hex }}
+                >
+                  {color === hex && (
+                    <Icon name="check" className="text-[14px] text-white" />
+                  )}
+                </button>
+              ))}
             </div>
           </div>
 

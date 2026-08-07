@@ -5,6 +5,7 @@ import {
   AddExerciseInput,
   AddMeasurementInput,
   AddPainLogInput,
+  RecoveryPlanStatus,
   RehabRepository,
 } from "../../domain/RehabRepository";
 import { GetPlanUseCase } from "../../application/GetPlanUseCase";
@@ -12,6 +13,7 @@ import { UpdateExerciseProgressUseCase } from "../../application/UpdateExerciseP
 import { AddExerciseUseCase } from "../../application/AddExerciseUseCase";
 import { DeleteExerciseUseCase } from "../../application/DeleteExerciseUseCase";
 import { MarkExerciseCompletionUseCase } from "../../application/MarkExerciseCompletionUseCase";
+import { UpdateRecoveryPlanStatusUseCase } from "../../application/UpdateRecoveryPlanStatusUseCase";
 import { AddAppointmentUseCase } from "../../application/AddAppointmentUseCase";
 import { AddPainLogUseCase } from "../../application/AddPainLogUseCase";
 import { AddMeasurementUseCase } from "../../application/AddMeasurementUseCase";
@@ -46,6 +48,10 @@ export function usePlan(repository: RehabRepository, planId: string) {
     null,
   );
   const [addingMeasurement, setAddingMeasurement] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [updateStatusError, setUpdateStatusError] = useState<string | null>(
+    null,
+  );
 
   const applyPlan = useCallback((fetched: RehabPlan) => {
     setPlan(fetched);
@@ -261,6 +267,31 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [plan, repository, refresh],
   );
 
+  const updateStatus = useCallback(
+    async (status: RecoveryPlanStatus) => {
+      if (!plan) return false;
+      setUpdatingStatus(true);
+      setUpdateStatusError(null);
+
+      try {
+        const useCase = new UpdateRecoveryPlanStatusUseCase(repository);
+        await useCase.execute(plan.id, status);
+        await refresh();
+        return true;
+      } catch (err) {
+        setUpdateStatusError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo actualizar el estado del plan",
+        );
+        return false;
+      } finally {
+        setUpdatingStatus(false);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
   return {
     plan,
     counts,
@@ -278,6 +309,9 @@ export function usePlan(repository: RehabRepository, planId: string) {
     toggleExerciseCompletion,
     completionError,
     pendingCompletionIds,
+    updateStatus,
+    updatingStatus,
+    updateStatusError,
     addAppointment,
     addingAppointment,
     addAppointmentError,

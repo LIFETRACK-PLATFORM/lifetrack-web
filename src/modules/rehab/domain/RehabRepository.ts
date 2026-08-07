@@ -33,6 +33,8 @@ export interface AddPainLogInput {
   note?: string;
 }
 
+export type RecoveryPlanStatus = "ACTIVE" | "COMPLETED" | "PAUSED";
+
 export type MeasurementType =
   | "FLEXION_DEGREES"
   | "EXTENSION_DEGREES"
@@ -61,6 +63,7 @@ export interface RehabRepository {
     completed: boolean,
   ): Promise<void>;
   createPlan(input: CreateRecoveryPlanInput): Promise<string>;
+  updatePlanStatus(planId: string, status: RecoveryPlanStatus): Promise<void>;
   addExercise(planId: string, input: AddExerciseInput): Promise<void>;
   deleteExercise(planId: string, exerciseId: string): Promise<void>;
   addAppointment(planId: string, input: AddAppointmentInput): Promise<void>;

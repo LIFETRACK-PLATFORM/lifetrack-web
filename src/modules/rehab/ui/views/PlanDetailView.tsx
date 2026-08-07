@@ -22,6 +22,8 @@ import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointme
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { usePlan } from "@/modules/rehab/ui/hooks/usePlan";
+import type { RecoveryPlanStatus } from "@/modules/rehab/domain/RehabRepository";
+import type { StatusBadgeStatus } from "@/components/ui/badge";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import Image from "next/image";
 import Link from "next/link";
@@ -67,6 +69,9 @@ export function PlanDetailView({
     toggleExerciseCompletion,
     completionError,
     pendingCompletionIds,
+    updateStatus,
+    updatingStatus,
+    updateStatusError,
     addAppointment,
     addingAppointment,
     addAppointmentError,
@@ -184,7 +189,7 @@ export function PlanDetailView({
                   {plan.phaseLabel}
                 </span>
                 <StatusBadge
-                  status="active"
+                  status={toBadgeStatus(plan.status)}
                   className="bg-white/10 text-primary-foreground [&_span]:bg-success"
                 />
               </div>
@@ -196,6 +201,16 @@ export function PlanDetailView({
                 <p className="text-body-md opacity-90">{plan.statusMessage}</p>
               </div>
             </div>
+          </section>
+          <section className="mb-10">
+            <PlanStatusControl
+              status={plan.status}
+              updating={updatingStatus}
+              onChangeStatus={updateStatus}
+            />
+            {updateStatusError && (
+              <p className="mt-2 text-body-md text-error">{updateStatusError}</p>
+            )}
           </section>
 
           <div className="sticky top-[72px] z-30 mb-6 flex gap-2 overflow-x-auto bg-background/95 py-2 no-scrollbar">
@@ -480,9 +495,12 @@ export function PlanDetailView({
         <main className="min-h-screen">
           <header className="sticky top-0 z-40 mx-auto flex w-full max-w-app items-center justify-between bg-surface px-6 py-4">
             <div className="flex flex-col">
-              <h2 className="text-headline-md font-bold text-primary">
-                {plan.titleWeb}
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-headline-md font-bold text-primary">
+                  {plan.titleWeb}
+                </h2>
+                <StatusBadge status={toBadgeStatus(plan.status)} />
+              </div>
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
                 <p className="font-label text-label-md text-text-3">
@@ -491,6 +509,11 @@ export function PlanDetailView({
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <PlanStatusControl
+                status={plan.status}
+                updating={updatingStatus}
+                onChangeStatus={updateStatus}
+              />
               <div className="hidden items-center rounded-full border border-border/30 bg-surface-1 px-4 py-1 sm:flex">
                 <Icon name="search" className="mr-2 text-text-3" />
                 <Input
@@ -513,6 +536,12 @@ export function PlanDetailView({
               </button>
             </div>
           </header>
+
+          {updateStatusError && (
+            <p className="mx-auto max-w-app px-6 pt-2 text-body-md text-error">
+              {updateStatusError}
+            </p>
+          )}
 
           <div className="mt-4 px-6">
             <div className="flex items-center gap-10 border-b border-border/20">
@@ -881,9 +910,104 @@ function DailyCheckButton({
       {pending
         ? "Guardando…"
         : completedToday
-          ? "Hecho hoy — tocar para desmarcar"
+          ? "Hecho hoy"
           : "Marcar como hecho hoy"}
     </button>
+  );
+}
+
+function toBadgeStatus(status: RecoveryPlanStatus): StatusBadgeStatus {
+  switch (status) {
+    case "COMPLETED":
+      return "completed";
+    case "PAUSED":
+      return "paused";
+    default:
+      return "active";
+  }
+}
+
+function PlanStatusControl({
+  status,
+  updating,
+  onChangeStatus,
+}: {
+  status: RecoveryPlanStatus;
+  updating: boolean;
+  onChangeStatus: (status: RecoveryPlanStatus) => void;
+}) {
+  if (status === "COMPLETED") return null;
+
+  if (status === "PAUSED") {
+    return (
+      <ConfirmStatusButton
+        label="Reactivar plan"
+        confirmTitle="Reactivar plan"
+        confirmDescription="El plan volverá a estar activo y aparecerá de nuevo en tu panel de rehabilitación."
+        confirmLabel="Reactivar"
+        disabled={updating}
+        onConfirm={() => onChangeStatus("ACTIVE")}
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <ConfirmStatusButton
+        label="Marcar como completado"
+        confirmTitle="Completar plan"
+        confirmDescription="El plan pasará a estado completado y podrás crear un nuevo plan de recuperación. Esta acción no se puede deshacer."
+        confirmLabel="Completar"
+        disabled={updating}
+        onConfirm={() => onChangeStatus("COMPLETED")}
+      />
+      <ConfirmStatusButton
+        label="Pausar plan"
+        confirmTitle="Pausar plan"
+        confirmDescription="El plan dejará de estar activo hasta que lo reactives."
+        confirmLabel="Pausar"
+        disabled={updating}
+        onConfirm={() => onChangeStatus("PAUSED")}
+      />
+    </div>
+  );
+}
+
+function ConfirmStatusButton({
+  label,
+  confirmTitle,
+  confirmDescription,
+  confirmLabel,
+  disabled,
+  onConfirm,
+}: {
+  label: string;
+  confirmTitle: string;
+  confirmDescription: string;
+  confirmLabel: string;
+  disabled: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button type="button" variant="outline" size="sm" disabled={disabled}>
+          {label}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{confirmTitle}</AlertDialogTitle>
+          <AlertDialogDescription>{confirmDescription}</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={onConfirm} disabled={disabled}>
+            {confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
