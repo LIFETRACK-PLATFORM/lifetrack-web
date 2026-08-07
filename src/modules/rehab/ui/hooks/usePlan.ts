@@ -22,6 +22,8 @@ import { DeleteAppointmentUseCase } from "../../application/DeleteAppointmentUse
 import { MarkAppointmentAttendanceUseCase } from "../../application/MarkAppointmentAttendanceUseCase";
 import { AddPainLogUseCase } from "../../application/AddPainLogUseCase";
 import { AddMeasurementUseCase } from "../../application/AddMeasurementUseCase";
+import { SetAdHocProtocolDayUseCase } from "../../application/SetAdHocProtocolDayUseCase";
+import { ClearAdHocProtocolDayUseCase } from "../../application/ClearAdHocProtocolDayUseCase";
 import { RehabApiError } from "../../infrastructure/http/rehabHttpClient";
 
 export function usePlan(repository: RehabRepository, planId: string) {
@@ -75,6 +77,10 @@ export function usePlan(repository: RehabRepository, planId: string) {
   const [updateStatusError, setUpdateStatusError] = useState<string | null>(
     null,
   );
+  const [adHocProtocolError, setAdHocProtocolError] = useState<string | null>(
+    null,
+  );
+  const [savingAdHocProtocol, setSavingAdHocProtocol] = useState(false);
 
   const applyPlan = useCallback((fetched: RehabPlan) => {
     setPlan(fetched);
@@ -453,6 +459,56 @@ export function usePlan(repository: RehabRepository, planId: string) {
     [plan, repository, refresh],
   );
 
+  const setAdHocProtocolDay = useCallback(
+    async (targetDate: string, sourceDate: string) => {
+      if (!plan) return false;
+      setSavingAdHocProtocol(true);
+      setAdHocProtocolError(null);
+
+      try {
+        const useCase = new SetAdHocProtocolDayUseCase(repository);
+        await useCase.execute(plan.id, targetDate, sourceDate);
+        await refresh();
+        return true;
+      } catch (err) {
+        setAdHocProtocolError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo guardar la rutina prestada",
+        );
+        return false;
+      } finally {
+        setSavingAdHocProtocol(false);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
+  const clearAdHocProtocolDay = useCallback(
+    async (targetDate: string) => {
+      if (!plan) return false;
+      setSavingAdHocProtocol(true);
+      setAdHocProtocolError(null);
+
+      try {
+        const useCase = new ClearAdHocProtocolDayUseCase(repository);
+        await useCase.execute(plan.id, targetDate);
+        await refresh();
+        return true;
+      } catch (err) {
+        setAdHocProtocolError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo quitar la rutina prestada",
+        );
+        return false;
+      } finally {
+        setSavingAdHocProtocol(false);
+      }
+    },
+    [plan, repository, refresh],
+  );
+
   return {
     plan,
     counts,
@@ -494,5 +550,9 @@ export function usePlan(repository: RehabRepository, planId: string) {
     addMeasurement,
     addingMeasurement,
     addMeasurementError,
+    setAdHocProtocolDay,
+    clearAdHocProtocolDay,
+    savingAdHocProtocol,
+    adHocProtocolError,
   };
 }

@@ -6,7 +6,7 @@ import {
 } from "../domain/VaultRepository";
 import { vaultFetch } from "./http/vaultHttpClient";
 
-import { DEFAULT_VAULT_CATEGORY } from "./vaultCategories";
+import { DEFAULT_VAULT_CATEGORY } from "../domain/vaultCategories";
 
 interface VaultItemSummaryDto {
   vaultItemId: string;

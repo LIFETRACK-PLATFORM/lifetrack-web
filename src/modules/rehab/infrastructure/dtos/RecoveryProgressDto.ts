@@ -64,6 +64,12 @@ export interface PainLogDto {
   note?: string;
 }
 
+export interface AdHocProtocolDayDto {
+  adHocProtocolDayId: string;
+  targetDate: string;
+  sourceDate: string;
+}
+
 export interface RecoveryProgressDto {
   recoveryPlanId: string;
   bodyPart: string;
@@ -75,6 +81,7 @@ export interface RecoveryProgressDto {
   measurements: MeasurementDto[];
   progressPhotos: unknown[];
   painLogs: PainLogDto[];
+  adHocProtocolDays?: AdHocProtocolDayDto[];
 }
 
 export interface TodayExerciseDto {

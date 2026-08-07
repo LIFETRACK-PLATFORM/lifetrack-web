@@ -76,20 +76,26 @@ export function ProtocolEmptyDay({
 export function ProtocolBorrowedBanner({
   sourceDate,
   targetDate,
+  completedCount,
+  totalCount,
+  onFinish,
   onClear,
 }: {
   sourceDate: string;
   targetDate: string;
+  completedCount: number;
+  totalCount: number;
+  onFinish: () => void;
   onClear: () => void;
 }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3">
+    <div className="flex flex-col gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 text-left">
         <p className="font-label text-label-md font-semibold text-primary">
           Rutina prestada
         </p>
         <p className="text-body-md text-text-2">
-          Mostrando ejercicios del{" "}
+          Ejercicios del{" "}
           {formatDateIsoCalendar(sourceDate, {
             weekday: "long",
             day: "numeric",
@@ -101,16 +107,25 @@ export function ProtocolBorrowedBanner({
             day: "numeric",
             month: "short",
           })}
-          .
+          . Cada check se guarda al tocarlo ({completedCount}/{totalCount}).
         </p>
       </div>
-      <button
-        type="button"
-        onClick={onClear}
-        className="shrink-0 rounded-lg px-2 py-1 font-label text-label-md text-text-3 hover:bg-surface-3"
-      >
-        Cancelar
-      </button>
+      <div className="flex shrink-0 gap-2">
+        <button
+          type="button"
+          onClick={onClear}
+          className="rounded-lg border border-border px-3 py-1.5 font-label text-label-md text-text-3 hover:bg-surface-3"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={onFinish}
+          className="rounded-lg bg-primary px-3 py-1.5 font-label text-label-md text-primary-foreground transition-all active:scale-95"
+        >
+          Listo
+        </button>
+      </div>
     </div>
   );
 }

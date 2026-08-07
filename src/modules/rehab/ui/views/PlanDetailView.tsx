@@ -23,7 +23,8 @@ import { WeeklyDaysStrip } from "@/modules/rehab/ui/components/WeeklyDaysStrip";
 import {
   formatCompletionLabel,
   formatProtocolTitle,
-  getExercisesDueOn,
+  getExercisesForProtocolView,
+  getProtocolStatsForExercises,
   getProtocolStatsForDate,
   isCompletedOnDate,
   isFutureDate,
@@ -71,9 +72,6 @@ export function PlanDetailView({
   const [extensionDegrees, setExtensionDegrees] = useState("");
   const todayIso = useMemo(() => todayDateIso(), []);
   const [viewingDate, setViewingDate] = useState(todayIso);
-  const [borrowedRoutineDate, setBorrowedRoutineDate] = useState<string | null>(
-    null,
-  );
   const activeRepository = useMemo(
     () => repository ?? createRehabRepository(),
     [repository],
@@ -120,6 +118,10 @@ export function PlanDetailView({
     addMeasurement,
     addingMeasurement,
     addMeasurementError,
+    setAdHocProtocolDay,
+    clearAdHocProtocolDay,
+    savingAdHocProtocol,
+    adHocProtocolError,
   } = usePlan(activeRepository, planId);
 
   const router = useRouter();
@@ -161,32 +163,26 @@ export function PlanDetailView({
     };
   }, [plan, loading, focusExerciseId, planId, router]);
 
-  const exercisesForViewingDate = useMemo(
-    () => (plan ? getExercisesDueOn(plan.exercises, viewingDate) : []),
-    [plan, viewingDate],
-  );
+  const borrowedRoutineDate = plan?.adHocProtocolDays[viewingDate] ?? null;
+
   const protocolExercises = useMemo(() => {
     if (!plan) return [];
-    if (borrowedRoutineDate) {
-      return getExercisesDueOn(plan.exercises, borrowedRoutineDate);
-    }
-    return exercisesForViewingDate;
-  }, [plan, borrowedRoutineDate, exercisesForViewingDate]);
+    return getExercisesForProtocolView(
+      plan.exercises,
+      viewingDate,
+      borrowedRoutineDate,
+    );
+  }, [plan, viewingDate, borrowedRoutineDate]);
   const protocolStats = useMemo(() => {
     if (!plan) {
       return { due: 0, completed: 0, remaining: 0, percent: 0 };
     }
-    if (borrowedRoutineDate) {
-      const due = protocolExercises.length;
-      const completed = protocolExercises.filter((exercise) =>
-        isCompletedOnDate(exercise, viewingDate),
-      ).length;
-      return {
-        due,
-        completed,
-        remaining: Math.max(due - completed, 0),
-        percent: due === 0 ? 0 : Math.round((completed / due) * 100),
-      };
+    if (borrowedRoutineDate || protocolExercises.length > 0) {
+      const scheduled = getProtocolStatsForDate(plan.exercises, viewingDate);
+      if (scheduled.due > 0) {
+        return scheduled;
+      }
+      return getProtocolStatsForExercises(protocolExercises, viewingDate);
     }
     return getProtocolStatsForDate(plan.exercises, viewingDate);
   }, [plan, borrowedRoutineDate, protocolExercises, viewingDate]);
@@ -194,10 +190,24 @@ export function PlanDetailView({
   const viewingIsFuture = isFutureDate(viewingDate, todayIso);
   const protocolTitle = formatProtocolTitle(viewingDate, todayIso);
   const completionLabel = formatCompletionLabel(viewingDate, todayIso);
+  const isBorrowedView =
+    borrowedRoutineDate !== null &&
+    getProtocolStatsForDate(plan?.exercises ?? [], viewingDate).due === 0;
 
   const handleSelectViewingDate = (date: string) => {
-    setBorrowedRoutineDate(null);
     setViewingDate(date);
+  };
+
+  const handleBorrowRoutine = (sourceDate: string) => {
+    void setAdHocProtocolDay(viewingDate, sourceDate);
+  };
+
+  const handleClearBorrowedRoutine = () => {
+    void clearAdHocProtocolDay(viewingDate);
+  };
+
+  const handleFinishBorrowedRoutine = () => {
+    void clearAdHocProtocolDay(viewingDate);
   };
 
   const handleAddPainLog = async () => {
@@ -363,11 +373,14 @@ export function PlanDetailView({
                 todayIso={todayIso}
                 onSelectDate={handleSelectViewingDate}
               />
-              {borrowedRoutineDate && (
+              {isBorrowedView && borrowedRoutineDate && (
                 <ProtocolBorrowedBanner
                   sourceDate={borrowedRoutineDate}
                   targetDate={viewingDate}
-                  onClear={() => setBorrowedRoutineDate(null)}
+                  completedCount={protocolStats.completed}
+                  totalCount={protocolStats.due}
+                  onFinish={handleFinishBorrowedRoutine}
+                  onClear={handleClearBorrowedRoutine}
                 />
               )}
               <button
@@ -411,7 +424,7 @@ export function PlanDetailView({
                   viewingDate={viewingDate}
                   weeklyDays={plan.weeklyDays}
                   exercises={plan.exercises}
-                  onBorrowRoutine={setBorrowedRoutineDate}
+                  onBorrowRoutine={handleBorrowRoutine}
                 />
               )}
               {saveError && (
@@ -422,6 +435,9 @@ export function PlanDetailView({
               )}
               {completionError && (
                 <p className="text-body-md text-error">{completionError}</p>
+              )}
+              {adHocProtocolError && (
+                <p className="text-body-md text-error">{adHocProtocolError}</p>
               )}
               {deleteExerciseError && (
                 <p className="text-body-md text-error">{deleteExerciseError}</p>
@@ -641,12 +657,15 @@ export function PlanDetailView({
                 />
               )}
 
-              {tab === "exercises" && borrowedRoutineDate && (
+              {tab === "exercises" && isBorrowedView && borrowedRoutineDate && (
                 <div className="mb-4">
                   <ProtocolBorrowedBanner
                     sourceDate={borrowedRoutineDate}
                     targetDate={viewingDate}
-                    onClear={() => setBorrowedRoutineDate(null)}
+                    completedCount={protocolStats.completed}
+                    totalCount={protocolStats.due}
+                    onFinish={handleFinishBorrowedRoutine}
+                    onClear={handleClearBorrowedRoutine}
                   />
                 </div>
               )}
@@ -684,7 +703,7 @@ export function PlanDetailView({
                       viewingDate={viewingDate}
                       weeklyDays={plan.weeklyDays}
                       exercises={plan.exercises}
-                      onBorrowRoutine={setBorrowedRoutineDate}
+                      onBorrowRoutine={handleBorrowRoutine}
                     />
                   )}
                   {saveError && (
@@ -700,6 +719,11 @@ export function PlanDetailView({
                   {completionError && (
                     <p className="col-span-full text-body-md text-error">
                       {completionError}
+                    </p>
+                  )}
+                  {adHocProtocolError && (
+                    <p className="col-span-full text-body-md text-error">
+                      {adHocProtocolError}
                     </p>
                   )}
                   {deleteExerciseError && (

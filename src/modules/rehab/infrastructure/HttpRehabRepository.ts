@@ -206,4 +206,25 @@ export class HttpRehabRepository implements RehabRepository {
       body: JSON.stringify(input),
     });
   }
+
+  async setAdHocProtocolDay(
+    planId: string,
+    targetDate: string,
+    sourceDate: string,
+  ): Promise<void> {
+    await rehabFetchStrict(`/rehab/plans/${planId}/ad-hoc-protocol`, {
+      method: "POST",
+      body: JSON.stringify({ targetDate, sourceDate }),
+    });
+  }
+
+  async clearAdHocProtocolDay(
+    planId: string,
+    targetDate: string,
+  ): Promise<void> {
+    await rehabFetchStrict(
+      `/rehab/plans/${planId}/ad-hoc-protocol/${targetDate}`,
+      { method: "DELETE" },
+    );
+  }
 }

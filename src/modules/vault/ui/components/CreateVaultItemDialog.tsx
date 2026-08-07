@@ -99,7 +99,7 @@ export function CreateVaultItemDialog({
             </label>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => setCategory(normalizeVaultCategory(e.target.value))}
               className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
             >
               {VAULT_CATEGORIES.map((option) => (
