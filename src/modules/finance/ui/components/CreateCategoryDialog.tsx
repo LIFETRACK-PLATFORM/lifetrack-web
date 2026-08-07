@@ -130,7 +130,7 @@ export function CreateCategoryDialog({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Elegí un ícono" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[110]">
                 {CATEGORY_ICON_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     <Icon name={option.value} className="text-[16px]" />
