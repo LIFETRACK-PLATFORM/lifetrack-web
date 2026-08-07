@@ -5,16 +5,20 @@ import { Icon } from "@/shared/ui/Icon";
 import { Category } from "@/modules/finance/domain/Category";
 import { CreateBudgetInput } from "@/modules/finance/domain/FinanceRepository";
 
-const now = new Date();
+import { formatMonthLabel } from "@/modules/finance/domain/financePeriod";
 
 export function CreateBudgetDialog({
   categories,
+  periodMonth: defaultMonth,
+  periodYear: defaultYear,
   onClose,
   onSubmit,
   submitting,
   error,
 }: {
   categories: Category[];
+  periodMonth?: number;
+  periodYear?: number;
   onClose: () => void;
   onSubmit: (input: CreateBudgetInput) => Promise<boolean>;
   submitting: boolean;
@@ -23,8 +27,8 @@ export function CreateBudgetDialog({
   const expenseCategories = categories.filter((c) => c.kind === "EXPENSE");
   const [categoryId, setCategoryId] = useState(expenseCategories[0]?.id ?? "");
   const [amount, setAmount] = useState("");
-  const [periodMonth, setPeriodMonth] = useState(String(now.getMonth() + 1));
-  const [periodYear, setPeriodYear] = useState(String(now.getFullYear()));
+  const periodMonth = defaultMonth ?? new Date().getMonth() + 1;
+  const periodYear = defaultYear ?? new Date().getFullYear();
   const [clientError, setClientError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,8 +44,8 @@ export function CreateBudgetDialog({
       setClientError("El monto debe ser un número mayor a 0.");
       return;
     }
-    const month = Number(periodMonth);
-    const year = Number(periodYear);
+    const month = periodMonth;
+    const year = periodYear;
     if (!Number.isInteger(month) || month < 1 || month > 12) {
       setClientError("El mes debe estar entre 1 y 12.");
       return;
@@ -109,33 +113,9 @@ export function CreateBudgetDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block font-label text-label-md text-text-3">
-                  Mes
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={12}
-                  value={periodMonth}
-                  onChange={(e) => setPeriodMonth(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block font-label text-label-md text-text-3">
-                  Año
-                </label>
-                <input
-                  type="number"
-                  min={2000}
-                  value={periodYear}
-                  onChange={(e) => setPeriodYear(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-                />
-              </div>
-            </div>
+            <p className="text-body-md text-text-3">
+              Período: {formatMonthLabel(periodMonth, periodYear)}
+            </p>
 
             {(clientError || error) && (
               <p className="text-body-md text-error">{clientError ?? error}</p>

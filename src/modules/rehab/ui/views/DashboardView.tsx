@@ -12,6 +12,7 @@ import { DashboardSummary } from "@/modules/rehab/domain/DashboardSummary";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { useDashboard } from "@/modules/rehab/ui/hooks/useDashboard";
 import { planExerciseHref } from "@/modules/rehab/ui/rehabRoutes";
+import { FinanceMonthWidget } from "@/modules/finance/ui/components/FinanceMonthWidget";
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
@@ -196,6 +197,7 @@ export function DashboardView({
         </header>
 
         <main className="mt-20 space-y-10 px-5">
+          <FinanceMonthWidget />
           {dashboards.map((d) => (
             <MobilePlanSection key={d.planId} d={d} showTitle={showPlanTitle} />
           ))}
@@ -245,6 +247,7 @@ export function DashboardView({
             </header>
 
             <div className="space-y-10">
+              <FinanceMonthWidget />
               {dashboards.map((d) => (
                 <WebPlanSection key={d.planId} d={d} showTitle={showPlanTitle} />
               ))}
