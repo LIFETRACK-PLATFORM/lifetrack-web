@@ -1,5 +1,6 @@
 import { toBase64 } from "../domain/crypto/base64";
 import { VaultItem } from "../domain/VaultItem";
+import { DEFAULT_VAULT_CATEGORY } from "../domain/vaultCategories";
 import {
   CreateVaultItemInput,
   UpdateVaultItemInput,
@@ -13,6 +14,7 @@ interface StoredVaultItem {
   id: string;
   site: string;
   username: string;
+  category: string;
   encryptedBlob: string;
   iv: string;
   salt: string;
@@ -35,6 +37,7 @@ export class MockVaultRepository implements VaultRepository {
           {
             site: item.site,
             username: item.username,
+            category: item.category,
             iv: item.iv,
             salt: item.salt,
             encryptionVersion: item.encryptionVersion,
@@ -52,6 +55,7 @@ export class MockVaultRepository implements VaultRepository {
       id: crypto.randomUUID(),
       site: input.site,
       username: input.username,
+      category: input.category ?? DEFAULT_VAULT_CATEGORY,
       encryptedBlob: input.encryptedBlob,
       iv: input.iv,
       salt: input.salt,
@@ -64,6 +68,7 @@ export class MockVaultRepository implements VaultRepository {
       {
         site: stored.site,
         username: stored.username,
+        category: stored.category,
         encryptedBlob: stored.encryptedBlob,
         iv: stored.iv,
         salt: stored.salt,
@@ -84,6 +89,7 @@ export class MockVaultRepository implements VaultRepository {
       {
         site: item.site,
         username: item.username,
+        category: item.category,
         encryptedBlob: item.encryptedBlob,
         iv: item.iv,
         salt: item.salt,
@@ -107,6 +113,7 @@ export class MockVaultRepository implements VaultRepository {
       ...items[idx]!,
       site: input.site,
       username: input.username,
+      category: input.category ?? items[idx]!.category,
       encryptedBlob: input.encryptedBlob,
       iv: input.iv,
       salt: input.salt,
@@ -118,6 +125,7 @@ export class MockVaultRepository implements VaultRepository {
       {
         site: updated.site,
         username: updated.username,
+        category: updated.category,
         encryptedBlob: updated.encryptedBlob,
         iv: updated.iv,
         salt: updated.salt,

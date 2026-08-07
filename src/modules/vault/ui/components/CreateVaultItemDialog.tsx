@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
+import {
+  DEFAULT_VAULT_CATEGORY,
+  VAULT_CATEGORIES,
+  normalizeVaultCategory,
+} from "../../domain/vaultCategories";
 
 export function CreateVaultItemDialog({
   onClose,
@@ -16,14 +21,18 @@ export function CreateVaultItemDialog({
     site: string,
     username: string,
     password: string,
+    category: string,
   ) => Promise<boolean>;
   submitting: boolean;
   error: string | null;
   mode?: "create" | "edit";
-  initial?: { site: string; username: string };
+  initial?: { site: string; username: string; category?: string };
 }) {
   const [site, setSite] = useState(initial?.site ?? "");
   const [username, setUsername] = useState(initial?.username ?? "");
+  const [category, setCategory] = useState(
+    normalizeVaultCategory(initial?.category ?? DEFAULT_VAULT_CATEGORY),
+  );
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [clientError, setClientError] = useState<string | null>(null);
@@ -45,7 +54,12 @@ export function CreateVaultItemDialog({
       return;
     }
 
-    const success = await onSubmit(site.trim(), username.trim(), password);
+    const success = await onSubmit(
+      site.trim(),
+      username.trim(),
+      password,
+      category,
+    );
     if (success) onClose();
   };
 
@@ -77,6 +91,23 @@ export function CreateVaultItemDialog({
               className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
               placeholder="Ej. github.com"
             />
+          </div>
+
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">
+              Categoría
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(normalizeVaultCategory(e.target.value))}
+              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+            >
+              {VAULT_CATEGORIES.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>

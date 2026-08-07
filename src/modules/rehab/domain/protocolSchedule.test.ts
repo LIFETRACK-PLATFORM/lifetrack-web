@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   formatDateIsoCalendar,
   getExercisesDueOn,
+  getExercisesForProtocolView,
+  getExercisesRecordedOn,
   getProtocolStatsForDate,
   isCompletedOnDate,
   isExerciseDueOnDate,
@@ -53,6 +55,27 @@ describe("protocolSchedule", () => {
   it("identifica fechas futuras", () => {
     expect(isFutureDate("2026-08-08", "2026-08-07")).toBe(true);
     expect(isFutureDate("2026-08-07", "2026-08-07")).toBe(false);
+  });
+
+  it("muestra ejercicios registrados en un dia sin agenda", () => {
+    const withCompletion = [
+      { daysOfWeek: [2, 4], completions: ["2026-08-07"] as string[] },
+    ];
+    expect(getExercisesRecordedOn(withCompletion, "2026-08-07")).toHaveLength(1);
+    expect(
+      getExercisesForProtocolView(withCompletion, "2026-08-07", null),
+    ).toHaveLength(1);
+  });
+
+  it("prioriza agenda, luego rutina prestada y luego registrados", () => {
+    const items = [
+      { daysOfWeek: [5], completions: [] as string[] },
+      { daysOfWeek: [3], completions: [] as string[] },
+    ];
+    expect(getExercisesForProtocolView(items, "2026-08-07", null)).toHaveLength(1);
+    expect(getExercisesForProtocolView(items, "2026-08-06", "2026-08-05")).toHaveLength(
+      1,
+    );
   });
 
   it("formatea titulo sin corrimiento de zona horaria", () => {

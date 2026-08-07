@@ -7,6 +7,7 @@ export interface UpdateVaultItemParams {
   site: string;
   username: string;
   password: string;
+  category?: string;
   masterKey: CryptoKey;
 }
 
@@ -18,6 +19,7 @@ export class UpdateVaultItemUseCase {
     return this.vaultRepository.updateItem(params.itemId, {
       site: params.site,
       username: params.username,
+      category: params.category,
       ...encrypted,
     });
   }

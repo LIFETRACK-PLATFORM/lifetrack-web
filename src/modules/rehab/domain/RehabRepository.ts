@@ -90,4 +90,10 @@ export interface RehabRepository {
   ): Promise<void>;
   addPainLog(planId: string, input: AddPainLogInput): Promise<void>;
   addMeasurement(planId: string, input: AddMeasurementInput): Promise<void>;
+  setAdHocProtocolDay(
+    planId: string,
+    targetDate: string,
+    sourceDate: string,
+  ): Promise<void>;
+  clearAdHocProtocolDay(planId: string, targetDate: string): Promise<void>;
 }

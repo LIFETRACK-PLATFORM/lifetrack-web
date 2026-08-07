@@ -77,6 +77,16 @@ function mapAppointment(dto: RecoveryProgressDto["appointments"][number]): Appoi
   );
 }
 
+function mapAdHocProtocolDays(
+  entries: RecoveryProgressDto["adHocProtocolDays"],
+): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const entry of entries ?? []) {
+    map[entry.targetDate] = entry.sourceDate;
+  }
+  return map;
+}
+
 export function mapProgressToPlan(
   dto: RecoveryProgressDto,
   today: GetTodayExercisesResponseDto,
@@ -129,6 +139,7 @@ export function mapProgressToPlan(
       streakDays: weeklySummary.streakDays,
       completedTodayCount: completedToday,
       scheduledTodayCount: scheduledToday.length,
+      adHocProtocolDays: mapAdHocProtocolDays(dto.adHocProtocolDays),
     },
     dto.recoveryPlanId,
   );

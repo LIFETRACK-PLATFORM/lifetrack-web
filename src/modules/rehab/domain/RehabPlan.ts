@@ -40,6 +40,8 @@ interface RehabPlanProps {
   streakDays: number;
   completedTodayCount: number;
   scheduledTodayCount: number;
+  /** targetDate ISO → sourceDate ISO (rutina prestada persistida en DB) */
+  adHocProtocolDays: Record<string, string>;
 }
 
 export class RehabPlan extends Entity<RehabPlanProps> {
@@ -113,5 +115,9 @@ export class RehabPlan extends Entity<RehabPlanProps> {
 
   get scheduledTodayCount(): number {
     return this.props.scheduledTodayCount;
+  }
+
+  get adHocProtocolDays(): Record<string, string> {
+    return this.props.adHocProtocolDays;
   }
 }

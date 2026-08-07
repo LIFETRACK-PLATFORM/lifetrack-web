@@ -6,10 +6,13 @@ import {
 } from "../domain/VaultRepository";
 import { vaultFetch } from "./http/vaultHttpClient";
 
+import { DEFAULT_VAULT_CATEGORY } from "../domain/vaultCategories";
+
 interface VaultItemSummaryDto {
   vaultItemId: string;
   site: string;
   username: string;
+  category?: string;
   encryptionVersion: string;
   createdAt: string;
   updatedAt: string;
@@ -19,6 +22,7 @@ interface VaultItemDto {
   vaultItemId: string;
   site: string;
   username: string;
+  category?: string;
   encryptedBlob?: string;
   iv: string;
   salt: string;
@@ -32,6 +36,7 @@ function toVaultItem(dto: VaultItemDto): VaultItem {
     {
       site: dto.site,
       username: dto.username,
+      category: dto.category ?? DEFAULT_VAULT_CATEGORY,
       encryptedBlob: dto.encryptedBlob,
       iv: dto.iv,
       salt: dto.salt,
@@ -48,6 +53,7 @@ function summaryToVaultItem(dto: VaultItemSummaryDto): VaultItem {
     {
       site: dto.site,
       username: dto.username,
+      category: dto.category ?? DEFAULT_VAULT_CATEGORY,
       iv: "",
       salt: "",
       encryptionVersion: dto.encryptionVersion,

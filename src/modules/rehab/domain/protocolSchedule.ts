@@ -52,6 +52,51 @@ export function getExercisesDueOn<T extends ExerciseScheduleInfo>(
   return exercises.filter((exercise) => isExerciseDueOnDate(exercise, dateIso));
 }
 
+export function getExercisesRecordedOn<T extends ExerciseScheduleInfo>(
+  exercises: readonly T[],
+  dateIso: string,
+): T[] {
+  return exercises.filter((exercise) => isCompletedOnDate(exercise, dateIso));
+}
+
+/**
+ * Ejercicios visibles en el protocolo de un día:
+ * 1) agendados ese día, 2) rutina prestada, 3) ya registrados (p. ej. feriado marcado antes).
+ */
+export function getExercisesForProtocolView<T extends ExerciseScheduleInfo>(
+  exercises: readonly T[],
+  viewingDate: string,
+  borrowedSourceDate: string | null,
+): T[] {
+  const scheduled = getExercisesDueOn(exercises, viewingDate);
+  if (scheduled.length > 0) {
+    return scheduled;
+  }
+
+  if (borrowedSourceDate) {
+    return getExercisesDueOn(exercises, borrowedSourceDate);
+  }
+
+  return getExercisesRecordedOn(exercises, viewingDate);
+}
+
+export function getProtocolStatsForExercises(
+  exercises: readonly ExerciseScheduleInfo[],
+  dateIso: string,
+): ProtocolStats {
+  const due = exercises.length;
+  const completed = exercises.filter((exercise) =>
+    isCompletedOnDate(exercise, dateIso),
+  ).length;
+
+  return {
+    due,
+    completed,
+    remaining: Math.max(due - completed, 0),
+    percent: due === 0 ? 0 : Math.round((completed / due) * 100),
+  };
+}
+
 export function getProtocolStatsForDate(
   exercises: readonly ExerciseScheduleInfo[],
   dateIso: string,

@@ -101,6 +101,7 @@ const plans: Record<string, RehabPlan> = {
       streakDays: 5,
       completedTodayCount: 1,
       scheduledTodayCount: 4,
+      adHocProtocolDays: {},
       exercises: [
         new Exercise(
           {
@@ -227,9 +228,16 @@ const plans: Record<string, RehabPlan> = {
   ),
 };
 
-function syncPlanTodayStats(plan: RehabPlan): RehabPlan {
-  const today = todayDateIso();
-  const stats = getProtocolStatsForDate(plan.exercises, today);
+function clonePlan(
+  plan: RehabPlan,
+  overrides: Partial<{
+    remainingToday: number;
+    exercises: Exercise[];
+    completedTodayCount: number;
+    scheduledTodayCount: number;
+    adHocProtocolDays: Record<string, string>;
+  }> = {},
+): RehabPlan {
   return new RehabPlan(
     {
       titleMobile: plan.titleMobile,
@@ -239,19 +247,32 @@ function syncPlanTodayStats(plan: RehabPlan): RehabPlan {
       weekLabel: plan.weekLabel,
       statusMessage: plan.statusMessage,
       status: plan.status,
-      remainingToday: stats.remaining,
-      exercises: plan.exercises,
+      remainingToday: overrides.remainingToday ?? plan.remainingToday,
+      exercises: overrides.exercises ?? plan.exercises,
       appointments: plan.appointments,
       metrics: plan.metrics,
       painHistory: plan.painHistory,
       weeklyDays: plan.weeklyDays,
       weeklyCompliancePercent: plan.weeklyCompliancePercent,
       streakDays: plan.streakDays,
-      completedTodayCount: stats.completed,
-      scheduledTodayCount: stats.due,
+      completedTodayCount:
+        overrides.completedTodayCount ?? plan.completedTodayCount,
+      scheduledTodayCount:
+        overrides.scheduledTodayCount ?? plan.scheduledTodayCount,
+      adHocProtocolDays: overrides.adHocProtocolDays ?? plan.adHocProtocolDays,
     },
     plan.id,
   );
+}
+
+function syncPlanTodayStats(plan: RehabPlan): RehabPlan {
+  const today = todayDateIso();
+  const stats = getProtocolStatsForDate(plan.exercises, today);
+  return clonePlan(plan, {
+    remainingToday: stats.remaining,
+    completedTodayCount: stats.completed,
+    scheduledTodayCount: stats.due,
+  });
 }
 
 function replaceExerciseInPlan(
@@ -262,28 +283,7 @@ function replaceExerciseInPlan(
   const exercises = plan.exercises.map((exercise) =>
     exercise.id === exerciseId ? nextExercise : exercise,
   );
-  return new RehabPlan(
-    {
-      titleMobile: plan.titleMobile,
-      titleWeb: plan.titleWeb,
-      phaseLabel: plan.phaseLabel,
-      dayProgress: plan.dayProgress,
-      weekLabel: plan.weekLabel,
-      statusMessage: plan.statusMessage,
-      status: plan.status,
-      remainingToday: plan.remainingToday,
-      exercises,
-      appointments: plan.appointments,
-      metrics: plan.metrics,
-      painHistory: plan.painHistory,
-      weeklyDays: plan.weeklyDays,
-      weeklyCompliancePercent: plan.weeklyCompliancePercent,
-      streakDays: plan.streakDays,
-      completedTodayCount: plan.completedTodayCount,
-      scheduledTodayCount: plan.scheduledTodayCount,
-    },
-    plan.id,
-  );
+  return clonePlan(plan, { exercises });
 }
 
 export class MockRehabRepository implements RehabRepository {
@@ -551,5 +551,31 @@ export class MockRehabRepository implements RehabRepository {
     if (input.type === "EXTENSION_DEGREES") {
       plan.metrics.kneeExtensionNote = `${input.value}${input.unit}`;
     }
+  }
+
+  async setAdHocProtocolDay(
+    planId: string,
+    targetDate: string,
+    sourceDate: string,
+  ): Promise<void> {
+    const plan = plans[planId];
+    if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
+    plans[planId] = clonePlan(plan, {
+      adHocProtocolDays: {
+        ...plan.adHocProtocolDays,
+        [targetDate]: sourceDate,
+      },
+    });
+  }
+
+  async clearAdHocProtocolDay(
+    planId: string,
+    targetDate: string,
+  ): Promise<void> {
+    const plan = plans[planId];
+    if (!plan) throw new Error(`Plan no encontrado: ${planId}`);
+    const next = { ...plan.adHocProtocolDays };
+    delete next[targetDate];
+    plans[planId] = clonePlan(plan, { adHocProtocolDays: next });
   }
 }
