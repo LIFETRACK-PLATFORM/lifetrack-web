@@ -319,8 +319,12 @@ export function PlanDetailView({
                     deleting={deletingExerciseId === ex.id}
                     showMedia={false}
                     onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
-                    onToggleCompletion={() =>
-                      toggleExerciseCompletion(ex.id, !ex.completedToday)
+                    onToggleCompletion={(date) =>
+                      toggleExerciseCompletion(
+                        ex.id,
+                        date ? true : !ex.completedToday,
+                        date,
+                      )
                     }
                     onEdit={() => setEditingExercise(ex)}
                     onDelete={() => void deleteExercise(ex.id)}
@@ -553,8 +557,12 @@ export function PlanDetailView({
                       deleting={deletingExerciseId === ex.id}
                       showMedia
                       onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
-                      onToggleCompletion={() =>
-                        toggleExerciseCompletion(ex.id, !ex.completedToday)
+                      onToggleCompletion={(date) =>
+                        toggleExerciseCompletion(
+                          ex.id,
+                          date ? true : !ex.completedToday,
+                          date,
+                        )
                       }
                       onEdit={() => setEditingExercise(ex)}
                       onDelete={() => void deleteExercise(ex.id)}

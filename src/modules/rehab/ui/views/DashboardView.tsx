@@ -84,6 +84,7 @@ export function DashboardView({
   const [injuryType, setInjuryType] = useState("Recuperación de LCA");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreatePlanOpen, setIsCreatePlanOpen] = useState(false);
 
   async function handleCreatePlan() {
     setCreating(true);
@@ -169,6 +170,15 @@ export function DashboardView({
           <div className="mx-auto flex w-full max-w-app items-center justify-between px-6 py-4">
             <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
             <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => setIsCreatePlanOpen(true)}
+                className="rounded-full p-2 hover:bg-surface-3"
+                aria-label="Nuevo plan"
+                title="Nuevo plan"
+              >
+                <Icon name="add" className="text-text-3" />
+              </button>
               <button type="button" className="rounded-full p-2 hover:bg-surface-3">
                 <Icon name="notifications" className="text-text-3" />
               </button>
@@ -213,6 +223,14 @@ export function DashboardView({
               <div className="flex gap-4">
                 <button
                   type="button"
+                  onClick={() => setIsCreatePlanOpen(true)}
+                  className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95"
+                >
+                  <Icon name="add" className="text-[18px]" />
+                  Nuevo plan
+                </button>
+                <button
+                  type="button"
                   className="rounded-lg bg-surface-4 p-2 text-primary hover:bg-surface-3"
                 >
                   <Icon name="notifications" />
@@ -234,7 +252,104 @@ export function DashboardView({
           </div>
         </main>
       </div>
+
+      {isCreatePlanOpen && (
+        <CreatePlanDialog
+          bodyPart={bodyPart}
+          setBodyPart={setBodyPart}
+          injuryType={injuryType}
+          setInjuryType={setInjuryType}
+          creating={creating}
+          error={createError}
+          onClose={() => setIsCreatePlanOpen(false)}
+          onSubmit={handleCreatePlan}
+        />
+      )}
     </>
+  );
+}
+
+function CreatePlanDialog({
+  bodyPart,
+  setBodyPart,
+  injuryType,
+  setInjuryType,
+  creating,
+  error,
+  onClose,
+  onSubmit,
+}: {
+  bodyPart: string;
+  setBodyPart: (value: string) => void;
+  injuryType: string;
+  setInjuryType: (value: string) => void;
+  creating: boolean;
+  error: string | null;
+  onClose: () => void;
+  onSubmit: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 p-4">
+      <div className="w-full max-w-md rounded-xl border border-border bg-surface-1 p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-headline-md font-semibold text-text-1">
+            Nuevo plan
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-3"
+          >
+            <Icon name="close" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">
+              Parte del cuerpo
+            </label>
+            <input
+              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+              value={bodyPart}
+              onChange={(e) => setBodyPart(e.target.value)}
+              placeholder="Ej. Rodilla"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">
+              Tipo de lesión / objetivo
+            </label>
+            <input
+              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+              value={injuryType}
+              onChange={(e) => setInjuryType(e.target.value)}
+              placeholder="Ej. Bajar de peso"
+            />
+          </div>
+
+          {error && <p className="text-body-md text-error">{error}</p>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg px-4 py-2 font-label text-label-md text-text-3 hover:bg-surface-3"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              disabled={creating}
+              onClick={onSubmit}
+              className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
+            >
+              {creating ? "Creando…" : "Crear plan"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
