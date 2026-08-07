@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,75 @@ import { UserProfile } from "@/modules/profile/domain/UserProfile";
 import { createProfileRepository } from "@/modules/profile/infrastructure/createProfileRepository";
 import { useProfile } from "@/modules/profile/ui/hooks/useProfile";
 import { useUpdateProfile } from "@/modules/profile/ui/hooks/useUpdateProfile";
+import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
+import { oauthStartUrl } from "@/modules/auth/infrastructure/oauthUrls";
+
+const PROVIDER_LABELS: Record<string, string> = {
+  LOCAL: "Email y contraseña",
+  GOOGLE: "Google",
+  GITHUB: "GitHub",
+};
+
+const SWITCHABLE_PROVIDERS: Array<{ id: "google" | "github"; provider: string }> = [
+  { id: "google", provider: "GOOGLE" },
+  { id: "github", provider: "GITHUB" },
+];
+
+function LoginMethodSection() {
+  const user = useAuthenticatedUser();
+  const searchParams = useSearchParams();
+  const switchResult = searchParams.get("providerSwitch");
+  const switchErrorReason = searchParams.get("reason");
+
+  const alternateProviders = SWITCHABLE_PROVIDERS.filter(
+    (option) => option.provider !== user.provider,
+  );
+
+  return (
+    <div className="mt-10 w-full max-w-lg">
+      <h2 className="font-heading text-heading-5 font-semibold text-text-1">
+        Método de inicio de sesión
+      </h2>
+      <p className="mt-1 text-body-md text-text-3">
+        Actualmente entrás con {PROVIDER_LABELS[user.provider] ?? user.provider}.
+      </p>
+
+      {switchResult === "success" && (
+        <Alert className="mt-4">
+          <AlertDescription>
+            Se actualizó el proveedor de inicio de sesión.
+          </AlertDescription>
+        </Alert>
+      )}
+      {switchResult === "error" && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertDescription>
+            {switchErrorReason ?? "No se pudo cambiar el proveedor de inicio de sesión."}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {alternateProviders.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-3">
+          {alternateProviders.map((option) => (
+            <Button
+              key={option.id}
+              type="button"
+              variant="outline"
+              onClick={() => {
+                window.location.href = oauthStartUrl(option.id, {
+                  intent: "switch",
+                });
+              }}
+            >
+              Cambiar a {PROVIDER_LABELS[option.provider]}
+            </Button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=7C5CFF&color=fff&name=LT";
@@ -276,6 +346,8 @@ export function ProfileView({
         repository={activeRepository}
         onSaved={setProfile}
       />
+
+      <LoginMethodSection />
     </main>
   );
 }

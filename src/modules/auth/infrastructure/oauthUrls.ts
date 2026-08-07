@@ -3,6 +3,10 @@ if (!API_GATEWAY_URL) {
   throw new Error("NEXT_PUBLIC_API_GATEWAY_URL no está configurada");
 }
 
-export function oauthStartUrl(provider: "google" | "github"): string {
-  return `${API_GATEWAY_URL}/auth/${provider}`;
+export function oauthStartUrl(
+  provider: "google" | "github",
+  options: { intent?: "switch" } = {},
+): string {
+  const url = `${API_GATEWAY_URL}/auth/${provider}`;
+  return options.intent ? `${url}?intent=${options.intent}` : url;
 }

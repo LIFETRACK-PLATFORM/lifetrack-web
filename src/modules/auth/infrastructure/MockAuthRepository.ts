@@ -45,6 +45,7 @@ export class MockAuthRepository implements AuthRepository {
       userId: "mock-user-1",
       email: "usuario@lifetrack.dev",
       roles: ["USER"],
+      provider: "LOCAL",
     });
   }
 
