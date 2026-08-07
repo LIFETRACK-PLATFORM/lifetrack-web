@@ -257,15 +257,15 @@ export function usePlan(repository: RehabRepository, planId: string) {
   );
 
   const toggleExerciseCompletion = useCallback(
-    async (exerciseId: string, completed: boolean) => {
+    async (exerciseId: string, completed: boolean, date?: string) => {
       if (!plan) return;
-      const today = new Date().toISOString().slice(0, 10);
+      const targetDate = date ?? new Date().toISOString().slice(0, 10);
       setCompletionError(null);
       setPendingCompletionIds((current) => new Set(current).add(exerciseId));
 
       try {
         const useCase = new MarkExerciseCompletionUseCase(repository);
-        await useCase.execute(exerciseId, today, completed);
+        await useCase.execute(exerciseId, targetDate, completed);
         await refresh();
       } catch (err) {
         setCompletionError(

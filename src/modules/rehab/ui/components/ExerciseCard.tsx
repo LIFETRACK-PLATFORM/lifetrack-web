@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -36,7 +37,7 @@ export function ExerciseCard({
   deleting: boolean;
   showMedia?: boolean;
   onAdjust: (delta: number) => void;
-  onToggleCompletion: () => void;
+  onToggleCompletion: (date?: string) => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -88,7 +89,8 @@ export function ExerciseCard({
               <DailyDoneToggle
                 completedToday={exercise.completedToday}
                 pending={pendingCompletion}
-                onToggle={onToggleCompletion}
+                onToggle={() => onToggleCompletion()}
+                onMarkYesterday={() => onToggleCompletion(yesterdayIso())}
               />
               <Button
                 type="button"
@@ -179,33 +181,83 @@ function ExerciseDayStatus({
   );
 }
 
+function yesterdayIso(): string {
+  return new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 function DailyDoneToggle({
   completedToday,
   pending,
   onToggle,
+  onMarkYesterday,
 }: {
   completedToday: boolean;
   pending: boolean;
   onToggle: () => void;
+  onMarkYesterday: () => void;
 }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  if (completedToday) {
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        disabled={pending}
+        title="Hecho hoy"
+        aria-label="Hecho hoy"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-success/20 text-success transition-all active:scale-95 disabled:opacity-60 hover:bg-success/30"
+      >
+        <Icon name="check_circle" className="text-[22px]" />
+      </button>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      disabled={pending}
-      title={completedToday ? "Hecho hoy" : "Marcar hecho hoy"}
-      aria-label={completedToday ? "Hecho hoy" : "Marcar hecho hoy"}
-      className={`flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-95 disabled:opacity-60 ${
-        completedToday
-          ? "bg-success/20 text-success hover:bg-success/30"
-          : "bg-warning/15 text-warning hover:bg-warning/25"
-      }`}
-    >
-      <Icon
-        name={completedToday ? "check_circle" : "radio_button_unchecked"}
-        className="text-[22px]"
-      />
-    </button>
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setPickerOpen((open) => !open)}
+        disabled={pending}
+        title="Marcar hecho"
+        aria-label="Marcar hecho"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-warning/15 text-warning transition-all active:scale-95 disabled:opacity-60 hover:bg-warning/25"
+      >
+        <Icon name="radio_button_unchecked" className="text-[22px]" />
+      </button>
+      {pickerOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar"
+            className="fixed inset-0 z-40 cursor-default"
+            onClick={() => setPickerOpen(false)}
+          />
+          <div className="absolute right-0 top-11 z-50 flex flex-col gap-1 rounded-lg border border-border bg-surface-1 p-1.5 shadow-lg">
+            <button
+              type="button"
+              onClick={() => {
+                setPickerOpen(false);
+                onToggle();
+              }}
+              className="whitespace-nowrap rounded-md px-3 py-1.5 text-left font-label text-label-md text-text-1 hover:bg-surface-3"
+            >
+              Marcar de hoy
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPickerOpen(false);
+                onMarkYesterday();
+              }}
+              className="whitespace-nowrap rounded-md px-3 py-1.5 text-left font-label text-label-md text-text-1 hover:bg-surface-3"
+            >
+              Marcar de ayer
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
