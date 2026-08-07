@@ -29,6 +29,10 @@ import {
   isFutureDate,
   todayDateIso,
 } from "@/modules/rehab/domain/protocolSchedule";
+import {
+  ProtocolBorrowedBanner,
+  ProtocolEmptyDay,
+} from "@/modules/rehab/ui/components/ProtocolEmptyDay";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { Exercise } from "@/modules/rehab/domain/Exercise";
@@ -67,6 +71,9 @@ export function PlanDetailView({
   const [extensionDegrees, setExtensionDegrees] = useState("");
   const todayIso = useMemo(() => todayDateIso(), []);
   const [viewingDate, setViewingDate] = useState(todayIso);
+  const [borrowedRoutineDate, setBorrowedRoutineDate] = useState<string | null>(
+    null,
+  );
   const activeRepository = useMemo(
     () => repository ?? createRehabRepository(),
     [repository],
@@ -158,17 +165,40 @@ export function PlanDetailView({
     () => (plan ? getExercisesDueOn(plan.exercises, viewingDate) : []),
     [plan, viewingDate],
   );
-  const protocolStats = useMemo(
-    () =>
-      plan
-        ? getProtocolStatsForDate(plan.exercises, viewingDate)
-        : { due: 0, completed: 0, remaining: 0, percent: 0 },
-    [plan, viewingDate],
-  );
+  const protocolExercises = useMemo(() => {
+    if (!plan) return [];
+    if (borrowedRoutineDate) {
+      return getExercisesDueOn(plan.exercises, borrowedRoutineDate);
+    }
+    return exercisesForViewingDate;
+  }, [plan, borrowedRoutineDate, exercisesForViewingDate]);
+  const protocolStats = useMemo(() => {
+    if (!plan) {
+      return { due: 0, completed: 0, remaining: 0, percent: 0 };
+    }
+    if (borrowedRoutineDate) {
+      const due = protocolExercises.length;
+      const completed = protocolExercises.filter((exercise) =>
+        isCompletedOnDate(exercise, viewingDate),
+      ).length;
+      return {
+        due,
+        completed,
+        remaining: Math.max(due - completed, 0),
+        percent: due === 0 ? 0 : Math.round((completed / due) * 100),
+      };
+    }
+    return getProtocolStatsForDate(plan.exercises, viewingDate);
+  }, [plan, borrowedRoutineDate, protocolExercises, viewingDate]);
   const isViewingToday = viewingDate === todayIso;
   const viewingIsFuture = isFutureDate(viewingDate, todayIso);
   const protocolTitle = formatProtocolTitle(viewingDate, todayIso);
   const completionLabel = formatCompletionLabel(viewingDate, todayIso);
+
+  const handleSelectViewingDate = (date: string) => {
+    setBorrowedRoutineDate(null);
+    setViewingDate(date);
+  };
 
   const handleAddPainLog = async () => {
     const level = Number(painLevel);
@@ -331,8 +361,15 @@ export function PlanDetailView({
                 days={plan.weeklyDays}
                 selectedDate={viewingDate}
                 todayIso={todayIso}
-                onSelectDate={setViewingDate}
+                onSelectDate={handleSelectViewingDate}
               />
+              {borrowedRoutineDate && (
+                <ProtocolBorrowedBanner
+                  sourceDate={borrowedRoutineDate}
+                  targetDate={viewingDate}
+                  onClear={() => setBorrowedRoutineDate(null)}
+                />
+              )}
               <button
                 type="button"
                 onClick={() => setIsAddExerciseOpen(true)}
@@ -341,7 +378,7 @@ export function PlanDetailView({
                 <Icon name="add" className="text-[20px]" />
                 Agregar ejercicio
               </button>
-              {exercisesForViewingDate
+              {protocolExercises
                 .filter((e) => e.id !== "glute")
                 .map((ex) => (
                   <ExerciseCard
@@ -369,11 +406,13 @@ export function PlanDetailView({
                     onDelete={() => void deleteExercise(ex.id)}
                   />
                 ))}
-              {exercisesForViewingDate.filter((e) => e.id !== "glute").length ===
-                0 && (
-                <p className="rounded-xl border border-dashed border-border/60 bg-surface-1 px-4 py-8 text-center text-body-md text-text-3">
-                  Sin ejercicios agendados este día.
-                </p>
+              {protocolExercises.filter((e) => e.id !== "glute").length === 0 && (
+                <ProtocolEmptyDay
+                  viewingDate={viewingDate}
+                  weeklyDays={plan.weeklyDays}
+                  exercises={plan.exercises}
+                  onBorrowRoutine={setBorrowedRoutineDate}
+                />
               )}
               {saveError && (
                 <p className="text-body-md text-error">{saveError}</p>
@@ -598,13 +637,23 @@ export function PlanDetailView({
                   days={plan.weeklyDays}
                   selectedDate={viewingDate}
                   todayIso={todayIso}
-                  onSelectDate={setViewingDate}
+                  onSelectDate={handleSelectViewingDate}
                 />
+              )}
+
+              {tab === "exercises" && borrowedRoutineDate && (
+                <div className="mb-4">
+                  <ProtocolBorrowedBanner
+                    sourceDate={borrowedRoutineDate}
+                    targetDate={viewingDate}
+                    onClear={() => setBorrowedRoutineDate(null)}
+                  />
+                </div>
               )}
 
               {tab === "exercises" && (
                 <div className="mb-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-                  {exercisesForViewingDate.map((ex) => (
+                  {protocolExercises.map((ex) => (
                     <ExerciseCard
                       key={ex.id}
                       exercise={ex}
@@ -630,10 +679,13 @@ export function PlanDetailView({
                       onDelete={() => void deleteExercise(ex.id)}
                     />
                   ))}
-                  {exercisesForViewingDate.length === 0 && (
-                    <p className="col-span-full rounded-xl border border-dashed border-border/60 bg-surface-1 px-4 py-8 text-center text-body-md text-text-3">
-                      Sin ejercicios agendados este día.
-                    </p>
+                  {protocolExercises.length === 0 && (
+                    <ProtocolEmptyDay
+                      viewingDate={viewingDate}
+                      weeklyDays={plan.weeklyDays}
+                      exercises={plan.exercises}
+                      onBorrowRoutine={setBorrowedRoutineDate}
+                    />
                   )}
                   {saveError && (
                     <p className="col-span-full text-body-md text-error">
