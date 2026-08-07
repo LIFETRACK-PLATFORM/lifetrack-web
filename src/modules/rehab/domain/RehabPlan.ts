@@ -1,7 +1,7 @@
 import { Entity } from "@/shared/domain/building-blocks/Entity";
 import { Exercise } from "./Exercise";
 import { Appointment } from "./Appointment";
-import type { RecoveryPlanStatus } from "./RehabRepository";
+import type { MeasurementType, RecoveryPlanStatus } from "./RehabRepository";
 
 interface PlanMetrics {
   kneeExtensionNote: string;
@@ -22,6 +22,13 @@ export interface WeeklyDayPoint {
   isFuture: boolean;
 }
 
+export interface MeasurementPoint {
+  type: MeasurementType;
+  value: number;
+  unit: string;
+  date: string;
+}
+
 interface RehabPlanProps {
   titleMobile: string;
   titleWeb: string;
@@ -35,6 +42,7 @@ interface RehabPlanProps {
   appointments: Appointment[];
   metrics: PlanMetrics;
   painHistory: PainLogPoint[];
+  measurements: MeasurementPoint[];
   weeklyDays: WeeklyDayPoint[];
   weeklyCompliancePercent: number;
   streakDays: number;
@@ -95,6 +103,10 @@ export class RehabPlan extends Entity<RehabPlanProps> {
 
   get painHistory(): PainLogPoint[] {
     return this.props.painHistory;
+  }
+
+  get measurements(): MeasurementPoint[] {
+    return this.props.measurements;
   }
 
   get weeklyDays(): WeeklyDayPoint[] {

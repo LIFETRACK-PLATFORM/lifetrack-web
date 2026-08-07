@@ -20,6 +20,8 @@ import { ExerciseCard } from "@/modules/rehab/ui/components/ExerciseCard";
 import { ExerciseFormDialog } from "@/modules/rehab/ui/components/ExerciseFormDialog";
 import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointmentDialog";
 import { WeeklyDaysStrip } from "@/modules/rehab/ui/components/WeeklyDaysStrip";
+import { MeasurementForm } from "@/modules/rehab/ui/components/MeasurementForm";
+import { MeasurementTrendChart } from "@/modules/rehab/ui/components/MeasurementTrendChart";
 import {
   formatCompletionLabel,
   formatProtocolTitle,
@@ -69,7 +71,6 @@ export function PlanDetailView({
     useState<Appointment | null>(null);
   const [painLevel, setPainLevel] = useState("3");
   const [painNote, setPainNote] = useState("");
-  const [extensionDegrees, setExtensionDegrees] = useState("");
   const todayIso = useMemo(() => todayDateIso(), []);
   const [viewingDate, setViewingDate] = useState(todayIso);
   const activeRepository = useMemo(
@@ -219,18 +220,6 @@ export function PlanDetailView({
       note: painNote.trim() || undefined,
     });
     if (success) setPainNote("");
-  };
-
-  const handleAddExtension = async () => {
-    const value = Number(extensionDegrees);
-    if (!Number.isFinite(value)) return;
-    const success = await addMeasurement({
-      type: "EXTENSION_DEGREES",
-      value,
-      unit: "°",
-      date: new Date().toISOString(),
-    });
-    if (success) setExtensionDegrees("");
   };
 
   if (loading) {
@@ -523,10 +512,10 @@ export function PlanDetailView({
                   <div className="h-full flex-1 rounded-t-sm bg-primary" />
                 </div>
               </div>
-              <ExtensionForm
-                value={extensionDegrees}
-                setValue={setExtensionDegrees}
-                onSubmit={handleAddExtension}
+              <MeasurementTrendChart measurements={plan.measurements} />
+              <MeasurementForm
+                defaultType="EXTENSION_DEGREES"
+                onSubmit={(input) => addMeasurement(input)}
                 submitting={addingMeasurement}
                 error={addMeasurementError}
               />
@@ -843,11 +832,13 @@ export function PlanDetailView({
                     history={plan.painHistory}
                     className="border-border/30"
                   />
+                  <div className="md:col-span-2">
+                    <MeasurementTrendChart measurements={plan.measurements} />
+                  </div>
                   <div className="md:col-span-2 space-y-4">
-                    <ExtensionForm
-                      value={extensionDegrees}
-                      setValue={setExtensionDegrees}
-                      onSubmit={handleAddExtension}
+                    <MeasurementForm
+                      defaultType="EXTENSION_DEGREES"
+                      onSubmit={(input) => addMeasurement(input)}
                       submitting={addingMeasurement}
                       error={addMeasurementError}
                     />
@@ -1390,48 +1381,6 @@ function ConfirmStatusButton({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
-}
-
-function ExtensionForm({
-  value,
-  setValue,
-  onSubmit,
-  submitting,
-  error,
-}: {
-  value: string;
-  setValue: (value: string) => void;
-  onSubmit: () => void;
-  submitting: boolean;
-  error: string | null;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-surface-1 p-6">
-      <h4 className="mb-3 font-label text-label-md text-text-3">
-        Registrar extensión de rodilla (grados)
-      </h4>
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="number"
-          step="0.1"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          placeholder="Ej. 5"
-          className="w-28 rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-        />
-        <span className="font-label text-label-md text-text-3">°</span>
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={submitting || value.trim() === ""}
-          className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
-        >
-          {submitting ? "Guardando…" : "Registrar"}
-        </button>
-      </div>
-      {error && <p className="mt-2 text-body-md text-error">{error}</p>}
-    </div>
   );
 }
 

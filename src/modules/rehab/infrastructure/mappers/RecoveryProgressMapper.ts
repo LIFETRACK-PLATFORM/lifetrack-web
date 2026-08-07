@@ -1,7 +1,8 @@
 import { Appointment } from "../../domain/Appointment";
 import { DashboardSummary } from "../../domain/DashboardSummary";
 import { Exercise } from "../../domain/Exercise";
-import { RehabPlan } from "../../domain/RehabPlan";
+import { RehabPlan, MeasurementPoint } from "../../domain/RehabPlan";
+import type { MeasurementType } from "../../domain/RehabRepository";
 import type {
   RecoveryPlanSummaryDto,
   RecoveryProgressDto,
@@ -103,6 +104,14 @@ export function mapProgressToPlan(
     );
   const latestExtension =
     extensionMeasurements[extensionMeasurements.length - 1];
+  const measurements: MeasurementPoint[] = (dto.measurements ?? [])
+    .map((m) => ({
+      type: m.type as MeasurementType,
+      value: m.value,
+      unit: m.unit,
+      date: m.date,
+    }))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const sortedPainLogs = [...(dto.painLogs ?? [])].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
@@ -134,6 +143,7 @@ export function mapProgressToPlan(
         level: p.level,
         note: p.note,
       })),
+      measurements,
       weeklyDays: weeklySummary.days,
       weeklyCompliancePercent: weeklySummary.weeklyCompliancePercent,
       streakDays: weeklySummary.streakDays,
