@@ -3,8 +3,16 @@
 import { useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   DEFAULT_VAULT_CATEGORY,
   VAULT_CATEGORIES,
+  getCategoryIcon,
   normalizeVaultCategory,
 } from "../../domain/vaultCategories";
 
@@ -118,20 +126,26 @@ export function CreateVaultItemDialog({
             <label className="mb-1 block font-label text-label-md text-text-3">
               Categoría
             </label>
-            <select
+            <Select
               value={categorySelection}
-              onChange={(e) => setCategorySelection(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
+              onValueChange={(value) => setCategorySelection(value)}
             >
-              {VAULT_CATEGORIES.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-              <option value={CUSTOM_CATEGORY_OPTION}>
-                + Crear categoría…
-              </option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Elegí una categoría" />
+              </SelectTrigger>
+              <SelectContent className="z-[110]">
+                {VAULT_CATEGORIES.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    <Icon name={getCategoryIcon(option)} className="text-[16px]" />
+                    {option}
+                  </SelectItem>
+                ))}
+                <SelectItem value={CUSTOM_CATEGORY_OPTION}>
+                  <Icon name="add" className="text-[16px]" />
+                  Crear categoría…
+                </SelectItem>
+              </SelectContent>
+            </Select>
             {categorySelection === CUSTOM_CATEGORY_OPTION && (
               <input
                 type="text"
