@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -25,6 +24,10 @@ export function ExerciseCard({
   pendingCompletion,
   deleting,
   showMedia = true,
+  viewingDate,
+  completedOnDate,
+  isFutureDay,
+  isViewingToday,
   onAdjust,
   onToggleCompletion,
   onEdit,
@@ -36,25 +39,29 @@ export function ExerciseCard({
   pendingCompletion: boolean;
   deleting: boolean;
   showMedia?: boolean;
+  viewingDate: string;
+  completedOnDate: boolean;
+  isFutureDay: boolean;
+  isViewingToday: boolean;
   onAdjust: (delta: number) => void;
-  onToggleCompletion: (date?: string) => void;
+  onToggleCompletion: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const target = exercise.target;
   const repsGoalReached = current >= target && target > 0;
-  const isDoneToday = exercise.completedToday;
+  const showUrgent = isViewingToday && exercise.urgent && !completedOnDate;
 
   return (
     <article
       id={exerciseDomId(exercise.id)}
       className={`rounded-xl border bg-surface-1 p-3 transition-all sm:p-4 ${
-        isDoneToday
+        completedOnDate
           ? "border-success/35 bg-success/5"
-          : exercise.urgent
+          : showUrgent
             ? "border-error/35 bg-error/5"
             : "border-warning/25 bg-warning/5"
-      } ${repsGoalReached && !isDoneToday ? "ring-1 ring-primary/25" : ""} ${
+      } ${repsGoalReached && !completedOnDate ? "ring-1 ring-primary/25" : ""} ${
         highlighted
           ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
           : ""
@@ -77,8 +84,9 @@ export function ExerciseCard({
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 space-y-1">
               <ExerciseDayStatus
-                completedToday={isDoneToday}
-                urgent={exercise.urgent}
+                completedOnDate={completedOnDate}
+                isFutureDay={isFutureDay}
+                urgent={showUrgent}
               />
               <h4 className="truncate text-body-lg font-semibold text-text-1">
                 {exercise.name}
@@ -87,10 +95,11 @@ export function ExerciseCard({
 
             <div className="flex shrink-0 items-center gap-1">
               <DailyDoneToggle
-                completedToday={exercise.completedToday}
+                completedOnDate={completedOnDate}
+                isFutureDay={isFutureDay}
                 pending={pendingCompletion}
-                onToggle={() => onToggleCompletion()}
-                onMarkDate={(date) => onToggleCompletion(date)}
+                viewingDate={viewingDate}
+                onToggle={onToggleCompletion}
               />
               <Button
                 type="button"
@@ -127,21 +136,25 @@ export function ExerciseCard({
                 </span>
               </>
             )}
-            <span className="inline-flex items-center gap-1 font-medium text-primary">
-              <Icon name="target" className="text-[14px]" />
-              {current}/{target}
-            </span>
+            {isViewingToday && (
+              <span className="inline-flex items-center gap-1 font-medium text-primary">
+                <Icon name="target" className="text-[14px]" />
+                {current}/{target}
+              </span>
+            )}
           </p>
 
           {exercise.notes && (
             <p className="text-label-md text-text-3">{exercise.notes}</p>
           )}
 
-          <ExerciseRepCounter
-            current={current}
-            target={target}
-            onAdjust={onAdjust}
-          />
+          {isViewingToday && (
+            <ExerciseRepCounter
+              current={current}
+              target={target}
+              onAdjust={onAdjust}
+            />
+          )}
         </div>
       </div>
     </article>
@@ -149,17 +162,28 @@ export function ExerciseCard({
 }
 
 function ExerciseDayStatus({
-  completedToday,
+  completedOnDate,
+  isFutureDay,
   urgent,
 }: {
-  completedToday: boolean;
+  completedOnDate: boolean;
+  isFutureDay: boolean;
   urgent: boolean;
 }) {
-  if (completedToday) {
+  if (completedOnDate) {
     return (
       <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/15 px-2 py-0.5 text-[11px] font-semibold text-success">
         <Icon name="check_circle" className="text-[13px]" />
         Realizado
+      </span>
+    );
+  }
+
+  if (isFutureDay) {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-surface-3 px-2 py-0.5 text-[11px] font-semibold text-text-3">
+        <Icon name="schedule" className="text-[13px]" />
+        Agendado
       </span>
     );
   }
@@ -181,32 +205,41 @@ function ExerciseDayStatus({
   );
 }
 
-function yesterdayIso(): string {
-  return new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-}
-
 function DailyDoneToggle({
-  completedToday,
+  completedOnDate,
+  isFutureDay,
   pending,
+  viewingDate,
   onToggle,
-  onMarkDate,
 }: {
-  completedToday: boolean;
+  completedOnDate: boolean;
+  isFutureDay: boolean;
   pending: boolean;
+  viewingDate: string;
   onToggle: () => void;
-  onMarkDate: (date: string) => void;
 }) {
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [customDate, setCustomDate] = useState("");
+  if (isFutureDay) {
+    return (
+      <button
+        type="button"
+        disabled
+        title="No se puede marcar un día futuro"
+        aria-label="No se puede marcar un día futuro"
+        className="flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-full bg-surface-3 text-text-3 opacity-50"
+      >
+        <Icon name="radio_button_unchecked" className="text-[22px]" />
+      </button>
+    );
+  }
 
-  if (completedToday) {
+  if (completedOnDate) {
     return (
       <button
         type="button"
         onClick={onToggle}
         disabled={pending}
-        title="Hecho hoy"
-        aria-label="Hecho hoy"
+        title={`Hecho el ${viewingDate}`}
+        aria-label={`Desmarcar cumplimiento del ${viewingDate}`}
         className="flex h-9 w-9 items-center justify-center rounded-full bg-success/20 text-success transition-all active:scale-95 disabled:opacity-60 hover:bg-success/30"
       >
         <Icon name="check_circle" className="text-[22px]" />
@@ -215,72 +248,16 @@ function DailyDoneToggle({
   }
 
   return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setPickerOpen((open) => !open)}
-        disabled={pending}
-        title="Marcar hecho"
-        aria-label="Marcar hecho"
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-warning/15 text-warning transition-all active:scale-95 disabled:opacity-60 hover:bg-warning/25"
-      >
-        <Icon name="radio_button_unchecked" className="text-[22px]" />
-      </button>
-      {pickerOpen && (
-        <>
-          <button
-            type="button"
-            aria-label="Cerrar"
-            className="fixed inset-0 z-40 cursor-default"
-            onClick={() => setPickerOpen(false)}
-          />
-          <div className="absolute right-0 top-11 z-50 flex w-56 flex-col gap-1 rounded-lg border border-border bg-surface-1 p-1.5 shadow-lg">
-            <button
-              type="button"
-              onClick={() => {
-                setPickerOpen(false);
-                onToggle();
-              }}
-              className="whitespace-nowrap rounded-md px-3 py-1.5 text-left font-label text-label-md text-text-1 hover:bg-surface-3"
-            >
-              Marcar de hoy
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setPickerOpen(false);
-                onMarkDate(yesterdayIso());
-              }}
-              className="whitespace-nowrap rounded-md px-3 py-1.5 text-left font-label text-label-md text-text-1 hover:bg-surface-3"
-            >
-              Marcar de ayer
-            </button>
-            <div className="flex items-center gap-1 border-t border-border/60 px-1 pt-1.5">
-              <input
-                type="date"
-                value={customDate}
-                max={new Date().toISOString().slice(0, 10)}
-                onChange={(e) => setCustomDate(e.target.value)}
-                className="min-w-0 flex-1 rounded-md border border-border bg-surface-1 px-2 py-1 text-label-md text-text-1 focus:border-primary focus:outline-none"
-              />
-              <button
-                type="button"
-                disabled={!customDate}
-                onClick={() => {
-                  if (!customDate) return;
-                  setPickerOpen(false);
-                  onMarkDate(customDate);
-                  setCustomDate("");
-                }}
-                className="shrink-0 rounded-md bg-primary px-2 py-1 font-label text-label-md text-primary-foreground disabled:opacity-40"
-              >
-                Marcar
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={pending}
+      title="Marcar hecho"
+      aria-label="Marcar hecho"
+      className="flex h-9 w-9 items-center justify-center rounded-full bg-warning/15 text-warning transition-all active:scale-95 disabled:opacity-60 hover:bg-warning/25"
+    >
+      <Icon name="radio_button_unchecked" className="text-[22px]" />
+    </button>
   );
 }
 

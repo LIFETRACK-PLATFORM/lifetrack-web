@@ -42,24 +42,26 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
 
   if (!isUnlocked) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-background p-6 pb-32 text-text-1 md:pb-10">
-        <div className="mx-auto max-w-app text-center">
-          <div className="mb-6 flex justify-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-surface-2 text-primary">
-              <Icon name="encrypted" className="text-[36px]" />
+      <main className="min-h-screen bg-background p-6 pb-32 text-text-1 md:p-10 md:pb-10">
+        <div className="mx-auto flex max-w-app flex-col items-center">
+          <div className="mb-6 text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-surface-2 text-primary">
+                <Icon name="encrypted" className="text-[36px]" />
+              </div>
             </div>
+            <h2 className="mb-2 text-headline-lg text-text-1">Bóveda</h2>
+            <p className="text-body-lg text-text-3">
+              Tus contraseñas cifradas de extremo a extremo. Solo vos podés
+              descifrarlas con tu contraseña maestra.
+            </p>
           </div>
-          <h2 className="mb-2 text-headline-lg text-text-1">Bóveda</h2>
-          <p className="mb-8 text-body-lg text-text-3">
-            Tus contraseñas cifradas de extremo a extremo. Solo vos podés
-            descifrarlas con tu contraseña maestra.
-          </p>
+          <UnlockVaultDialog
+            onUnlock={unlock}
+            unlocking={unlocking}
+            error={unlockError}
+          />
         </div>
-        <UnlockVaultDialog
-          onUnlock={unlock}
-          unlocking={unlocking}
-          error={unlockError}
-        />
       </main>
     );
   }
