@@ -16,6 +16,8 @@ interface ExerciseProps {
   reps: number;
   image: string;
   daysOfWeek: number[];
+  /** Fechas (YYYY-MM-DD) en las que este ejercicio quedo marcado como hecho. */
+  completions: string[];
   scheduledToday: boolean;
   completedToday: boolean;
   urgent: boolean;
@@ -76,6 +78,10 @@ export class Exercise extends Entity<ExerciseProps> {
 
   get daysOfWeek(): number[] {
     return this.props.daysOfWeek;
+  }
+
+  get completions(): string[] {
+    return this.props.completions;
   }
 
   get scheduledToday(): boolean {

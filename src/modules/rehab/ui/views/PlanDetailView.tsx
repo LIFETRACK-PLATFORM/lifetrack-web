@@ -302,7 +302,7 @@ export function PlanDetailView({
                   Quedan {plan.remainingToday}
                 </span>
               </div>
-              <WeeklyDaysStrip days={plan.weeklyDays} />
+              <WeeklyDaysStrip days={plan.weeklyDays} exercises={plan.exercises} />
               <button
                 type="button"
                 onClick={() => setIsAddExerciseOpen(true)}
@@ -549,7 +549,7 @@ export function PlanDetailView({
                 </div>
               </div>
 
-              {tab === "exercises" && <WeeklyDaysStrip days={plan.weeklyDays} />}
+              {tab === "exercises" && <WeeklyDaysStrip days={plan.weeklyDays} exercises={plan.exercises} />}
 
               {(tab === "exercises" || tab === "photos") && (
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -872,47 +872,127 @@ function PlanDetailSkeleton() {
 
 const WEEKDAY_LETTERS = ["D", "L", "M", "M", "J", "V", "S"];
 
-function WeeklyDaysStrip({ days }: { days: WeeklyDayPoint[] }) {
+function isExerciseDueOn(exercise: Exercise, dateIso: string): boolean {
+  const weekday = new Date(`${dateIso}T00:00:00.000Z`).getUTCDay();
+  return (
+    exercise.daysOfWeek.length === 0 || exercise.daysOfWeek.includes(weekday)
+  );
+}
+
+function WeeklyDaysStrip({
+  days,
+  exercises,
+}: {
+  days: WeeklyDayPoint[];
+  exercises: Exercise[];
+}) {
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   if (days.length === 0) return null;
   const todayIso = new Date().toISOString().slice(0, 10);
 
-  return (
-    <div className="flex items-center justify-between rounded-xl border border-border bg-surface-1 px-3 py-3">
-      {days.map((day, i) => {
-        const isToday = day.date === todayIso;
-        const isRest = day.due === 0;
-        const status = isRest
-          ? "rest"
-          : day.isFuture
-            ? "future"
-            : day.compliant
-              ? "done"
-              : "missed";
+  const selectedDay = days.find((d) => d.date === selectedDate) ?? null;
+  const doneExercises = selectedDate
+    ? exercises.filter((e) => e.completions.includes(selectedDate))
+    : [];
+  const missedExercises = selectedDate
+    ? exercises.filter(
+        (e) =>
+          isExerciseDueOn(e, selectedDate) &&
+          !e.completions.includes(selectedDate),
+      )
+    : [];
 
-        return (
-          <div
-            key={day.date}
-            className="flex flex-1 flex-col items-center gap-1.5"
-            title={`${day.date}${isRest ? " · sin ejercicios agendados" : ` · ${day.completed}/${day.due} completados`}`}
-          >
-            <span className="font-label text-[11px] text-text-3">
-              {WEEKDAY_LETTERS[i]}
-            </span>
-            <div
-              className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] ${
-                status === "done"
-                  ? "bg-success/20 text-success"
-                  : status === "missed"
-                    ? "bg-error/15 text-error"
-                    : "bg-surface-3 text-text-3"
-              } ${isToday ? "ring-2 ring-primary ring-offset-1 ring-offset-surface-1" : ""}`}
+  return (
+    <div className="rounded-xl border border-border bg-surface-1 px-3 py-3">
+      <div className="flex items-center justify-between">
+        {days.map((day, i) => {
+          const isToday = day.date === todayIso;
+          const isRest = day.due === 0;
+          const status = isRest
+            ? "rest"
+            : day.isFuture
+              ? "future"
+              : day.compliant
+                ? "done"
+                : "missed";
+
+          return (
+            <button
+              key={day.date}
+              type="button"
+              onClick={() =>
+                setSelectedDate((current) =>
+                  current === day.date ? null : day.date,
+                )
+              }
+              className="flex flex-1 flex-col items-center gap-1.5"
+              title={`${day.date}${isRest ? " · sin ejercicios agendados" : ` · ${day.completed}/${day.due} completados`}`}
             >
-              {status === "done" && <Icon name="check" className="text-[14px]" />}
-              {status === "missed" && <Icon name="close" className="text-[14px]" />}
-            </div>
-          </div>
-        );
-      })}
+              <span className="font-label text-[11px] text-text-3">
+                {WEEKDAY_LETTERS[i]}
+              </span>
+              <div
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-[13px] transition-transform active:scale-90 ${
+                  status === "done"
+                    ? "bg-success/20 text-success"
+                    : status === "missed"
+                      ? "bg-error/15 text-error"
+                      : "bg-surface-3 text-text-3"
+                } ${isToday ? "ring-2 ring-primary ring-offset-1 ring-offset-surface-1" : ""} ${
+                  selectedDate === day.date
+                    ? "ring-2 ring-primary/60"
+                    : ""
+                }`}
+              >
+                {status === "done" && (
+                  <Icon name="check" className="text-[14px]" />
+                )}
+                {status === "missed" && (
+                  <Icon name="close" className="text-[14px]" />
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {selectedDay && (
+        <div className="mt-3 space-y-2 border-t border-border/60 pt-3">
+          <p className="font-label text-label-md text-text-3">
+            {new Date(`${selectedDay.date}T00:00:00.000Z`).toLocaleDateString(
+              "es-PE",
+              { weekday: "long", day: "numeric", month: "long" },
+            )}
+          </p>
+          {doneExercises.length === 0 && missedExercises.length === 0 && (
+            <p className="text-body-md text-text-3">
+              Sin ejercicios agendados ese día.
+            </p>
+          )}
+          {doneExercises.map((e) => (
+            <p
+              key={e.id}
+              className="flex items-center gap-2 text-body-md text-text-1"
+            >
+              <Icon name="check_circle" className="text-[16px] text-success" />
+              {e.name}
+            </p>
+          ))}
+          {missedExercises.map((e) => (
+            <p
+              key={e.id}
+              className="flex items-center gap-2 text-body-md text-text-3"
+            >
+              <Icon
+                name="radio_button_unchecked"
+                className="text-[16px] text-text-3"
+              />
+              {e.name}
+              {selectedDay.isFuture ? " (agendado)" : " (no marcado)"}
+            </p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -114,6 +114,7 @@ const plans: Record<string, RehabPlan> = {
             image:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuAarTEW0pmSQ0_-4zhv_22QG9m6MOOC6WcChAeiI16MYrP3ik7bdP4jTINGvuwDfto9EGtK5pNRTcXMx4uamyzd_jntN4QBThkX6ASZiStIA2odrcuorwqhSR-6qWVixw93GKunSm6sSkyXNhoukmzfpFw7G7rKMpK2hoYjP21oV6sBhe9ZPKcdpHFt7aCfVutXWdnH9WmCdtC5-LHmYYnKIB7w0TnAaVRvCZKFfvnm_vFzaWK8feHQpA",
             daysOfWeek: [],
+            completions: [],
             scheduledToday: true,
             completedToday: false,
             urgent: false,
@@ -136,6 +137,7 @@ const plans: Record<string, RehabPlan> = {
             image:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuCcdc34GK0rS-iIDGl2eMNYg8sVM7MH642Um9DnnNxtwcA1Xl2ftt0TOFbgFzwcz2i_KUFpWoOtvBHp7417YSPzX1U1Y6TJhKWEwsF1p9UFLiSKmMeAoYvJ6SOjiTWNrwyOnJRIjA6pETUQafUtGOQxDW19tTSDALmGkpFI5-lnNRzs6o27wnxrjnZIvIPe_Eh29HC_8bscTAsNTKexwEMr9zFv89ghwKp41a320aLBBne1cB7wBQgtqg",
             daysOfWeek: [1, 3, 5],
+            completions: [],
             scheduledToday: false,
             completedToday: false,
             urgent: false,
@@ -158,6 +160,7 @@ const plans: Record<string, RehabPlan> = {
             image:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuAf_46SdyqTYUqWaQ4aLdBI5aEVEng_vX6_gEA2uzS9xfjd4io5jHwukBeg8j7RR3mr2SsgkpWSZig6fuV3KBNZ_NOH94yw5WNEdDD259FrYxosJ5sVMBrZ1DLxO5emmh2Ccm62sKTIUYpZrv62OnDNILY5sKQVRBr8IOXrx40vZqDx_6mJuIh6YaKZXiNCMp5iE4rI7HK_GPP5HndU5OX7k9O6wKPGKu2v27sUwOnA68gwl33pV0QMmA",
             daysOfWeek: [],
+            completions: [],
             scheduledToday: true,
             completedToday: true,
             urgent: false,
@@ -180,6 +183,7 @@ const plans: Record<string, RehabPlan> = {
             image:
               "https://lh3.googleusercontent.com/aida-public/AB6AXuDJvQGkHp77hRxtTHqHh8-h6xhBvygNBJVsXqpktw9kgaPZh8w_okgrfIGa96irO9etdnKGXMkLqm8ldKp_JMR-sKlxJ7S-xn8LhgvYEHAxgVMlW1XV3Uo4Uve44vwtIrBE9v8aSHcqTpgj5mzSmry2r7QX0QNlbibR9_CZWBPR5O590WpOLdrhOTwhMXAcVVt4FKC5OYjaNxGlbrHi_zFz3oA8v_UbeHU8e5uNvnqc8QO6fMBA_Xd_Ig",
             daysOfWeek: [2, 4],
+            completions: [],
             scheduledToday: false,
             completedToday: false,
             urgent: true,
@@ -282,6 +286,7 @@ export class MockRehabRepository implements RehabRepository {
         reps: input.targetReps,
         image: MOCK_EXERCISE_IMAGE,
         daysOfWeek: input.daysOfWeek ?? [],
+        completions: [],
         scheduledToday: true,
         completedToday: false,
         urgent: false,
@@ -332,6 +337,7 @@ export class MockRehabRepository implements RehabRepository {
         reps: input.targetReps,
         image: current.image,
         daysOfWeek: input.daysOfWeek ?? [],
+        completions: current.completions,
         scheduledToday: current.scheduledToday,
         completedToday: current.completedToday,
         urgent: current.urgent,
