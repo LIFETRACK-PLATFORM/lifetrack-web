@@ -1,4 +1,5 @@
 import { DashboardSummary } from "../domain/DashboardSummary";
+import { todayDateIso } from "../domain/protocolSchedule";
 import { RehabPlan } from "../domain/RehabPlan";
 import {
   AddAppointmentInput,
@@ -31,13 +32,13 @@ export class NoRecoveryPlansError extends Error {
 export class HttpRehabRepository implements RehabRepository {
   private getToday(planId: string) {
     return rehabFetchStrict<GetTodayExercisesResponseDto>(
-      `/rehab/plans/${planId}/today`,
+      `/rehab/plans/${planId}/today?todayIso=${todayDateIso()}`,
     );
   }
 
   private getWeeklySummary(planId: string) {
     return rehabFetchStrict<WeeklySummaryDto>(
-      `/rehab/plans/${planId}/weekly-summary`,
+      `/rehab/plans/${planId}/weekly-summary?todayIso=${todayDateIso()}`,
     );
   }
 
@@ -87,7 +88,7 @@ export class HttpRehabRepository implements RehabRepository {
       body: JSON.stringify({
         setsDone: 1,
         repsDone: current,
-        date: new Date().toISOString(),
+        date: todayDateIso(),
       }),
     });
   }
@@ -231,7 +232,7 @@ export class HttpRehabRepository implements RehabRepository {
   ): Promise<void> {
     await rehabFetchStrict(`/rehab/plans/${planId}/ad-hoc-protocol`, {
       method: "POST",
-      body: JSON.stringify({ targetDate, sourceDate }),
+      body: JSON.stringify({ targetDate, sourceDate, todayIso: todayDateIso() }),
     });
   }
 
