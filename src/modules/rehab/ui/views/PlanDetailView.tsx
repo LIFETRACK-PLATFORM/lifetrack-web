@@ -20,7 +20,7 @@ import { ExerciseCard } from "@/modules/rehab/ui/components/ExerciseCard";
 import { ExerciseFormDialog } from "@/modules/rehab/ui/components/ExerciseFormDialog";
 import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointmentDialog";
 import { WeeklyDaysStrip } from "@/modules/rehab/ui/components/WeeklyDaysStrip";
-import { MeasurementForm } from "@/modules/rehab/ui/components/MeasurementForm";
+import { MeasurementDialog } from "@/modules/rehab/ui/components/MeasurementDialog";
 import { MeasurementTrendChart } from "@/modules/rehab/ui/components/MeasurementTrendChart";
 import { MeasurementHistoryList } from "@/modules/rehab/ui/components/MeasurementHistoryList";
 import {
@@ -75,6 +75,7 @@ export function PlanDetailView({
     useState<Appointment | null>(null);
   const [painLevel, setPainLevel] = useState("3");
   const [painNote, setPainNote] = useState("");
+  const [isAddMeasurementOpen, setIsAddMeasurementOpen] = useState(false);
   const [editingMeasurement, setEditingMeasurement] =
     useState<MeasurementPoint | null>(null);
   const todayIso = useMemo(() => todayDateIso(), []);
@@ -537,20 +538,19 @@ export function PlanDetailView({
                 </div>
               </div>
               <MeasurementTrendChart measurements={plan.measurements} />
+              <button
+                type="button"
+                onClick={() => setIsAddMeasurementOpen(true)}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
+              >
+                <Icon name="add" className="text-[20px]" />
+                Registrar medición
+              </button>
               <MeasurementHistoryList
                 measurements={plan.measurements}
                 onEdit={setEditingMeasurement}
                 onDelete={deleteMeasurement}
                 deletingId={deletingMeasurementId}
-              />
-              <MeasurementForm
-                key={editingMeasurement?.measurementId ?? "new"}
-                defaultType="EXTENSION_DEGREES"
-                initial={editingMeasurement ?? undefined}
-                onSubmit={handleMeasurementSubmit}
-                onCancel={() => setEditingMeasurement(null)}
-                submitting={editingMeasurement ? updatingMeasurement : addingMeasurement}
-                error={editingMeasurement ? updateMeasurementError : addMeasurementError}
               />
               {deleteMeasurementError && (
                 <p className="text-body-md text-error">{deleteMeasurementError}</p>
@@ -871,27 +871,26 @@ export function PlanDetailView({
                   <div className="md:col-span-2">
                     <MeasurementTrendChart measurements={plan.measurements} />
                   </div>
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 space-y-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddMeasurementOpen(true)}
+                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
+                    >
+                      <Icon name="add" className="text-[20px]" />
+                      Registrar medición
+                    </button>
                     <MeasurementHistoryList
                       measurements={plan.measurements}
                       onEdit={setEditingMeasurement}
                       onDelete={deleteMeasurement}
                       deletingId={deletingMeasurementId}
                     />
-                  </div>
-                  <div className="md:col-span-2 space-y-4">
-                    <MeasurementForm
-                      key={editingMeasurement?.measurementId ?? "new"}
-                      defaultType="EXTENSION_DEGREES"
-                      initial={editingMeasurement ?? undefined}
-                      onSubmit={handleMeasurementSubmit}
-                      onCancel={() => setEditingMeasurement(null)}
-                      submitting={editingMeasurement ? updatingMeasurement : addingMeasurement}
-                      error={editingMeasurement ? updateMeasurementError : addMeasurementError}
-                    />
                     {deleteMeasurementError && (
                       <p className="text-body-md text-error">{deleteMeasurementError}</p>
                     )}
+                  </div>
+                  <div className="md:col-span-2 space-y-4">
                     <PainLogForm
                       painLevel={painLevel}
                       setPainLevel={setPainLevel}
@@ -1011,6 +1010,27 @@ export function PlanDetailView({
           }
           submitting={updatingAppointment}
           error={updateAppointmentError}
+        />
+      )}
+
+      {isAddMeasurementOpen && (
+        <MeasurementDialog
+          defaultType="EXTENSION_DEGREES"
+          onClose={() => setIsAddMeasurementOpen(false)}
+          onSubmit={handleMeasurementSubmit}
+          submitting={addingMeasurement}
+          error={addMeasurementError}
+        />
+      )}
+      {editingMeasurement && (
+        <MeasurementDialog
+          key={editingMeasurement.measurementId}
+          defaultType="EXTENSION_DEGREES"
+          initial={editingMeasurement}
+          onClose={() => setEditingMeasurement(null)}
+          onSubmit={handleMeasurementSubmit}
+          submitting={updatingMeasurement}
+          error={updateMeasurementError}
         />
       )}
     </>
