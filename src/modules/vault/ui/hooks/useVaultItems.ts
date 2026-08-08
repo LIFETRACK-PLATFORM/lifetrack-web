@@ -76,7 +76,7 @@ export function useVaultItems(
       itemId: string,
       site: string,
       username: string,
-      password: string,
+      password?: string,
       category?: string,
     ) => {
       if (!masterKey) throw new Error("La bóveda está bloqueada.");

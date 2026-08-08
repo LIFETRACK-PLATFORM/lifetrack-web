@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
 import {
   Select,
@@ -13,6 +13,7 @@ import {
   DEFAULT_VAULT_CATEGORY,
   VAULT_CATEGORIES,
   getCategoryIcon,
+  getCategorySortIndex,
   normalizeVaultCategory,
 } from "../../domain/vaultCategories";
 
@@ -25,6 +26,7 @@ export function CreateVaultItemDialog({
   error,
   mode = "create",
   initial,
+  existingCategories = [],
 }: {
   onClose: () => void;
   onSubmit: (
@@ -37,13 +39,24 @@ export function CreateVaultItemDialog({
   error: string | null;
   mode?: "create" | "edit";
   initial?: { site: string; username: string; category?: string };
+  /** Categorías ya usadas por el usuario (incluye las personalizadas creadas antes). */
+  existingCategories?: string[];
 }) {
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>(VAULT_CATEGORIES);
+    for (const category of existingCategories) {
+      set.add(normalizeVaultCategory(category));
+    }
+    return Array.from(set).sort((a, b) => {
+      const indexDiff = getCategorySortIndex(a) - getCategorySortIndex(b);
+      return indexDiff !== 0 ? indexDiff : a.localeCompare(b, "es");
+    });
+  }, [existingCategories]);
+
   const initialCategory = normalizeVaultCategory(
     initial?.category ?? DEFAULT_VAULT_CATEGORY,
   );
-  const initialIsCustom = !(VAULT_CATEGORIES as readonly string[]).includes(
-    initialCategory,
-  );
+  const initialIsCustom = !categoryOptions.includes(initialCategory);
 
   const [site, setSite] = useState(initial?.site ?? "");
   const [username, setUsername] = useState(initial?.username ?? "");
@@ -69,7 +82,7 @@ export function CreateVaultItemDialog({
       setClientError("El usuario es obligatorio.");
       return;
     }
-    if (!password.trim()) {
+    if (mode === "create" && !password.trim()) {
       setClientError("La contraseña es obligatoria.");
       return;
     }
@@ -134,7 +147,7 @@ export function CreateVaultItemDialog({
                 <SelectValue placeholder="Elegí una categoría" />
               </SelectTrigger>
               <SelectContent className="z-[110]">
-                {VAULT_CATEGORIES.map((option) => (
+                {categoryOptions.map((option) => (
                   <SelectItem key={option} value={option}>
                     <Icon name={getCategoryIcon(option)} className="text-[16px]" />
                     {option}
@@ -173,7 +186,7 @@ export function CreateVaultItemDialog({
 
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">
-              Contraseña
+              Contraseña{mode === "edit" && " (opcional)"}
             </label>
             <div className="relative">
               <input
@@ -181,7 +194,11 @@ export function CreateVaultItemDialog({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 pr-10 text-body-md text-text-1 focus:border-primary focus:outline-none"
-                placeholder="Contraseña del sitio"
+                placeholder={
+                  mode === "edit"
+                    ? "Dejá vacío para mantener la actual"
+                    : "Contraseña del sitio"
+                }
                 autoComplete="new-password"
               />
               <button

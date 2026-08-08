@@ -262,6 +262,7 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
       {openDialog === "create" && (
         <CreateVaultItemDialog
           mode="create"
+          existingCategories={categoryList}
           onClose={closeDialog}
           submitting={submitting}
           error={submitError}
@@ -293,6 +294,7 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
             username: editingItem.username,
             category: editingItem.category,
           }}
+          existingCategories={categoryList}
           onClose={closeDialog}
           submitting={submitting}
           error={submitError}
