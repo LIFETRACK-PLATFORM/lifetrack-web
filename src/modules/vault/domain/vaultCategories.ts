@@ -4,6 +4,10 @@ export const VAULT_CATEGORIES = [
   "Finanzas",
   "Redes sociales",
   "Streaming",
+  "Compras",
+  "Juegos",
+  "Salud",
+  "Educación",
   "Otros",
 ] as const;
 
@@ -17,10 +21,15 @@ const PRESET_VAULT_CATEGORY_ICONS: Record<string, string> = {
   Finanzas: "payments",
   "Redes sociales": "groups",
   Streaming: "play_circle",
+  Compras: "shopping_bag",
+  Juegos: "games",
+  Salud: "heart_pulse",
+  Educación: "graduation_cap",
   Otros: "folder",
 };
 
-const FALLBACK_CATEGORY_ICON = "folder";
+/** Categorías personalizadas (no preestablecidas): ícono genérico distinto de "Otros". */
+const FALLBACK_CATEGORY_ICON = "label";
 
 export function getCategoryIcon(category: string): string {
   return PRESET_VAULT_CATEGORY_ICONS[category] ?? FALLBACK_CATEGORY_ICON;
