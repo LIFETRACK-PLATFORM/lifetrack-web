@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Space_Grotesk, Manrope, JetBrains_Mono } from "next/font/google";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider, Toaster } from "@lifetrack/system-design";
 import { ThemeProvider } from "@/shared/ui/theme-provider";
+import "@lifetrack/system-design/styles.css";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
