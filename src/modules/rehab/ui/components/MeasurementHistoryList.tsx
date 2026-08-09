@@ -2,6 +2,11 @@
 
 import {
   Button,
+  Badge,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -33,56 +38,61 @@ export function MeasurementHistoryList({
   );
 
   return (
-    <div className="rounded-xl border border-border bg-surface-1 p-6">
-      <h4 className="mb-3 font-label text-label-md text-text-3">
-        Historial de mediciones
-      </h4>
-      {sorted.length === 0 ? (
-        <p className="text-body-md text-text-3">
-          Todavía no registraste ninguna medición.
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {sorted.map((measurement) => (
-            <div
-              key={measurement.measurementId}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/30 bg-surface-2 px-3 py-2"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-label text-label-md font-semibold text-text-1">
-                  {measurementDisplayLabel(measurement)}
-                </p>
-                <p className="font-label text-label-md text-text-3">
-                  {measurement.value}
-                  {measurement.unit} ·{" "}
-                  {formatDateIsoCalendar(measurement.date.slice(0, 10), {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => onEdit(measurement)}
-                  aria-label={`Editar medición ${measurementDisplayLabel(measurement)}`}
-                >
-                  <Icon name="edit" className="text-[18px] text-text-3" />
-                </Button>
-                <DeleteMeasurementButton
-                  label={measurementDisplayLabel(measurement)}
-                  deleting={deletingId === measurement.measurementId}
-                  onConfirm={() => onDelete(measurement.measurementId)}
-                />
-              </div>
-            </div>
-          ))}
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-body-md">Historial de mediciones</CardTitle>
+          <Badge variant="secondary">{sorted.length} registros</Badge>
         </div>
-      )}
-    </div>
+      </CardHeader>
+      <CardContent>
+        {sorted.length === 0 ? (
+          <p className="text-body-md text-text-3">
+            Todavía no registraste ninguna medición.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {sorted.map((measurement) => (
+              <div
+                key={measurement.measurementId}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-label text-label-md font-semibold text-text-1">
+                    {measurementDisplayLabel(measurement)}
+                  </p>
+                  <p className="font-label text-label-md text-text-3">
+                    {measurement.value}
+                    {measurement.unit} ·{" "}
+                    {formatDateIsoCalendar(measurement.date.slice(0, 10), {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => onEdit(measurement)}
+                    aria-label={`Editar medición ${measurementDisplayLabel(measurement)}`}
+                  >
+                    <Icon name="edit" className="text-[18px] text-text-3" />
+                  </Button>
+                  <DeleteMeasurementButton
+                    label={measurementDisplayLabel(measurement)}
+                    deleting={deletingId === measurement.measurementId}
+                    onConfirm={() => onDelete(measurement.measurementId)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
