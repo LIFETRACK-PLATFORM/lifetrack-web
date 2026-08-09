@@ -3,9 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, Input, Label } from "@lifetrack/system-design";
 import { Icon } from "@/shared/ui/Icon";
 import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 import { loginAvatars, loginHeroImage } from "@/modules/auth/infrastructure/content/loginContent";

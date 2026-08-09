@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@lifetrack/system-design";
 import { Icon } from "@/shared/ui/Icon";
 import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 import { OnboardingRepository } from "@/modules/onboarding/domain/OnboardingRepository";

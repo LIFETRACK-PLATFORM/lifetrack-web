@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useEffect, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button, Input, Label } from "@lifetrack/system-design";
 import { Icon } from "@/shared/ui/Icon";
 import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 import { AuthRepository } from "@/modules/auth/domain/AuthRepository";

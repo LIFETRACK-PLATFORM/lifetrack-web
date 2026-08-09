@@ -1,12 +1,7 @@
 "use client";
 
 import { Icon, type IconName } from "@/shared/ui/Icon";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@lifetrack/system-design";
 import { Transaction } from "@/modules/finance/domain/Transaction";
 import { Account } from "@/modules/finance/domain/Account";
 import { Category } from "@/modules/finance/domain/Category";

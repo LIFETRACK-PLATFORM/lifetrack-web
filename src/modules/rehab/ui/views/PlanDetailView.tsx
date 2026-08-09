@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -11,10 +11,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { StatusBadge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+  Input,
+  StatusBadge,
+  Skeleton,
+} from "@lifetrack/system-design";
 import { Icon } from "@/shared/ui/Icon";
 import { ExerciseCard } from "@/modules/rehab/ui/components/ExerciseCard";
 import { ExerciseFormDialog } from "@/modules/rehab/ui/components/ExerciseFormDialog";
@@ -48,7 +48,7 @@ import type {
   RecoveryPlanStatus,
 } from "@/modules/rehab/domain/RehabRepository";
 import type { MeasurementPoint, PainLogPoint } from "@/modules/rehab/domain/RehabPlan";
-import type { StatusBadgeStatus } from "@/components/ui/badge";
+import type { StatusBadgeStatus } from "@lifetrack/system-design";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import Image from "next/image";
 import Link from "next/link";

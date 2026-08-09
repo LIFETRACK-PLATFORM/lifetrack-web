@@ -10,13 +10,7 @@ import {
   DEFAULT_COLOR_BY_KIND,
   DEFAULT_ICON_BY_KIND,
 } from "@/modules/finance/domain/categoryIcons";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@lifetrack/system-design";
 
 export function CreateCategoryDialog({
   onClose,

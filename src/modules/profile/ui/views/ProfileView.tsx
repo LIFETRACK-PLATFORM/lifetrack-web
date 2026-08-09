@@ -3,11 +3,7 @@
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button, Input, Label, Alert, AlertDescription, Skeleton } from "@lifetrack/system-design";
 import { Icon } from "@/shared/ui/Icon";
 import { ProfileRepository } from "@/modules/profile/domain/ProfileRepository";
 import { UserProfile } from "@/modules/profile/domain/UserProfile";
