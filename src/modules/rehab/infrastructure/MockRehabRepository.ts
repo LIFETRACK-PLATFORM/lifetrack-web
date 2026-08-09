@@ -5,6 +5,7 @@ import { Appointment } from "../domain/Appointment";
 import {
   addDaysToIso,
   getProtocolStatsForDate,
+  sumRepsForDate,
   startOfWeekIso,
   todayDateIso,
 } from "../domain/protocolSchedule";
@@ -125,6 +126,7 @@ const plans: Record<string, RehabPlan> = {
               "https://lh3.googleusercontent.com/aida-public/AB6AXuAarTEW0pmSQ0_-4zhv_22QG9m6MOOC6WcChAeiI16MYrP3ik7bdP4jTINGvuwDfto9EGtK5pNRTcXMx4uamyzd_jntN4QBThkX6ASZiStIA2odrcuorwqhSR-6qWVixw93GKunSm6sSkyXNhoukmzfpFw7G7rKMpK2hoYjP21oV6sBhe9ZPKcdpHFt7aCfVutXWdnH9WmCdtC5-LHmYYnKIB7w0TnAaVRvCZKFfvnm_vFzaWK8feHQpA",
             daysOfWeek: [],
             completions: [],
+            logs: [],
             scheduledToday: true,
             completedToday: false,
             urgent: false,
@@ -148,6 +150,7 @@ const plans: Record<string, RehabPlan> = {
               "https://lh3.googleusercontent.com/aida-public/AB6AXuCcdc34GK0rS-iIDGl2eMNYg8sVM7MH642Um9DnnNxtwcA1Xl2ftt0TOFbgFzwcz2i_KUFpWoOtvBHp7417YSPzX1U1Y6TJhKWEwsF1p9UFLiSKmMeAoYvJ6SOjiTWNrwyOnJRIjA6pETUQafUtGOQxDW19tTSDALmGkpFI5-lnNRzs6o27wnxrjnZIvIPe_Eh29HC_8bscTAsNTKexwEMr9zFv89ghwKp41a320aLBBne1cB7wBQgtqg",
             daysOfWeek: [1, 3, 5],
             completions: [],
+            logs: [],
             scheduledToday: false,
             completedToday: false,
             urgent: false,
@@ -171,6 +174,7 @@ const plans: Record<string, RehabPlan> = {
               "https://lh3.googleusercontent.com/aida-public/AB6AXuAf_46SdyqTYUqWaQ4aLdBI5aEVEng_vX6_gEA2uzS9xfjd4io5jHwukBeg8j7RR3mr2SsgkpWSZig6fuV3KBNZ_NOH94yw5WNEdDD259FrYxosJ5sVMBrZ1DLxO5emmh2Ccm62sKTIUYpZrv62OnDNILY5sKQVRBr8IOXrx40vZqDx_6mJuIh6YaKZXiNCMp5iE4rI7HK_GPP5HndU5OX7k9O6wKPGKu2v27sUwOnA68gwl33pV0QMmA",
             daysOfWeek: [],
             completions: [todayDateIso()],
+            logs: [],
             scheduledToday: true,
             completedToday: true,
             urgent: false,
@@ -194,6 +198,7 @@ const plans: Record<string, RehabPlan> = {
               "https://lh3.googleusercontent.com/aida-public/AB6AXuDJvQGkHp77hRxtTHqHh8-h6xhBvygNBJVsXqpktw9kgaPZh8w_okgrfIGa96irO9etdnKGXMkLqm8ldKp_JMR-sKlxJ7S-xn8LhgvYEHAxgVMlW1XV3Uo4Uve44vwtIrBE9v8aSHcqTpgj5mzSmry2r7QX0QNlbibR9_CZWBPR5O590WpOLdrhOTwhMXAcVVt4FKC5OYjaNxGlbrHi_zFz3oA8v_UbeHU8e5uNvnqc8QO6fMBA_Xd_Ig",
             daysOfWeek: [2, 4],
             completions: [],
+            logs: [],
             scheduledToday: false,
             completedToday: false,
             urgent: true,
@@ -213,6 +218,7 @@ const plans: Record<string, RehabPlan> = {
             type: "THERAPY",
             date: "2026-10-24T09:00:00.000Z",
             attended: null,
+            rescheduledFrom: null,
           },
           "apt-1",
         ),
@@ -367,9 +373,55 @@ export class MockRehabRepository implements RehabRepository {
 
   async updateExerciseProgress(
     _planId: string,
-    _exerciseId: string,
-    _current: number,
-  ): Promise<void> {}
+    exerciseId: string,
+    current: number,
+    date?: string,
+  ): Promise<void> {
+    const dateOnly = (date ?? todayDateIso()).slice(0, 10);
+
+    for (const [planId, plan] of Object.entries(plans)) {
+      const existing = plan.exercises.find((exercise) => exercise.id === exerciseId);
+      if (!existing) continue;
+
+      const logsWithoutDate = existing.logs.filter(
+        (log) => log.date.slice(0, 10) !== dateOnly,
+      );
+      const nextLogs =
+        current > 0
+          ? [...logsWithoutDate, { date: dateOnly, repsDone: current }]
+          : logsWithoutDate;
+
+      const nextExercise = new Exercise(
+        {
+          name: existing.name,
+          detail: existing.detail,
+          icon: existing.icon,
+          current:
+            dateOnly === todayDateIso()
+              ? current
+              : sumRepsForDate(nextLogs, todayDateIso()),
+          target: existing.target,
+          completed: existing.completed,
+          metricType: existing.metricType,
+          targetDurationMinutes: existing.targetDurationMinutes,
+          notes: existing.notes,
+          sets: existing.sets,
+          reps: existing.reps,
+          image: existing.image,
+          daysOfWeek: existing.daysOfWeek,
+          completions: existing.completions,
+          logs: nextLogs,
+          scheduledToday: existing.scheduledToday,
+          completedToday: existing.completedToday,
+          urgent: existing.urgent,
+        },
+        exerciseId,
+      );
+
+      plans[planId] = replaceExerciseInPlan(plan, exerciseId, nextExercise);
+      return;
+    }
+  }
 
   async markExerciseCompletion(
     exerciseId: string,
@@ -405,6 +457,7 @@ export class MockRehabRepository implements RehabRepository {
           image: current.image,
           daysOfWeek: current.daysOfWeek,
           completions,
+          logs: current.logs,
           scheduledToday: current.scheduledToday,
           completedToday: completions.includes(today),
           urgent: current.urgent,
@@ -459,6 +512,7 @@ export class MockRehabRepository implements RehabRepository {
         image: MOCK_EXERCISE_IMAGE,
         daysOfWeek: input.daysOfWeek ?? [],
         completions: [],
+        logs: [],
         scheduledToday: true,
         completedToday: false,
         urgent: false,
@@ -510,6 +564,7 @@ export class MockRehabRepository implements RehabRepository {
         image: current.image,
         daysOfWeek: input.daysOfWeek ?? [],
         completions: current.completions,
+        logs: current.logs,
         scheduledToday: current.scheduledToday,
         completedToday: current.completedToday,
         urgent: current.urgent,
@@ -538,6 +593,7 @@ export class MockRehabRepository implements RehabRepository {
           type: input.type,
           date: date.toISOString(),
           attended: null,
+          rescheduledFrom: null,
         },
         `appointment-${Date.now()}`,
       ),
@@ -553,6 +609,7 @@ export class MockRehabRepository implements RehabRepository {
       if (idx < 0) continue;
       const current = plan.appointments[idx];
       const date = new Date(input.date);
+      const dateChanged = date.getTime() !== new Date(current.date).getTime();
       plan.appointments[idx] = new Appointment(
         {
           month: date.toLocaleString("es-AR", { month: "short" }),
@@ -566,6 +623,7 @@ export class MockRehabRepository implements RehabRepository {
           type: input.type,
           date: date.toISOString(),
           attended: current.attended,
+          rescheduledFrom: dateChanged ? current.date : current.rescheduledFrom,
         },
         current.id,
       );
@@ -592,6 +650,7 @@ export class MockRehabRepository implements RehabRepository {
           type: current.type,
           date: current.date,
           attended,
+          rescheduledFrom: current.rescheduledFrom,
         },
         current.id,
       );

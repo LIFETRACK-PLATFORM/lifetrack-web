@@ -10,19 +10,27 @@ import type {
   GetTodayExercisesResponseDto,
   WeeklySummaryDto,
 } from "../dtos/RecoveryProgressDto";
+import { sumRepsForDate, todayDateIso } from "../../domain/protocolSchedule";
 
 const DEFAULT_EXERCISE_IMAGE =
   "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400";
 
-function sumLogsReps(logs: { repsDone: number }[]): number {
-  return logs.reduce((acc, log) => acc + log.repsDone, 0);
+function mapExerciseLogs(
+  logs: RecoveryProgressDto["exercises"][number]["logs"],
+): { date: string; repsDone: number }[] {
+  return (logs ?? []).map((log) => ({
+    date: log.date.slice(0, 10),
+    repsDone: log.repsDone,
+  }));
 }
 
 function mapExercise(
   dto: RecoveryProgressDto["exercises"][number],
   todayById: Map<string, TodayExerciseDto>,
 ): Exercise {
-  const current = sumLogsReps(dto.logs);
+  const mappedLogs = mapExerciseLogs(dto.logs);
+  const todayIso = todayDateIso();
+  const current = sumRepsForDate(mappedLogs, todayIso);
   const isDuration = dto.metricType === "DURATION";
   const target = isDuration
     ? dto.targetDurationMinutes ?? 0
@@ -47,6 +55,7 @@ function mapExercise(
       image: DEFAULT_EXERCISE_IMAGE,
       daysOfWeek: dto.daysOfWeek ?? [],
       completions: (dto.completions ?? []).map((c) => c.date),
+      logs: mappedLogs,
       scheduledToday: today?.scheduledToday ?? false,
       // completedToday viene directo del progreso (cubre todos los ejercicios,
       // no solo los "due" hoy/ayer que devuelve GetTodayExercises).
@@ -73,6 +82,7 @@ function mapAppointment(dto: RecoveryProgressDto["appointments"][number]): Appoi
       type: dto.type,
       date: dto.date,
       attended: dto.attended ?? null,
+      rescheduledFrom: dto.rescheduledFromDate ?? null,
     },
     dto.appointmentId,
   );

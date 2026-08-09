@@ -80,6 +80,7 @@ export function ExerciseCard({
   showMedia = true,
   completedOnDate,
   isFutureDay,
+  isEditableDay,
   isViewingToday,
   onAdjust,
   onToggleCompletion,
@@ -94,6 +95,7 @@ export function ExerciseCard({
   showMedia?: boolean;
   completedOnDate: boolean;
   isFutureDay: boolean;
+  isEditableDay: boolean;
   isViewingToday: boolean;
   onAdjust: (delta: number) => void;
   onToggleCompletion: () => void;
@@ -177,7 +179,7 @@ export function ExerciseCard({
                 </span>
               </>
             )}
-            {isViewingToday && (
+            {isEditableDay && (
               <span className="inline-flex items-center gap-1 font-mono text-xs font-medium text-primary">
                 {current}/{target}
               </span>
@@ -188,7 +190,7 @@ export function ExerciseCard({
             <p className="text-label-md text-text-3">{exercise.notes}</p>
           )}
 
-          {isViewingToday && !isFutureDay && (
+          {isEditableDay && (
             <label
               htmlFor={checkboxId}
               className={`mt-1 flex w-fit cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 transition-colors ${
@@ -214,7 +216,7 @@ export function ExerciseCard({
             </label>
           )}
 
-          {isViewingToday && (
+          {isEditableDay && exercise.metricType === "REPS" && (
             <ExerciseRepCounter
               current={current}
               target={target}

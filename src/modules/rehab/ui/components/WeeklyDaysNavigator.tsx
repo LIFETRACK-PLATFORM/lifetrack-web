@@ -43,7 +43,7 @@ export function WeeklyDaysNavigator({
       : "Semana seleccionada";
 
   return (
-    <div className={`space-y-3 ${className}`.trim()}>
+    <div className={`space-y-2 ${className}`.trim()}>
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -58,10 +58,21 @@ export function WeeklyDaysNavigator({
         <div className="min-w-0 flex-1 text-center">
           <p className="truncate font-label text-label-md font-semibold text-text-1">
             {weekLabel}
+            <span className="font-normal text-text-3">
+              {" "}
+              · {weeklyCompliancePercent}% cumplimiento
+            </span>
           </p>
-          <p className="font-label text-label-md text-text-3">
-            {weeklyCompliancePercent}% cumplimiento
-          </p>
+          {!isViewingCurrentWeek && (
+            <button
+              type="button"
+              onClick={onGoToCurrentWeek}
+              disabled={loadingWeek}
+              className="mt-0.5 font-label text-label-md text-primary underline-offset-2 hover:underline disabled:opacity-50"
+            >
+              Esta semana
+            </button>
+          )}
         </div>
 
         <button
@@ -74,19 +85,6 @@ export function WeeklyDaysNavigator({
           <Icon name="chevron_right" className="text-[20px]" />
         </button>
       </div>
-
-      {!isViewingCurrentWeek && (
-        <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={onGoToCurrentWeek}
-            disabled={loadingWeek}
-            className="rounded-full border border-primary/30 bg-primary/5 px-3 py-1 font-label text-label-md text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:opacity-50"
-          >
-            Esta semana
-          </button>
-        </div>
-      )}
 
       {loadingWeek ? (
         <div className="flex gap-2 overflow-x-auto pb-1">

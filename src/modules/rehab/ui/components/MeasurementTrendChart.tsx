@@ -26,6 +26,7 @@ import {
   MEASUREMENT_TYPES,
   MEASUREMENT_TYPE_UNITS,
   measurementDisplayLabel,
+  measurementSeriesKey as seriesKey,
 } from "@/modules/rehab/ui/lib/measurementLabels";
 import { formatDateIsoCalendar } from "@/modules/rehab/domain/protocolSchedule";
 
@@ -34,14 +35,6 @@ function formatShortDate(dateIso: string): string {
     day: "2-digit",
     month: "short",
   });
-}
-
-/** Clave de serie: para OTHER, cada customLabel distinto es su propia serie
- * (si no, "Muleta" y "Brazo" se mezclarían en un mismo trazo "Otro"). */
-function seriesKey(point: MeasurementPoint): string {
-  return point.type === "OTHER"
-    ? `OTHER:${point.customLabel ?? ""}`
-    : point.type;
 }
 
 export function MeasurementTrendChart({

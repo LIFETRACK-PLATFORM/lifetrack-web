@@ -12,6 +12,8 @@ interface AppointmentProps {
   type: AppointmentType;
   date: string;
   attended: boolean | null;
+  /** Fecha (ISO) de la que se reprogramó esta cita, si corresponde. */
+  rescheduledFrom: string | null;
 }
 
 export class Appointment extends Entity<AppointmentProps> {
@@ -53,5 +55,9 @@ export class Appointment extends Entity<AppointmentProps> {
 
   get attended(): boolean | null {
     return this.props.attended;
+  }
+
+  get rescheduledFrom(): string | null {
+    return this.props.rescheduledFrom;
   }
 }

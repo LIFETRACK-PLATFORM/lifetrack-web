@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RehabPlan } from "../../domain/RehabPlan";
 import {
   isSameWeek,
+  isFutureDate,
   shiftWeekIso,
   startOfWeekIso,
+  sumRepsForDate,
   todayDateIso,
 } from "../../domain/protocolSchedule";
 import {
@@ -35,7 +37,11 @@ import { SetAdHocProtocolDayUseCase } from "../../application/SetAdHocProtocolDa
 import { ClearAdHocProtocolDayUseCase } from "../../application/ClearAdHocProtocolDayUseCase";
 import { RehabApiError } from "../../infrastructure/http/rehabHttpClient";
 
-export function usePlan(repository: RehabRepository, planId: string) {
+export function usePlan(
+  repository: RehabRepository,
+  planId: string,
+  viewingDate: string,
+) {
   const [plan, setPlan] = useState<RehabPlan | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -104,14 +110,21 @@ export function usePlan(repository: RehabRepository, planId: string) {
   );
   const [savingAdHocProtocol, setSavingAdHocProtocol] = useState(false);
 
-  const applyPlan = useCallback((fetched: RehabPlan) => {
-    setPlan(fetched);
+  const syncCountsForDate = useCallback((fetched: RehabPlan, date: string) => {
     const initial: Record<string, number> = {};
     for (const exercise of fetched.exercises) {
-      initial[exercise.id] = exercise.current;
+      initial[exercise.id] = sumRepsForDate(exercise.logs, date);
     }
     setCounts(initial);
   }, []);
+
+  const applyPlan = useCallback(
+    (fetched: RehabPlan) => {
+      setPlan(fetched);
+      syncCountsForDate(fetched, viewingDate);
+    },
+    [syncCountsForDate, viewingDate],
+  );
 
   const refresh = useCallback(async () => {
     const getPlan = new GetPlanUseCase(repository);
@@ -160,6 +173,13 @@ export function usePlan(repository: RehabRepository, planId: string) {
     };
   }, [repository, planId, weekReferenceDate, applyPlan]);
 
+  useEffect(() => {
+    if (!plan) return;
+    queueMicrotask(() => {
+      syncCountsForDate(plan, viewingDate);
+    });
+  }, [plan, viewingDate, syncCountsForDate]);
+
   const todayIso = useMemo(() => todayDateIso(), []);
   const canGoToNextWeek = useMemo(
     () => startOfWeekIso(weekReferenceDate) < startOfWeekIso(todayIso),
@@ -190,6 +210,7 @@ export function usePlan(repository: RehabRepository, planId: string) {
 
   const ADJUST_DEBOUNCE_MS = 500;
   const pendingProgressRef = useRef<Record<string, number>>({});
+  const pendingProgressDateRef = useRef<Record<string, string>>({});
   const progressTimersRef = useRef<
     Record<string, ReturnType<typeof setTimeout>>
   >({});
@@ -197,20 +218,22 @@ export function usePlan(repository: RehabRepository, planId: string) {
   const commitProgress = useCallback(
     async (exerciseId: string) => {
       const value = pendingProgressRef.current[exerciseId];
+      const date = pendingProgressDateRef.current[exerciseId] ?? viewingDate;
       delete pendingProgressRef.current[exerciseId];
+      delete pendingProgressDateRef.current[exerciseId];
       delete progressTimersRef.current[exerciseId];
       if (value === undefined || !plan) return;
 
       try {
         const useCase = new UpdateExerciseProgressUseCase(repository);
-        await useCase.execute(plan.id, exerciseId, value);
+        await useCase.execute(plan.id, exerciseId, value, date);
       } catch (err) {
         setSaveError(
           err instanceof Error ? err.message : "No se pudo guardar progreso",
         );
       }
     },
-    [plan, repository],
+    [plan, repository, viewingDate],
   );
 
   useEffect(() => {
@@ -227,13 +250,14 @@ export function usePlan(repository: RehabRepository, planId: string) {
   // API una vez por cada click si el usuario toca varias veces seguidas.
   const adjust = useCallback(
     (exerciseId: string, delta: number, target: number) => {
-      if (!plan) return;
+      if (!plan || isFutureDate(viewingDate, todayIso)) return;
       setSaveError(null);
       setCounts((current) => {
         const prev = current[exerciseId] ?? 0;
         const next = Math.max(0, Math.min(target, prev + delta));
 
         pendingProgressRef.current[exerciseId] = next;
+        pendingProgressDateRef.current[exerciseId] = viewingDate;
         if (progressTimersRef.current[exerciseId]) {
           clearTimeout(progressTimersRef.current[exerciseId]);
         }
@@ -244,7 +268,7 @@ export function usePlan(repository: RehabRepository, planId: string) {
         return { ...current, [exerciseId]: next };
       });
     },
-    [plan, commitProgress],
+    [plan, commitProgress, viewingDate, todayIso],
   );
 
   const addExercise = useCallback(

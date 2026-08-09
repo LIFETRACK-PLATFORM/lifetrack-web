@@ -43,3 +43,12 @@ export function measurementDisplayLabel(point: {
   }
   return MEASUREMENT_TYPE_LABELS[point.type];
 }
+
+/** Clave de serie/grupo: para OTHER, cada customLabel distinto es su propio grupo
+ * (si no, "Muleta" y "Brazo" se mezclarían en un mismo grupo "Otro"). */
+export function measurementSeriesKey(point: {
+  type: MeasurementType;
+  customLabel?: string;
+}): string {
+  return point.type === "OTHER" ? `OTHER:${point.customLabel ?? ""}` : point.type;
+}
