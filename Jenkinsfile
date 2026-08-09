@@ -8,8 +8,13 @@ pipeline {
   stages {
     stage("Install") {
       steps {
-        sh "npm install -g pnpm@10.21.0"
-        sh "pnpm install --frozen-lockfile"
+        sh '''
+          set -e
+          corepack enable
+          corepack prepare pnpm@10.21.0 --activate
+          pnpm --version
+          pnpm install --frozen-lockfile
+        '''
       }
     }
 
@@ -30,14 +35,15 @@ pipeline {
 
     stage("Docker Build") {
       steps {
-        sh "docker build -t lifetrack-web:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=https://api.tracklywork.com ."
+        sh "docker buildx build --builder lifetrack-builder -t lifetrack-web:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=https://api.tracklywork.com --load ."
       }
     }
   }
 
   post {
     always {
-      sh 'docker image prune -f'
+      sh 'docker image prune -af || true'
+      sh 'docker buildx prune -af --builder lifetrack-builder || true'
     }
     success {
       echo "Pipeline OK - frontend #${env.BUILD_NUMBER}"

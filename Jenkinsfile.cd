@@ -11,7 +11,7 @@ pipeline {
   stages {
     stage("Docker Build") {
       steps {
-        sh "docker build -t ${IMAGE}:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=${API_URL} ."
+        sh "docker buildx build --builder lifetrack-builder -t ${IMAGE}:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=${API_URL} --load ."
       }
     }
 
@@ -62,7 +62,8 @@ pipeline {
 
   post {
     always {
-      sh 'docker image prune -f'
+      sh 'docker image prune -af || true'
+      sh 'docker buildx prune -af --builder lifetrack-builder || true'
     }
     success {
       echo "Deploy OK - frontend #${env.BUILD_NUMBER}"
