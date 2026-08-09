@@ -86,7 +86,7 @@ export default function AuthenticatedLayout({
         {showAppNav && <SideNav user={navUser} />}
         <div
           className={`flex min-h-full flex-1 flex-col ${
-            showAppNav ? "md:pl-[280px]" : ""
+            showAppNav ? "md:pl-[220px]" : ""
           }`}
         >
           {children}
