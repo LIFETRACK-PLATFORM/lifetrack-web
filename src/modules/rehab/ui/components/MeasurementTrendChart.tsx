@@ -10,7 +10,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@lifetrack/system-design";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@lifetrack/system-design";
 import type { MeasurementPoint } from "@/modules/rehab/domain/RehabPlan";
 import {
   MEASUREMENT_TYPES,
@@ -76,75 +86,76 @@ export function MeasurementTrendChart({
   );
 
   return (
-    <div className="rounded-xl border border-border bg-surface-1 p-6">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h4 className="font-label text-label-md text-text-3">
-          Evolución de mediciones
-        </h4>
-        {activeKey && (
-          <Select value={activeKey} onValueChange={setSelectedKey}>
-            <SelectTrigger className="w-56">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {availableKeys.map((key) => {
-                const point = seriesByKey.get(key);
-                return (
-                  <SelectItem key={key} value={key}>
-                    {point ? measurementDisplayLabel(point) : key}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
-
-      {!activeKey && (
-        <p className="text-body-md text-text-3">
-          Todavía no registraste ninguna medición.
-        </p>
-      )}
-
-      {activeKey && series.length < 2 && (
-        <p className="text-body-md text-text-3">
-          Registrá al menos dos mediciones de {activeLabel} para ver la
-          evolución en el tiempo.
-        </p>
-      )}
-
-      {activeKey && series.length >= 2 && (
-        <div className="h-56">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={series}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis
-                dataKey="date"
-                tickFormatter={formatShortDate}
-                tick={{ fill: "var(--text-3)", fontSize: 11 }}
-              />
-              <YAxis
-                tick={{ fill: "var(--text-3)", fontSize: 11 }}
-                unit={activeUnit}
-              />
-              <Tooltip
-                labelFormatter={(date) => formatShortDate(String(date))}
-                formatter={(value: unknown) => [
-                  `${value}${activeUnit}`,
-                  activeLabel,
-                ]}
-              />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke="var(--primary)"
-                strokeWidth={2}
-                dot
-              />
-            </LineChart>
-          </ResponsiveContainer>
+    <Card className="border-t-[3px] border-t-primary bg-primary/[0.03]">
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="text-body-md">Evolución de mediciones</CardTitle>
+          {activeKey && (
+            <Select value={activeKey} onValueChange={setSelectedKey}>
+              <SelectTrigger className="w-56">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableKeys.map((key) => {
+                  const point = seriesByKey.get(key);
+                  return (
+                    <SelectItem key={key} value={key}>
+                      {point ? measurementDisplayLabel(point) : key}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          )}
         </div>
-      )}
-    </div>
+      </CardHeader>
+      <CardContent>
+        {!activeKey && (
+          <p className="text-body-md text-text-3">
+            Todavía no registraste ninguna medición.
+          </p>
+        )}
+
+        {activeKey && series.length < 2 && (
+          <p className="text-body-md text-text-3">
+            Registrá al menos dos mediciones de {activeLabel} para ver la
+            evolución en el tiempo.
+          </p>
+        )}
+
+        {activeKey && series.length >= 2 && (
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={series}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={formatShortDate}
+                  tick={{ fill: "var(--text-3)", fontSize: 11 }}
+                />
+                <YAxis
+                  tick={{ fill: "var(--text-3)", fontSize: 11 }}
+                  unit={activeUnit}
+                />
+                <Tooltip
+                  labelFormatter={(date) => formatShortDate(String(date))}
+                  formatter={(value: unknown) => [
+                    `${value}${activeUnit}`,
+                    activeLabel,
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke="var(--primary)"
+                  strokeWidth={2}
+                  dot
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

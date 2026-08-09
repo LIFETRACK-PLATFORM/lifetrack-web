@@ -537,22 +537,16 @@ export function PlanDetailView({
               <h3 className="px-1 text-headline-md font-semibold text-text-1">
                 Indicadores de recuperación
               </h3>
-              <div className="rounded-xl border border-border bg-surface-1 p-6">
-                <div className="mb-4 flex items-center justify-between">
+              <Card className="border-t-[3px] border-t-primary bg-primary/[0.03]">
+                <CardContent className="flex items-center justify-between gap-3">
                   <span className="font-label text-label-md text-text-3">
                     Rango de extensión de rodilla
                   </span>
-                  <span className="font-bold text-primary">
+                  <span className="font-metric text-metric-lg text-primary">
                     {plan.metrics.kneeExtensionNote}
                   </span>
-                </div>
-                <div className="flex h-32 items-end gap-2">
-                  <div className="h-1/4 flex-1 rounded-t-sm bg-surface-3" />
-                  <div className="h-2/4 flex-1 rounded-t-sm bg-surface-3" />
-                  <div className="h-3/4 flex-1 rounded-t-sm bg-surface-3" />
-                  <div className="h-full flex-1 rounded-t-sm bg-primary" />
-                </div>
-              </div>
+                </CardContent>
+              </Card>
               <MeasurementTrendChart measurements={plan.measurements} />
               <button
                 type="button"
@@ -874,26 +868,19 @@ export function PlanDetailView({
 
               {tab === "metrics" && (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="rounded-xl border border-border/30 bg-surface-1 p-6">
-                    <div className="mb-4 flex justify-between">
+                  <Card className="border-t-[3px] border-t-primary bg-primary/[0.03]">
+                    <CardContent className="flex items-center justify-between gap-3">
                       <span className="font-label text-label-md text-text-3">
                         Rango de extensión de rodilla
                       </span>
-                      <span className="font-bold text-primary">
+                      <span className="font-metric text-metric-lg text-primary">
                         {plan.metrics.kneeExtensionNote}
                       </span>
-                    </div>
-                    <div className="flex h-40 items-end gap-2">
-                      <div className="h-1/4 flex-1 rounded-t-sm bg-surface-3" />
-                      <div className="h-2/4 flex-1 rounded-t-sm bg-surface-3" />
-                      <div className="h-3/4 flex-1 rounded-t-sm bg-surface-3" />
-                      <div className="h-full flex-1 rounded-t-sm bg-primary" />
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
                   <PainHistoryCard
                     painLevel={plan.metrics.painLevel}
                     history={plan.painHistory}
-                    className="border-border/30"
                   />
                   <div className="md:col-span-2">
                     <MeasurementTrendChart measurements={plan.measurements} />
@@ -1177,50 +1164,50 @@ function PlanDetailSkeleton() {
 function PainHistoryCard({
   painLevel,
   history,
-  className = "border-border",
 }: {
   painLevel: string;
   history: PainLogPoint[];
-  className?: string;
 }) {
   const recent = history.slice(-10);
   return (
-    <div className={`rounded-xl border bg-surface-1 p-6 ${className}`}>
-      <div className="mb-3 flex items-center justify-between">
-        <span className="font-label text-label-md text-text-3">
-          Último dolor registrado
-        </span>
-        <span className="font-metric text-metric-xl text-error">
-          {painLevel}
-        </span>
-      </div>
-      {recent.length > 0 ? (
-        <div className="flex h-24 items-end gap-1.5">
-          {recent.map((point) => (
-            <div
-              key={point.date}
-              className="flex flex-1 flex-col items-center gap-1"
-            >
-              <div
-                className="w-full rounded-t-sm bg-error/70"
-                style={{ height: `${Math.max((point.level / 10) * 100, 4)}%` }}
-                title={`${point.level}/10 · ${new Date(point.date).toLocaleDateString("es-PE", { day: "numeric", month: "short" })}`}
-              />
-              <span className="text-[10px] text-text-3">
-                {new Date(point.date).toLocaleDateString("es-PE", {
-                  day: "numeric",
-                  month: "short",
-                })}
-              </span>
-            </div>
-          ))}
+    <Card className="border-t-[3px] border-t-error bg-error/[0.03]">
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-body-md">Último dolor registrado</CardTitle>
+          <span className="font-metric text-metric-xl text-error">
+            {painLevel}
+          </span>
         </div>
-      ) : (
-        <p className="text-body-md text-text-3">
-          Todavía no hay registros de dolor.
-        </p>
-      )}
-    </div>
+      </CardHeader>
+      <CardContent>
+        {recent.length > 0 ? (
+          <div className="flex h-24 items-end gap-1.5">
+            {recent.map((point) => (
+              <div
+                key={point.date}
+                className="flex flex-1 flex-col items-center gap-1"
+              >
+                <div
+                  className="w-full rounded-t-sm bg-error/70"
+                  style={{ height: `${Math.max((point.level / 10) * 100, 4)}%` }}
+                  title={`${point.level}/10 · ${new Date(point.date).toLocaleDateString("es-PE", { day: "numeric", month: "short" })}`}
+                />
+                <span className="text-[10px] text-text-3">
+                  {new Date(point.date).toLocaleDateString("es-PE", {
+                    day: "numeric",
+                    month: "short",
+                  })}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-body-md text-text-3">
+            Todavía no hay registros de dolor.
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -1233,6 +1220,67 @@ function formatAppointmentTime(dateIso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+type AppointmentCardStatus = "attended" | "missed" | "today" | "pending" | "upcoming";
+
+const APPOINTMENT_STATUS_STYLE: Record<
+  AppointmentCardStatus,
+  {
+    border: string;
+    badgeVariant: "success" | "destructive" | "warning" | "secondary";
+    badgeLabel: string;
+    dateBg: string;
+    dateText: string;
+  }
+> = {
+  attended: {
+    border: "var(--success)",
+    badgeVariant: "success",
+    badgeLabel: "Asistió",
+    dateBg: "bg-success/15",
+    dateText: "text-success",
+  },
+  missed: {
+    border: "var(--error)",
+    badgeVariant: "destructive",
+    badgeLabel: "No asistió",
+    dateBg: "bg-error/15",
+    dateText: "text-error",
+  },
+  today: {
+    border: "var(--warning)",
+    badgeVariant: "warning",
+    badgeLabel: "Hoy",
+    dateBg: "bg-warning/15",
+    dateText: "text-warning",
+  },
+  pending: {
+    border: "var(--border)",
+    badgeVariant: "secondary",
+    badgeLabel: "Sin confirmar",
+    dateBg: "bg-surface-3",
+    dateText: "text-text-3",
+  },
+  upcoming: {
+    border: "var(--primary)",
+    badgeVariant: "secondary",
+    badgeLabel: "Próxima",
+    dateBg: "bg-primary/15",
+    dateText: "text-primary",
+  },
+};
+
+function isSameCalendarDay(dateIso: string): boolean {
+  return new Date(dateIso).toDateString() === new Date().toDateString();
+}
+
+function getAppointmentStatus(apt: Appointment): AppointmentCardStatus {
+  if (apt.attended === true) return "attended";
+  if (apt.attended === false) return "missed";
+  if (isSameCalendarDay(apt.date)) return "today";
+  if (isPastOrToday(apt.date)) return "pending";
+  return "upcoming";
 }
 
 function AppointmentListItem({
@@ -1250,17 +1298,32 @@ function AppointmentListItem({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const status = getAppointmentStatus(apt);
+  const style = APPOINTMENT_STATUS_STYLE[status];
+  const tint =
+    status === "pending"
+      ? "var(--surface-1)"
+      : `color-mix(in srgb, ${style.border} 4%, var(--surface-1))`;
+
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border/30 bg-surface-1 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+    <article
+      className="flex flex-col gap-3 overflow-hidden rounded-xl border border-border border-l-[3px] p-4 transition-all sm:flex-row sm:items-start sm:justify-between sm:p-5"
+      style={{ borderLeftColor: style.border, backgroundColor: tint }}
+    >
       <div className="flex min-w-0 flex-1 items-start gap-4">
-        <div className="flex min-w-[64px] shrink-0 flex-col items-center rounded-lg bg-surface-3 px-3 py-2 text-text-1">
+        <div
+          className={`flex min-w-[64px] shrink-0 flex-col items-center rounded-lg px-3 py-2 ${style.dateBg} ${style.dateText}`}
+        >
           <span className="font-label text-label-md font-bold">{apt.month}</span>
           <span className="font-metric text-[24px] sm:text-[28px]">{apt.day}</span>
-          <span className="font-label text-[11px] text-text-3">
+          <span className="font-label text-[11px] opacity-80">
             {formatAppointmentTime(apt.date)}
           </span>
         </div>
         <div className="min-w-0 flex-1">
+          <Badge variant={style.badgeVariant} showDot className="mb-2">
+            {style.badgeLabel}
+          </Badge>
           <div className="mb-1 flex flex-wrap items-center gap-2">
             <h4 className="truncate text-body-lg font-bold">{apt.title}</h4>
             <StatusBadge
@@ -1303,7 +1366,7 @@ function AppointmentListItem({
           onConfirm={onDelete}
         />
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -1362,48 +1425,55 @@ function AppointmentAttendanceControl({
   pending: boolean;
   onMark: (attended: boolean) => void;
 }) {
-  if (attended !== null) {
-    return (
-      <button
-        type="button"
-        onClick={() => onMark(!attended)}
-        disabled={pending}
-        className={`flex items-center gap-1 rounded-full px-2 py-1 font-label text-label-md transition-all active:scale-95 disabled:opacity-60 ${
-          attended ? "bg-primary/10 text-primary" : "bg-error/10 text-error"
-        }`}
-      >
-        <Icon
-          name={attended ? "check_circle" : "close"}
-          className="text-[16px]"
-        />
-        {attended ? "Asististe" : "No asististe"}
-      </button>
-    );
-  }
+  const label =
+    attended === true
+      ? "Asistencia confirmada"
+      : attended === false
+        ? "Ausencia registrada"
+        : "¿Asististe?";
+  const resolved = attended !== null;
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="font-label text-label-md text-text-3">
-        ¿Asististe?
+    <div
+      className={`flex w-fit flex-wrap items-center gap-2.5 rounded-lg border px-2.5 py-2 ${
+        attended === true
+          ? "border-success/35 bg-success/10"
+          : attended === false
+            ? "border-error/30 bg-error/8"
+            : "border-border bg-surface-2"
+      }`}
+    >
+      <span
+        className={`font-label text-label-md font-medium ${
+          resolved ? (attended ? "text-success" : "text-error") : "text-text-3"
+        }`}
+      >
+        {label}
       </span>
-      <button
-        type="button"
-        onClick={() => onMark(true)}
-        disabled={pending}
-        className="rounded-full bg-primary/10 p-1.5 text-primary transition-all active:scale-95 disabled:opacity-60"
-        aria-label="Marcar como asistida"
-      >
-        <Icon name="check" className="text-[16px]" />
-      </button>
-      <button
-        type="button"
-        onClick={() => onMark(false)}
-        disabled={pending}
-        className="rounded-full bg-error/10 p-1.5 text-error transition-all active:scale-95 disabled:opacity-60"
-        aria-label="Marcar como no asistida"
-      >
-        <Icon name="close" className="text-[16px]" />
-      </button>
+      <div className="flex gap-1.5">
+        <Button
+          type="button"
+          variant={attended === true ? "success" : "outline"}
+          size="icon-sm"
+          disabled={pending}
+          onClick={() => onMark(true)}
+          aria-pressed={attended === true}
+          aria-label="Marcar como asistida"
+        >
+          <Icon name="check" />
+        </Button>
+        <Button
+          type="button"
+          variant={attended === false ? "destructive" : "outline"}
+          size="icon-sm"
+          disabled={pending}
+          onClick={() => onMark(false)}
+          aria-pressed={attended === false}
+          aria-label="Marcar como no asistida"
+        >
+          <Icon name="close" />
+        </Button>
+      </div>
     </div>
   );
 }
