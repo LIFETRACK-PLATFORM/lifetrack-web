@@ -35,14 +35,15 @@ pipeline {
 
     stage("Docker Build") {
       steps {
-        sh "docker build -t lifetrack-web:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=https://api.tracklywork.com ."
+        sh "docker buildx build --builder lifetrack-builder -t lifetrack-web:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=https://api.tracklywork.com --load ."
       }
     }
   }
 
   post {
     always {
-      sh 'docker image prune -f'
+      sh 'docker image prune -af'
+      sh 'docker buildx prune -af --builder lifetrack-builder'
     }
     success {
       echo "Pipeline OK - frontend #${env.BUILD_NUMBER}"
