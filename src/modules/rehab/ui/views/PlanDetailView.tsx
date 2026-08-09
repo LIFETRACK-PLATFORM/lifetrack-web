@@ -2,6 +2,13 @@
 
 import {
   Button,
+  Badge,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  Progress,
+  Textarea,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -200,6 +207,16 @@ export function PlanDetailView({
     }
     return getProtocolStatsForDate(plan.exercises, viewingDate);
   }, [plan, borrowedRoutineDate, protocolExercises, viewingDate]);
+  const repsSummary = useMemo(() => {
+    if (viewingDate !== todayIso) return { done: 0, total: 0 };
+    return protocolExercises.reduce(
+      (acc, ex) => ({
+        done: acc.done + (counts[ex.id] ?? 0),
+        total: acc.total + ex.target,
+      }),
+      { done: 0, total: 0 },
+    );
+  }, [protocolExercises, counts, viewingDate, todayIso]);
   const isViewingToday = viewingDate === todayIso;
   const viewingIsFuture = isFutureDate(viewingDate, todayIso);
   const protocolTitle = formatProtocolTitle(viewingDate, todayIso);
@@ -416,7 +433,6 @@ export function PlanDetailView({
                     pendingCompletion={pendingCompletionIds.has(ex.id)}
                     deleting={deletingExerciseId === ex.id}
                     showMedia={false}
-                    viewingDate={viewingDate}
                     completedOnDate={isCompletedOnDate(ex, viewingDate)}
                     isFutureDay={viewingIsFuture}
                     isViewingToday={isViewingToday}
@@ -649,7 +665,20 @@ export function PlanDetailView({
             <section className="flex-1 space-y-6">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-headline-md text-text-1">{protocolTitle}</h3>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  {tab === "exercises" && (
+                    <div className="hidden items-center gap-1.5 lg:flex">
+                      <Badge variant="success" showDot>
+                        Completado
+                      </Badge>
+                      <Badge variant="warning" showDot>
+                        En progreso
+                      </Badge>
+                      <Badge variant="destructive" showDot>
+                        Vencido
+                      </Badge>
+                    </div>
+                  )}
                   {tab === "exercises" && (
                     <span className="font-label text-label-md text-primary">
                       Quedan {protocolStats.remaining}
@@ -702,7 +731,6 @@ export function PlanDetailView({
                       pendingCompletion={pendingCompletionIds.has(ex.id)}
                       deleting={deletingExerciseId === ex.id}
                       showMedia
-                      viewingDate={viewingDate}
                       completedOnDate={isCompletedOnDate(ex, viewingDate)}
                       isFutureDay={viewingIsFuture}
                       isViewingToday={isViewingToday}
@@ -768,7 +796,6 @@ export function PlanDetailView({
                       pendingCompletion={pendingCompletionIds.has(ex.id)}
                       deleting={deletingExerciseId === ex.id}
                       showMedia
-                      viewingDate={todayIso}
                       completedOnDate={ex.completedToday}
                       isFutureDay={false}
                       isViewingToday
@@ -905,52 +932,91 @@ export function PlanDetailView({
               )}
             </section>
 
-            <aside className="w-full space-y-6 lg:w-[320px]">
-              <div className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
-                <h3 className="mb-4 text-headline-md">Estadísticas de sesión</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="font-label text-label-md text-text-3">
-                      {completionLabel}
-                    </span>
-                    <span className="font-bold text-primary">
-                      {protocolStats.completed} / {protocolStats.due}
-                    </span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-surface-3">
-                    <div
-                      className="h-full rounded-full bg-primary"
-                      style={{
-                        width: `${protocolStats.percent}%`,
-                      }}
+            <aside className="w-full space-y-4 lg:w-[320px]">
+              <Card className="border-t-[3px] border-t-primary bg-primary/[0.03]">
+                <CardHeader>
+                  <CardTitle className="text-body-md">Estadísticas de sesión</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="mb-1.5 flex justify-between">
+                      <span className="font-label text-label-md text-text-3">
+                        {completionLabel}
+                      </span>
+                      <span className="font-metric text-metric-sm text-success">
+                        {protocolStats.completed}/{protocolStats.due}
+                      </span>
+                    </div>
+                    <Progress
+                      value={protocolStats.percent}
+                      className="bg-success/20"
+                      indicatorClassName="bg-success"
                     />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-label text-label-md text-text-3">
-                      Cumplimiento semanal
-                    </span>
-                    <span className="font-bold">{plan.weeklyCompliancePercent}%</span>
+                  <div>
+                    <div className="mb-1.5 flex justify-between">
+                      <span className="font-label text-label-md text-text-3">
+                        Reps acumuladas
+                      </span>
+                      <span className="font-metric text-metric-sm text-primary">
+                        {repsSummary.done}/{repsSummary.total}
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        repsSummary.total > 0
+                          ? (repsSummary.done / repsSummary.total) * 100
+                          : 0
+                      }
+                      className="bg-primary/20"
+                      indicatorClassName="bg-primary"
+                    />
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-label text-label-md text-text-3">
-                      Racha
-                    </span>
-                    <span className="font-bold">{plan.streakDays} días</span>
+                  <div>
+                    <div className="mb-1.5 flex justify-between">
+                      <span className="font-label text-label-md text-text-3">
+                        Cumplimiento semanal
+                      </span>
+                      <span className="font-metric text-metric-sm text-warning">
+                        {plan.weeklyCompliancePercent}%
+                      </span>
+                    </div>
+                    <Progress
+                      value={plan.weeklyCompliancePercent}
+                      className="bg-warning/20"
+                      indicatorClassName="bg-warning"
+                    />
                   </div>
-                </div>
-              </div>
-              <div className="rounded-xl border border-border bg-surface-2 p-6 text-text-1">
-                <div className="mb-2 flex items-center gap-2">
-                  <Icon name="calendar_today" filled />
-                  <span className="font-label text-label-md font-bold">
-                    Próxima cita
-                  </span>
-                </div>
-                <p className="text-body-md">
-                  {plan.appointments[0]?.title} —{" "}
-                  {plan.appointments[0]?.detail}
-                </p>
-              </div>
+                  <div className="flex items-center justify-between rounded-lg border border-accent-tint/30 bg-accent-tint/10 px-3.5 py-3">
+                    <span className="font-label text-label-md text-text-3">Racha</span>
+                    <span className="font-metric text-metric-sm text-accent-tint">
+                      {plan.streakDays} días
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+              {plan.appointments[0] && (
+                <Card className="border-l-[3px] border-l-success bg-success/[0.04]">
+                  <CardHeader>
+                    <CardTitle className="text-body-md">Próxima cita</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-success/35 bg-success/15 text-success">
+                        <Icon name="calendar_today" className="text-[18px]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-body-md font-semibold text-text-1">
+                          {plan.appointments[0].title}
+                        </p>
+                        <p className="mt-0.5 text-label-md text-text-3">
+                          {plan.appointments[0].detail}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </aside>
           </div>
         </main>
@@ -1471,37 +1537,52 @@ function PainLogForm({
   submitting: boolean;
   error: string | null;
 }) {
+  const level = Number(painLevel) || 0;
+  const tone = level >= 7 ? "destructive" : level >= 4 ? "warning" : "success";
+  const toneBorder =
+    level >= 7 ? "border-t-error" : level >= 4 ? "border-t-warning" : "border-t-success";
+  const toneBg =
+    level >= 7 ? "bg-error/[0.03]" : level >= 4 ? "bg-warning/[0.03]" : "bg-success/[0.03]";
+
   return (
-    <div className="rounded-xl border border-border bg-surface-1 p-6">
-      <h4 className="mb-3 font-label text-label-md text-text-3">
-        Registrar dolor de hoy (0-10)
-      </h4>
-      <div className="flex flex-wrap items-center gap-3">
-        <input
-          type="number"
-          min={0}
-          max={10}
-          value={painLevel}
-          onChange={(e) => setPainLevel(e.target.value)}
-          className="w-20 rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-        />
-        <input
-          type="text"
-          value={painNote}
-          onChange={(e) => setPainNote(e.target.value)}
-          placeholder="Nota (opcional)"
-          className="min-w-[160px] flex-1 rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={onSubmit}
-          disabled={submitting}
-          className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
-        >
-          {submitting ? "Guardando…" : "Registrar"}
-        </button>
-      </div>
-      {error && <p className="mt-2 text-body-md text-error">{error}</p>}
-    </div>
+    <Card className={`border-t-[3px] ${toneBorder} ${toneBg}`}>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <CardTitle className="text-body-md">Registrar dolor de hoy (0–10)</CardTitle>
+          <Badge variant={tone} showDot>
+            {level >= 7 ? "Dolor alto" : level >= 4 ? "Dolor moderado" : "Dolor leve"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid gap-4 sm:grid-cols-[96px_1fr_auto] sm:items-end">
+          <div className="space-y-1.5">
+            <label className="font-label text-label-md text-text-3">Nivel</label>
+            <Input
+              type="number"
+              min={0}
+              max={10}
+              value={painLevel}
+              onChange={(e) => setPainLevel(e.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="font-label text-label-md text-text-3">
+              Notas (opcional)
+            </label>
+            <Textarea
+              value={painNote}
+              onChange={(e) => setPainNote(e.target.value)}
+              placeholder="¿Cómo te sentís hoy?"
+              rows={1}
+            />
+          </div>
+          <Button type="button" onClick={onSubmit} disabled={submitting}>
+            {submitting ? "Guardando…" : "Registrar"}
+          </Button>
+        </div>
+        {error && <p className="mt-3 text-body-md text-error">{error}</p>}
+      </CardContent>
+    </Card>
   );
 }
