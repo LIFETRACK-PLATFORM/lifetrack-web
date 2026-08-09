@@ -19,7 +19,6 @@ export function WeeklyDaysNavigator({
   onSelectDate,
   onPreviousWeek,
   onNextWeek,
-  onGoToCurrentWeek,
   className = "",
 }: {
   days: WeeklyDayPoint[];
@@ -34,13 +33,13 @@ export function WeeklyDaysNavigator({
   onSelectDate: (date: string) => void;
   onPreviousWeek: () => void;
   onNextWeek: () => void;
-  onGoToCurrentWeek: () => void;
   className?: string;
 }) {
   const weekLabel =
     weekStart && weekEnd
       ? formatWeekRangeLabel(weekStart, weekEnd)
       : "Semana seleccionada";
+  const title = isViewingCurrentWeek ? "Esta semana" : weekLabel;
 
   return (
     <div className={`space-y-2 ${className}`.trim()}>
@@ -57,22 +56,12 @@ export function WeeklyDaysNavigator({
 
         <div className="min-w-0 flex-1 text-center">
           <p className="truncate font-label text-label-md font-semibold text-text-1">
-            {weekLabel}
+            {title}
             <span className="font-normal text-text-3">
               {" "}
               · {weeklyCompliancePercent}% cumplimiento
             </span>
           </p>
-          {!isViewingCurrentWeek && (
-            <button
-              type="button"
-              onClick={onGoToCurrentWeek}
-              disabled={loadingWeek}
-              className="mt-0.5 font-label text-label-md text-primary underline-offset-2 hover:underline disabled:opacity-50"
-            >
-              Esta semana
-            </button>
-          )}
         </div>
 
         <button

@@ -106,7 +106,6 @@ export function PlanDetailView({
     isViewingCurrentWeek,
     goToPreviousWeek,
     goToNextWeek,
-    goToCurrentWeek,
     error,
     notFound,
     saveError,
@@ -437,7 +436,6 @@ export function PlanDetailView({
                 onSelectDate={handleSelectViewingDate}
                 onPreviousWeek={goToPreviousWeek}
                 onNextWeek={goToNextWeek}
-                onGoToCurrentWeek={goToCurrentWeek}
               />
               {isBorrowedView && borrowedRoutineDate && (
                 <ProtocolBorrowedBanner
@@ -742,7 +740,6 @@ export function PlanDetailView({
                   onSelectDate={handleSelectViewingDate}
                   onPreviousWeek={goToPreviousWeek}
                   onNextWeek={goToNextWeek}
-                  onGoToCurrentWeek={goToCurrentWeek}
                 />
               )}
 
