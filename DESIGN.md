@@ -151,3 +151,13 @@ Set **lucide-react** (viene por defecto con shadcn/ui — no mezclar con react-i
 - **Overlays:** modal/dialog con scrim, toast de confirmación/error, tooltip.
 - **Progreso:** barra lineal y progress ring de 8px stroke (métricas de rehab: sesiones completadas, %).
 - **Avatares:** avatar simple y avatar group con overflow (`+N`) para vistas de equipo/familia.
+
+## Brandmark
+El isotipo es 3 círculos superpuestos en diagonal (misma familia visual que un progress ring), en `primary` con opacidades crecientes (0.4 / 0.7 / 1) de abajo-izquierda a arriba-derecha — sugiere progreso/acumulación, coherente con el concepto de "tracking". Reemplaza al punto sólido anterior. Se usa junto al wordmark "LifeTrack OS" en el topbar y en el header del sidebar, nunca solo (excepto favicon). Implementación: `src/shared/ui/Logo.tsx`.
+
+El topbar/header lleva además un fondo sutil de **dot-grid** (radial-gradient de puntos de 1px, `border` color, grilla de 18px) detrás del contenido, para dar textura sin romper la planitud del sistema. Utilidad: `.bg-dot-grid` en `globals.css`.
+
+## Loading & Estados vacíos
+- **Skeletons:** gradiente `surface-2 → surface-3 → surface-2` en shimmer horizontal continuo (1.6s), no un `pulse` de opacidad — se siente más "vivo" sin ser ruidoso. Utilidad: `.animate-shimmer`; componente: `src/components/ui/skeleton.tsx`.
+- **Spinner:** anillo de 3px, `surface-3` como track y `primary` como indicador, rotación continua — para loaders puntuales (botón, sección chica), nunca pantalla completa. Componente: `src/components/ui/spinner.tsx`.
+- **Estados vacíos:** card centrada (ícono en halo `accent-tint` + título + descripción + CTA opcional), mismo lenguaje plano que el resto de cards. Se usa para "sin resultados", "vault vacío", "sin plan activo", etc. Componente: `src/components/ui/empty-state.tsx`.

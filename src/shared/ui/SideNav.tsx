@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon } from "@/shared/ui/Icon";
 import { LogoutButton } from "@/shared/ui/LogoutButton";
+import { Logo } from "@/shared/ui/Logo";
 import { ThemeToggle } from "@/shared/ui/ThemeToggle";
 
 interface SideNavUser {
@@ -23,13 +24,16 @@ export function SideNav({ user }: { user: SideNavUser }) {
   return (
     <aside className="fixed left-0 top-0 z-50 hidden h-full w-[280px] flex-col border-r border-border bg-surface-1 px-4 py-6 md:flex">
       <div className="mb-10 flex items-start justify-between gap-2 px-2">
-        <div>
-          <h1 className="font-heading text-heading-4 font-bold text-primary">
-            LifeTrack OS
-          </h1>
-          <p className="font-label text-label-md text-text-3">
-            Precisión silenciosa
-          </p>
+        <div className="flex items-center gap-3">
+          <Logo size={28} />
+          <div>
+            <h1 className="font-heading text-heading-4 font-bold text-primary">
+              LifeTrack OS
+            </h1>
+            <p className="font-label text-label-md text-text-3">
+              Precisión silenciosa
+            </p>
+          </div>
         </div>
         <ThemeToggle />
       </div>
