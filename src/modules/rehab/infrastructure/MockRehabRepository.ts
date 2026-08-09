@@ -3,7 +3,9 @@ import { RehabPlan } from "../domain/RehabPlan";
 import { Exercise } from "../domain/Exercise";
 import { Appointment } from "../domain/Appointment";
 import {
+  addDaysToIso,
   getProtocolStatsForDate,
+  startOfWeekIso,
   todayDateIso,
 } from "../domain/protocolSchedule";
 import {
@@ -11,10 +13,12 @@ import {
   AddExerciseInput,
   AddMeasurementInput,
   AddPainLogInput,
+  GetPlanOptions,
   RecoveryPlanStatus,
   RehabRepository,
   UpdateMeasurementInput,
 } from "../domain/RehabRepository";
+import type { WeeklyDayPoint } from "../domain/RehabPlan";
 
 const MOCK_EXERCISE_IMAGE =
   "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400";
@@ -246,6 +250,10 @@ function clonePlan(
     scheduledTodayCount: number;
     adHocProtocolDays: Record<string, string>;
     measurements: RehabPlan["measurements"];
+    weeklyDays: WeeklyDayPoint[];
+    weeklyCompliancePercent: number;
+    weekStart: string;
+    weekEnd: string;
   }> = {},
 ): RehabPlan {
   return new RehabPlan(
@@ -263,8 +271,11 @@ function clonePlan(
       metrics: plan.metrics,
       painHistory: plan.painHistory,
       measurements: overrides.measurements ?? plan.measurements,
-      weeklyDays: plan.weeklyDays,
-      weeklyCompliancePercent: plan.weeklyCompliancePercent,
+      weeklyDays: overrides.weeklyDays ?? plan.weeklyDays,
+      weeklyCompliancePercent:
+        overrides.weeklyCompliancePercent ?? plan.weeklyCompliancePercent,
+      weekStart: overrides.weekStart ?? plan.weekStart,
+      weekEnd: overrides.weekEnd ?? plan.weekEnd,
       streakDays: plan.streakDays,
       completedTodayCount:
         overrides.completedTodayCount ?? plan.completedTodayCount,
@@ -274,6 +285,34 @@ function clonePlan(
     },
     plan.id,
   );
+}
+
+function buildWeeklyDaysForReference(
+  exercises: Exercise[],
+  weekReferenceDate: string,
+  todayIso: string,
+): WeeklyDayPoint[] {
+  const weekStart = startOfWeekIso(weekReferenceDate);
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = addDaysToIso(weekStart, index);
+    const stats = getProtocolStatsForDate(exercises, date);
+    const due = stats.due;
+    const completed = stats.completed;
+    return {
+      date,
+      due,
+      completed,
+      compliant: due > 0 && completed === due,
+      isFuture: date > todayIso,
+    };
+  });
+}
+
+function buildWeeklyCompliancePercent(days: WeeklyDayPoint[]): number {
+  const evaluableDays = days.filter((day) => day.due > 0 && !day.isFuture);
+  if (evaluableDays.length === 0) return 0;
+  const compliantDays = evaluableDays.filter((day) => day.compliant).length;
+  return Math.round((compliantDays / evaluableDays.length) * 100);
 }
 
 function syncPlanTodayStats(plan: RehabPlan): RehabPlan {
@@ -302,12 +341,28 @@ export class MockRehabRepository implements RehabRepository {
     return [dashboard];
   }
 
-  async getPlan(id: string): Promise<RehabPlan> {
+  async getPlan(id: string, options?: GetPlanOptions): Promise<RehabPlan> {
     const plan = plans[id];
     if (!plan) throw new Error(`Plan no encontrado: ${id}`);
     const synced = syncPlanTodayStats(plan);
     plans[id] = synced;
-    return synced;
+
+    const today = todayDateIso();
+    const weekReferenceDate = options?.weekReferenceDate ?? today;
+    const weekStart = startOfWeekIso(weekReferenceDate);
+    const weekEnd = addDaysToIso(weekStart, 6);
+    const weeklyDays = buildWeeklyDaysForReference(
+      synced.exercises,
+      weekReferenceDate,
+      today,
+    );
+
+    return clonePlan(synced, {
+      weeklyDays,
+      weeklyCompliancePercent: buildWeeklyCompliancePercent(weeklyDays),
+      weekStart,
+      weekEnd,
+    });
   }
 
   async updateExerciseProgress(

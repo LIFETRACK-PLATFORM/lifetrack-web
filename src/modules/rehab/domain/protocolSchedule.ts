@@ -157,3 +157,81 @@ export function formatCompletionLabel(
   });
   return `Completado (${formatted})`;
 }
+
+function parseDateIsoUtc(dateIso: string): Date {
+  const [year, month, day] = dateIso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function toDateIsoUtc(date: Date): string {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+/** Domingo de la semana calendario (0=domingo) que contiene `dateIso`. */
+export function startOfWeekIso(dateIso: string): string {
+  const date = parseDateIsoUtc(dateIso);
+  const dayOfWeek = date.getUTCDay();
+  date.setUTCDate(date.getUTCDate() - dayOfWeek);
+  return toDateIsoUtc(date);
+}
+
+export function addDaysToIso(dateIso: string, days: number): string {
+  const date = parseDateIsoUtc(dateIso);
+  date.setUTCDate(date.getUTCDate() + days);
+  return toDateIsoUtc(date);
+}
+
+export function shiftWeekIso(dateIso: string, weeks: number): string {
+  return addDaysToIso(dateIso, weeks * 7);
+}
+
+export function isSameWeek(dateIso: string, otherIso: string): boolean {
+  return startOfWeekIso(dateIso) === startOfWeekIso(otherIso);
+}
+
+export function formatWeekRangeLabel(
+  weekStart: string,
+  weekEnd: string,
+  locale = "es-PE",
+): string {
+  const startLabel = formatDateIsoCalendar(weekStart, {
+    day: "numeric",
+    month: "short",
+  }, locale);
+  const endLabel = formatDateIsoCalendar(weekEnd, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }, locale);
+  return `${startLabel} – ${endLabel}`;
+}
+
+export interface WeekDayOption {
+  date: string;
+}
+
+/** Al cambiar de semana, mantiene el mismo día de la semana si existe en la tira. */
+export function pickViewingDateForWeek(
+  weekDays: readonly WeekDayOption[],
+  previousDate: string,
+  todayIso: string = todayDateIso(),
+): string {
+  if (weekDays.length === 0) {
+    return previousDate;
+  }
+
+  const currentWeekStart = startOfWeekIso(todayIso);
+  const visibleWeekStart = weekDays[0]?.date;
+  if (visibleWeekStart === currentWeekStart) {
+    return todayIso;
+  }
+
+  const previousWeekday = parseDateIsoUtc(previousDate).getUTCDay();
+  const sameWeekday = weekDays.find(
+    (day) => parseDateIsoUtc(day.date).getUTCDay() === previousWeekday,
+  );
+  return sameWeekday?.date ?? weekDays[0].date;
+}
