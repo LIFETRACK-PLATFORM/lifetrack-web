@@ -195,22 +195,19 @@ export function PlanDetailView({
   }, [plan, loading, focusExerciseId, planId, router]);
 
   useEffect(() => {
-    previousWeekStartRef.current = null;
-    setViewingDate(todayIso);
-  }, [planId, todayIso]);
-
-  useEffect(() => {
     if (!plan) return;
 
     const visibleWeekStart = plan.weekStart ?? plan.weeklyDays[0]?.date;
-    if (!visibleWeekStart) return;
+    if (!visibleWeekStart || previousWeekStartRef.current === visibleWeekStart) {
+      return;
+    }
 
-    if (previousWeekStartRef.current !== visibleWeekStart) {
-      previousWeekStartRef.current = visibleWeekStart;
+    previousWeekStartRef.current = visibleWeekStart;
+    queueMicrotask(() => {
       setViewingDate((previous) =>
         pickViewingDateForWeek(plan.weeklyDays, previous, todayIso),
       );
-    }
+    });
   }, [plan, todayIso]);
 
   const borrowedRoutineDate = plan?.adHocProtocolDays[viewingDate] ?? null;

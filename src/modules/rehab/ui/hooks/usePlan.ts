@@ -120,11 +120,6 @@ export function usePlan(repository: RehabRepository, planId: string) {
   }, [repository, planId, applyPlan, weekReferenceDate]);
 
   useEffect(() => {
-    hasLoadedOnceRef.current = false;
-    setWeekReferenceDate(todayDateIso());
-  }, [planId]);
-
-  useEffect(() => {
     let cancelled = false;
     Promise.resolve().then(() => {
       if (cancelled) return;
