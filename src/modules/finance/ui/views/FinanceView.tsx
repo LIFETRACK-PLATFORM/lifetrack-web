@@ -3,8 +3,7 @@
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import { Icon, type IconName } from "@/shared/ui/Icon";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Badge, Skeleton, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@lifetrack/system-design";
 import {
   DEFAULT_COLOR_BY_KIND,
   DEFAULT_ICON_BY_KIND,
@@ -40,13 +39,6 @@ import {
   RecurringSection,
 } from "@/modules/finance/ui/components/RecurringSection";
 import { PendingRemindersBanner } from "@/modules/finance/ui/components/PendingRemindersBanner";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
 const FinanceCharts = dynamic(
   () =>
     import("@/modules/finance/ui/components/FinanceCharts").then(

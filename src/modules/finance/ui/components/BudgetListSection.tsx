@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
-import { StatusBadge } from "@/components/ui/badge";
+import { StatusBadge } from "@lifetrack/system-design";
 import { BudgetListItem } from "@/modules/finance/domain/BudgetListItem";
 import { Category } from "@/modules/finance/domain/Category";
 import { FinanceRepository } from "@/modules/finance/domain/FinanceRepository";

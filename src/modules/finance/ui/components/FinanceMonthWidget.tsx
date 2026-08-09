@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@lifetrack/system-design";
 import { FinanceRepository } from "@/modules/finance/domain/FinanceRepository";
 import { createFinanceRepository } from "@/modules/finance/infrastructure/createFinanceRepository";
 import { GetMonthlySummaryUseCase } from "@/modules/finance/application/GetMonthlySummaryUseCase";

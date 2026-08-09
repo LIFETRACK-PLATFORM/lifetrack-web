@@ -2,13 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@lifetrack/system-design";
 import {
   DEFAULT_VAULT_CATEGORY,
   VAULT_CATEGORIES,
