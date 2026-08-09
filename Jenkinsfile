@@ -42,8 +42,8 @@ pipeline {
 
   post {
     always {
-      sh 'docker image prune -af'
-      sh 'docker buildx prune -af --builder lifetrack-builder'
+      sh 'docker image prune -af || true'
+      sh 'docker buildx prune -af --builder lifetrack-builder || true'
     }
     success {
       echo "Pipeline OK - frontend #${env.BUILD_NUMBER}"
