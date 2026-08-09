@@ -7,6 +7,7 @@ import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUse
 import { StatusBadge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/shared/ui/Icon";
+import { Logo } from "@/shared/ui/Logo";
 import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
 import { DashboardSummary } from "@/modules/rehab/domain/DashboardSummary";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
@@ -165,9 +166,12 @@ export function DashboardView({
     <>
       {/* Mobile */}
       <div className="min-h-screen bg-background pb-32 text-text-1 md:hidden">
-        <header className="fixed left-0 top-0 z-40 w-full bg-surface">
+        <header className="fixed left-0 top-0 z-40 w-full bg-surface bg-dot-grid">
           <div className="mx-auto flex w-full max-w-app items-center justify-between px-6 py-4">
-            <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
+            <div className="flex items-center gap-2.5">
+              <Logo size={24} />
+              <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
+            </div>
             <div className="flex items-center gap-4">
               <button
                 type="button"
@@ -350,9 +354,12 @@ function DashboardSkeleton() {
     <>
       {/* Mobile */}
       <div className="min-h-screen bg-background pb-32 text-text-1 md:hidden">
-        <header className="fixed left-0 top-0 z-40 w-full bg-surface">
+        <header className="fixed left-0 top-0 z-40 w-full bg-surface bg-dot-grid">
           <div className="mx-auto flex w-full max-w-app items-center justify-between px-6 py-4">
-            <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
+            <div className="flex items-center gap-2.5">
+              <Logo size={24} />
+              <h1 className="text-headline-md font-bold text-primary">LifeTrack OS</h1>
+            </div>
             <Skeleton className="h-10 w-10 rounded-full" />
           </div>
         </header>

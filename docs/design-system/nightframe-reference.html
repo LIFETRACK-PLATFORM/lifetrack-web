@@ -14,6 +14,8 @@
   body{margin:0;}
   *{box-sizing:border-box;}
   ::selection{background:#7C5CFF;color:#fff;}
+  @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </helmet>
 
@@ -21,7 +23,7 @@
 
   <div style="{{ styles.topBar }}">
     <div style="{{ styles.topBarLeft }}">
-      <div style="{{ styles.wordmarkDot }}"></div>
+      <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="9" cy="23" r="4" fill="{{ c.primary }}" opacity="0.4"></circle><circle cx="18" cy="15.5" r="5.5" fill="{{ c.primary }}" opacity="0.7"></circle><circle cx="27" cy="8" r="7" fill="{{ c.primary }}"></circle></svg>
       <div>
         <div style="{{ styles.wordmark }}">LifeTrack OS</div>
         <div style="{{ styles.wordmarkSub }}">Nightframe Design System</div>
@@ -322,7 +324,7 @@
       <h2 style="{{ styles.h2 }}">Dashboard</h2>
       <div style="{{ styles.dashboardFrame }}">
         <div style="{{ styles.dashSidebar }}">
-          <div style="{{ styles.dashLogoRow }}"><div style="{{ styles.wordmarkDotSm }}"></div><span style="{{ styles.dashLogoText }}">LifeTrack</span></div>
+          <div style="{{ styles.dashLogoRow }}"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="6" cy="15.5" r="2.7" fill="{{ c.primary }}" opacity="0.4"></circle><circle cx="12" cy="10.5" r="3.7" fill="{{ c.primary }}" opacity="0.7"></circle><circle cx="18" cy="5.5" r="4.7" fill="{{ c.primary }}"></circle></svg><span style="{{ styles.dashLogoText }}">LifeTrack</span></div>
           <div style="{{ styles.dashNav }}">
             <div style="{{ styles.navItemActive }}" style-hover="{{ styles.navItemActiveHover }}">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect></svg>
@@ -453,6 +455,43 @@
       </div>
     </section>
 
+    <!-- ============ 5. ESTADOS VACÍOS & LOADING ============ -->
+    <section style="{{ styles.section }}">
+      <div style="{{ styles.sectionLabel }}">05 — Estados</div>
+      <h2 style="{{ styles.h2 }}">Skeleton loaders</h2>
+      <p style="{{ styles.bodyMuted }}">Se usan mientras carga contenido remoto — nunca un spinner de página completa.</p>
+      <div style="{{ styles.skeletonShowcase }}">
+        <div style="{{ styles.skeletonKpi }}"></div>
+        <div style="{{ styles.skeletonCol }}">
+          <div style="{{ styles.skeletonRow }}"></div>
+          <div style="{{ styles.skeletonRow }}"></div>
+          <div style="{{ styles.skeletonRowShort }}"></div>
+        </div>
+        <div style="{{ styles.spinnerRing }}"></div>
+      </div>
+
+      <h2 style="{{ styles.h2 }}">Estados vacíos</h2>
+      <div style="{{ styles.emptyStatesRow }}">
+        <div style="{{ styles.emptyStateCard }}">
+          <div style="{{ styles.emptyIconWrap }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.2" y1="16.2" x2="21" y2="21"></line></svg></div>
+          <div style="{{ styles.emptyTitle }}">Sin resultados</div>
+          <div style="{{ styles.emptyDesc }}">No encontramos nada para tu búsqueda. Probá con otros términos.</div>
+        </div>
+        <div style="{{ styles.emptyStateCard }}">
+          <div style="{{ styles.emptyIconWrap }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V7a4 4 0 018 0v4"></path><circle cx="12" cy="15.5" r="1.3"></circle></svg></div>
+          <div style="{{ styles.emptyTitle }}">Tu vault está vacío</div>
+          <div style="{{ styles.emptyDesc }}">Guardá tu primera contraseña, todo se cifra en tu navegador.</div>
+          <button style="{{ styles.btnPrimarySm }}">Agregar contraseña</button>
+        </div>
+        <div style="{{ styles.emptyStateCard }}">
+          <div style="{{ styles.emptyIconWrap }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 3 10 2-7 2 2h5"></path></svg></div>
+          <div style="{{ styles.emptyTitle }}">Todavía no hay un plan</div>
+          <div style="{{ styles.emptyDesc }}">Creá un plan de recuperación para empezar a registrar sesiones.</div>
+          <button style="{{ styles.btnPrimarySm }}">Crear plan</button>
+        </div>
+      </div>
+    </section>
+
     <div style="{{ styles.footer }}">LifeTrack OS · Nightframe Design System · v1.0</div>
   </div>
 </div>
@@ -533,7 +572,7 @@ class Component extends DCLogic {
     const font = fBody;
     const styles = {
       page:{minHeight:'100vh', background:c.bg, color:c.text1, fontFamily:font, transition:'background 0.2s,color 0.2s'},
-      topBar:{position:'sticky', top:0, zIndex:5, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 40px', background:c.bg+'', borderBottom:'1px solid '+c.border, backdropFilter:'blur(6px)'},
+      topBar:{position:'sticky', top:0, zIndex:5, display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 40px', background:c.bg+'', borderBottom:'1px solid '+c.border, backdropFilter:'blur(6px)', backgroundImage:'radial-gradient(circle at 1px 1px, '+c.border+' 1px, transparent 0)', backgroundSize:'18px 18px'},
       topBarLeft:{display:'flex', alignItems:'center', gap:12},
       wordmarkDot:{width:32, height:32, borderRadius:9, background:c.primary},
       wordmarkDotSm:{width:22, height:22, borderRadius:7, background:c.primary},
@@ -709,6 +748,18 @@ class Component extends DCLogic {
       pipelinePatientInfo:{flex:1, display:'flex', flexDirection:'column', gap:4},
 
       footer:{textAlign:'center', fontFamily:fMono, fontSize:11, color:c.text3, marginTop:40},
+      skeletonShowcase:{display:'flex', gap:24, alignItems:'center', flexWrap:'wrap', marginBottom:8},
+      skeletonBase:{borderRadius:8, background:'linear-gradient(90deg, '+c.s2+' 25%, '+c.s3+' 50%, '+c.s2+' 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.6s infinite'},
+      skeletonKpi:{borderRadius:12, background:'linear-gradient(90deg, '+c.s2+' 25%, '+c.s3+' 50%, '+c.s2+' 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.6s infinite', width:220, height:92},
+      skeletonCol:{display:'flex', flexDirection:'column', gap:10, width:280},
+      skeletonRow:{borderRadius:8, background:'linear-gradient(90deg, '+c.s2+' 25%, '+c.s3+' 50%, '+c.s2+' 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.6s infinite', height:16, width:'100%'},
+      skeletonRowShort:{borderRadius:8, background:'linear-gradient(90deg, '+c.s2+' 25%, '+c.s3+' 50%, '+c.s2+' 75%)', backgroundSize:'200% 100%', animation:'shimmer 1.6s infinite', height:16, width:'60%'},
+      spinnerRing:{width:32, height:32, borderRadius:16, border:'3px solid '+c.s3, borderTopColor:c.primary, animation:'spin 0.8s linear infinite'},
+      emptyStatesRow:{display:'flex', gap:20, flexWrap:'wrap', marginBottom:8},
+      emptyStateCard:{width:270, display:'flex', flexDirection:'column', alignItems:'center', textAlign:'center', gap:10, padding:'32px 22px', background:c.s1, border:'1px solid '+c.border, borderRadius:14},
+      emptyIconWrap:{width:52, height:52, borderRadius:26, background:c.accentTintBg, color:c.primary, display:'flex', alignItems:'center', justifyContent:'center'},
+      emptyTitle:{fontFamily:fDisplay, fontWeight:600, fontSize:15, color:c.text1},
+      emptyDesc:{fontSize:13, color:c.text2, lineHeight:1.5, marginBottom:4},
       badgeSuccessSm:{fontSize:11, fontFamily:fBody, fontWeight:600, color:c.success, background:c.successBg, padding:'3px 8px', borderRadius:6},
       badgeWarningSm:{fontSize:11, fontFamily:fBody, fontWeight:600, color:c.warning, background:c.warningBg, padding:'3px 8px', borderRadius:6},
       badgeErrorSm:{fontSize:11, fontFamily:fBody, fontWeight:600, color:c.error, background:c.errorBg, padding:'3px 8px', borderRadius:6},
