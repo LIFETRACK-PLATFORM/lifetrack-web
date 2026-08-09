@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
+  Button,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@lifetrack/system-design";
 import { Icon } from "@/shared/ui/Icon";
 import { Exercise } from "@/modules/rehab/domain/Exercise";
 import { ExerciseMediaThumb } from "@/modules/rehab/ui/components/ExerciseMediaThumb";

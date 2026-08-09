@@ -10,13 +10,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@lifetrack/system-design";
 import type { MeasurementPoint } from "@/modules/rehab/domain/RehabPlan";
 import {
   MEASUREMENT_TYPES,
