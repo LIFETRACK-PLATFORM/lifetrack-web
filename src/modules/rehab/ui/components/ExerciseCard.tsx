@@ -2,6 +2,9 @@
 
 import {
   Button,
+  Badge,
+  Checkbox,
+  Progress,
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -17,6 +20,57 @@ import { Exercise } from "@/modules/rehab/domain/Exercise";
 import { ExerciseMediaThumb } from "@/modules/rehab/ui/components/ExerciseMediaThumb";
 import { exerciseDomId } from "@/modules/rehab/ui/rehabRoutes";
 
+type ExerciseCardStatus = "completed" | "future" | "urgent" | "pending";
+
+const STATUS_STYLE: Record<
+  ExerciseCardStatus,
+  { border: string; tint: string | null; badgeVariant: "success" | "secondary" | "destructive" | "warning"; label: string; icon: string; progress: string }
+> = {
+  completed: {
+    border: "border-l-success",
+    tint: "color-mix(in srgb, var(--success) 5%, var(--surface-1))",
+    badgeVariant: "success",
+    label: "Realizado",
+    icon: "check_circle",
+    progress: "bg-success",
+  },
+  future: {
+    border: "border-l-border",
+    tint: null,
+    badgeVariant: "secondary",
+    label: "Agendado",
+    icon: "schedule",
+    progress: "bg-text-3",
+  },
+  urgent: {
+    border: "border-l-error",
+    tint: "color-mix(in srgb, var(--error) 5%, var(--surface-1))",
+    badgeVariant: "destructive",
+    label: "Vencido",
+    icon: "priority_high",
+    progress: "bg-error",
+  },
+  pending: {
+    border: "border-l-warning",
+    tint: "color-mix(in srgb, var(--warning) 5%, var(--surface-1))",
+    badgeVariant: "warning",
+    label: "Pendiente",
+    icon: "radio_button_unchecked",
+    progress: "bg-primary",
+  },
+};
+
+function getCardStatus(
+  completedOnDate: boolean,
+  isFutureDay: boolean,
+  urgent: boolean,
+): ExerciseCardStatus {
+  if (completedOnDate) return "completed";
+  if (isFutureDay) return "future";
+  if (urgent) return "urgent";
+  return "pending";
+}
+
 export function ExerciseCard({
   exercise,
   current,
@@ -24,7 +78,6 @@ export function ExerciseCard({
   pendingCompletion,
   deleting,
   showMedia = true,
-  viewingDate,
   completedOnDate,
   isFutureDay,
   isViewingToday,
@@ -39,7 +92,6 @@ export function ExerciseCard({
   pendingCompletion: boolean;
   deleting: boolean;
   showMedia?: boolean;
-  viewingDate: string;
   completedOnDate: boolean;
   isFutureDay: boolean;
   isViewingToday: boolean;
@@ -49,23 +101,20 @@ export function ExerciseCard({
   onDelete: () => void;
 }) {
   const target = exercise.target;
-  const repsGoalReached = current >= target && target > 0;
   const showUrgent = isViewingToday && exercise.urgent && !completedOnDate;
+  const status = getCardStatus(completedOnDate, isFutureDay, showUrgent);
+  const style = STATUS_STYLE[status];
+  const checkboxId = `exercise-done-${exercise.id}`;
 
   return (
     <article
       id={exerciseDomId(exercise.id)}
-      className={`rounded-xl border bg-surface-1 p-3 transition-all sm:p-4 ${
-        completedOnDate
-          ? "border-success/35 bg-success/5"
-          : showUrgent
-            ? "border-error/35 bg-error/5"
-            : "border-warning/25 bg-warning/5"
-      } ${repsGoalReached && !completedOnDate ? "ring-1 ring-primary/25" : ""} ${
+      className={`overflow-hidden rounded-xl border border-border border-l-[3px] p-3 transition-all sm:p-4 ${style.border} ${
         highlighted
           ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
           : ""
       }`}
+      style={{ backgroundColor: style.tint ?? "var(--surface-1)" }}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
         {showMedia ? (
@@ -83,24 +132,16 @@ export function ExerciseCard({
         <div className="min-w-0 flex-1 space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 space-y-1">
-              <ExerciseDayStatus
-                completedOnDate={completedOnDate}
-                isFutureDay={isFutureDay}
-                urgent={showUrgent}
-              />
+              <Badge variant={style.badgeVariant} showDot>
+                <Icon name={style.icon} className="text-[12px]" />
+                {style.label}
+              </Badge>
               <h4 className="truncate text-body-lg font-semibold text-text-1">
                 {exercise.name}
               </h4>
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
-              <DailyDoneToggle
-                completedOnDate={completedOnDate}
-                isFutureDay={isFutureDay}
-                pending={pendingCompletion}
-                viewingDate={viewingDate}
-                onToggle={onToggleCompletion}
-              />
               <Button
                 type="button"
                 variant="ghost"
@@ -137,8 +178,7 @@ export function ExerciseCard({
               </>
             )}
             {isViewingToday && (
-              <span className="inline-flex items-center gap-1 font-medium text-primary">
-                <Icon name="target" className="text-[14px]" />
+              <span className="inline-flex items-center gap-1 font-mono text-xs font-medium text-primary">
                 {current}/{target}
               </span>
             )}
@@ -148,10 +188,36 @@ export function ExerciseCard({
             <p className="text-label-md text-text-3">{exercise.notes}</p>
           )}
 
+          {isViewingToday && !isFutureDay && (
+            <label
+              htmlFor={checkboxId}
+              className={`mt-1 flex w-fit cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 transition-colors ${
+                completedOnDate
+                  ? "border-success/35 bg-success/10"
+                  : "border-border bg-surface-2"
+              } ${pendingCompletion ? "opacity-60" : ""}`}
+            >
+              <Checkbox
+                id={checkboxId}
+                checked={completedOnDate}
+                disabled={pendingCompletion}
+                onCheckedChange={onToggleCompletion}
+              />
+              <span
+                className={`font-label text-label-md font-medium ${
+                  completedOnDate ? "text-success" : "text-text-3"
+                }`}
+              >
+                {completedOnDate ? "Completado" : "Marcar como completado"}
+              </span>
+            </label>
+          )}
+
           {isViewingToday && (
             <ExerciseRepCounter
               current={current}
               target={target}
+              progressClassName={style.progress}
               onAdjust={onAdjust}
             />
           )}
@@ -161,141 +227,45 @@ export function ExerciseCard({
   );
 }
 
-function ExerciseDayStatus({
-  completedOnDate,
-  isFutureDay,
-  urgent,
-}: {
-  completedOnDate: boolean;
-  isFutureDay: boolean;
-  urgent: boolean;
-}) {
-  if (completedOnDate) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-success/40 bg-success/15 px-2 py-0.5 text-[11px] font-semibold text-success">
-        <Icon name="check_circle" className="text-[13px]" />
-        Realizado
-      </span>
-    );
-  }
-
-  if (isFutureDay) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-surface-3 px-2 py-0.5 text-[11px] font-semibold text-text-3">
-        <Icon name="schedule" className="text-[13px]" />
-        Agendado
-      </span>
-    );
-  }
-
-  if (urgent) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full border border-error/40 bg-error/15 px-2 py-0.5 text-[11px] font-semibold text-error">
-        <Icon name="priority_high" className="text-[13px]" />
-        Vencido
-      </span>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-warning/40 bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning">
-      <Icon name="radio_button_unchecked" className="text-[13px]" />
-      Pendiente
-    </span>
-  );
-}
-
-function DailyDoneToggle({
-  completedOnDate,
-  isFutureDay,
-  pending,
-  viewingDate,
-  onToggle,
-}: {
-  completedOnDate: boolean;
-  isFutureDay: boolean;
-  pending: boolean;
-  viewingDate: string;
-  onToggle: () => void;
-}) {
-  if (isFutureDay) {
-    return (
-      <button
-        type="button"
-        disabled
-        title="No se puede marcar un día futuro"
-        aria-label="No se puede marcar un día futuro"
-        className="flex h-9 w-9 cursor-not-allowed items-center justify-center rounded-full bg-surface-3 text-text-3 opacity-50"
-      >
-        <Icon name="radio_button_unchecked" className="text-[22px]" />
-      </button>
-    );
-  }
-
-  if (completedOnDate) {
-    return (
-      <button
-        type="button"
-        onClick={onToggle}
-        disabled={pending}
-        title={`Hecho el ${viewingDate}`}
-        aria-label={`Desmarcar cumplimiento del ${viewingDate}`}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-success/20 text-success transition-all active:scale-95 disabled:opacity-60 hover:bg-success/30"
-      >
-        <Icon name="check_circle" className="text-[22px]" />
-      </button>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      disabled={pending}
-      title="Marcar hecho"
-      aria-label="Marcar hecho"
-      className="flex h-9 w-9 items-center justify-center rounded-full bg-warning/15 text-warning transition-all active:scale-95 disabled:opacity-60 hover:bg-warning/25"
-    >
-      <Icon name="radio_button_unchecked" className="text-[22px]" />
-    </button>
-  );
-}
-
 function ExerciseRepCounter({
   current,
   target,
+  progressClassName,
   onAdjust,
 }: {
   current: number;
   target: number;
+  progressClassName: string;
   onAdjust: (delta: number) => void;
 }) {
+  const percent = target > 0 ? Math.round((current / target) * 100) : 0;
+
   return (
-    <div className="flex items-center gap-2 rounded-lg bg-surface-2 p-1.5">
-      <button
+    <div className="flex items-center gap-2.5 pt-1">
+      <Button
         type="button"
+        variant="outline"
+        size="icon-sm"
         onClick={() => onAdjust(-1)}
         disabled={current <= 0}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-4 transition-transform active:scale-95 disabled:opacity-40 sm:h-8 sm:w-8"
         aria-label="Reducir repeticiones"
       >
         <Icon name="remove" />
-      </button>
-      <div className="min-w-0 flex-1 text-center">
-        <span className="font-metric text-[18px] font-bold text-primary">
-          {current}
-        </span>
-        <span className="font-label text-label-md text-text-3">/{target}</span>
-      </div>
-      <button
+      </Button>
+      <Progress
+        value={percent}
+        className="flex-1 bg-surface-3"
+        indicatorClassName={progressClassName}
+      />
+      <Button
         type="button"
+        size="icon-sm"
         onClick={() => onAdjust(1)}
         disabled={current >= target}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-transform active:scale-95 disabled:opacity-40 sm:h-8 sm:w-8"
         aria-label="Aumentar repeticiones"
       >
         <Icon name="add" />
-      </button>
+      </Button>
     </div>
   );
 }

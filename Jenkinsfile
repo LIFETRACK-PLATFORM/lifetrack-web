@@ -30,12 +30,15 @@ pipeline {
 
     stage("Docker Build") {
       steps {
-        sh "docker build -t lifetrack-web:${env.BUILD_NUMBER} --build-arg NEXT_PUBLIC_API_GATEWAY_URL=https://api.tracklywork.com ."
+        sh "docker build -t lifetrack-web:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=https://api.tracklywork.com ."
       }
     }
   }
 
   post {
+    always {
+      sh 'docker image prune -f'
+    }
     success {
       echo "Pipeline OK - frontend #${env.BUILD_NUMBER}"
       githubNotify credentialsId: 'github-token-userpass', account: 'LIFETRACK-PLATFORM', repo: 'lifetrack-web', sha: env.GIT_COMMIT, status: 'SUCCESS', context: 'jenkins-ci', description: 'CI passed'
