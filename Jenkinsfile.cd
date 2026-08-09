@@ -11,7 +11,7 @@ pipeline {
   stages {
     stage("Docker Build") {
       steps {
-        sh "docker build -t ${IMAGE}:${env.BUILD_NUMBER} --build-arg NEXT_PUBLIC_API_GATEWAY_URL=${API_URL} ."
+        sh "docker build -t ${IMAGE}:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=${API_URL} ."
       }
     }
 
@@ -19,7 +19,7 @@ pipeline {
       steps {
         withCredentials([usernamePassword(credentialsId: 'github-token-userpass', usernameVariable: 'GH_USER', passwordVariable: 'GH_TOKEN')]) {
           sh "echo ${GH_TOKEN} | docker login ghcr.io -u ${GH_USER} --password-stdin"
-          sh "docker push ${IMAGE}:${env.BUILD_NUMBER}"
+          sh "docker push ${IMAGE}:latest"
         }
       }
     }
@@ -45,13 +45,14 @@ pipeline {
             ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS} '
               docker stop lifetrack-web || true
               docker rm lifetrack-web || true
-              docker pull ${IMAGE}:${env.BUILD_NUMBER}
+              docker pull ${IMAGE}:latest
               docker run -d --name lifetrack-web \
                 --network lifetrack-net \
                 --restart unless-stopped \
                 -p 127.0.0.1:3002:3002 \
                 --env-file /home/ricardo/lifetrack-infra/envs/frontend.env \
-                ${IMAGE}:${env.BUILD_NUMBER}
+                ${IMAGE}:latest
+              docker image prune -f
             '
           """
         }
@@ -60,6 +61,9 @@ pipeline {
   }
 
   post {
+    always {
+      sh 'docker image prune -f'
+    }
     success {
       echo "Deploy OK - frontend #${env.BUILD_NUMBER}"
     }
