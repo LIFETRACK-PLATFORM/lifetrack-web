@@ -6,6 +6,7 @@ import {
   AddExerciseInput,
   AddMeasurementInput,
   AddPainLogInput,
+  GetPlanOptions,
   RecoveryPlanStatus,
   RehabRepository,
   UpdateExerciseInput,
@@ -36,9 +37,13 @@ export class HttpRehabRepository implements RehabRepository {
     );
   }
 
-  private getWeeklySummary(planId: string) {
+  private getWeeklySummary(planId: string, weekReferenceDate?: string) {
+    const todayIso = todayDateIso();
+    const referenceQuery = weekReferenceDate
+      ? `&referenceDate=${weekReferenceDate}`
+      : "";
     return rehabFetchStrict<WeeklySummaryDto>(
-      `/rehab/plans/${planId}/weekly-summary?todayIso=${todayDateIso()}`,
+      `/rehab/plans/${planId}/weekly-summary?todayIso=${todayIso}${referenceQuery}`,
     );
   }
 
@@ -69,11 +74,11 @@ export class HttpRehabRepository implements RehabRepository {
     );
   }
 
-  async getPlan(id: string): Promise<RehabPlan> {
+  async getPlan(id: string, options?: GetPlanOptions): Promise<RehabPlan> {
     const [progress, today, weeklySummary] = await Promise.all([
       this.getProgress(id),
       this.getToday(id),
-      this.getWeeklySummary(id),
+      this.getWeeklySummary(id, options?.weekReferenceDate),
     ]);
     return mapProgressToPlan(progress, today, weeklySummary);
   }

@@ -26,7 +26,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { ExerciseCard } from "@/modules/rehab/ui/components/ExerciseCard";
 import { ExerciseFormDialog } from "@/modules/rehab/ui/components/ExerciseFormDialog";
 import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointmentDialog";
-import { WeeklyDaysStrip } from "@/modules/rehab/ui/components/WeeklyDaysStrip";
+import { WeeklyDaysNavigator } from "@/modules/rehab/ui/components/WeeklyDaysNavigator";
 import { MeasurementDialog } from "@/modules/rehab/ui/components/MeasurementDialog";
 import { MeasurementTrendChart } from "@/modules/rehab/ui/components/MeasurementTrendChart";
 import { MeasurementHistoryList } from "@/modules/rehab/ui/components/MeasurementHistoryList";
@@ -38,6 +38,7 @@ import {
   getProtocolStatsForDate,
   isCompletedOnDate,
   isFutureDate,
+  pickViewingDateForWeek,
   todayDateIso,
 } from "@/modules/rehab/domain/protocolSchedule";
 import {
@@ -87,6 +88,7 @@ export function PlanDetailView({
     useState<MeasurementPoint | null>(null);
   const todayIso = useMemo(() => todayDateIso(), []);
   const [viewingDate, setViewingDate] = useState(todayIso);
+  const previousWeekStartRef = useRef<string | null>(null);
   const activeRepository = useMemo(
     () => repository ?? createRehabRepository(),
     [repository],
@@ -97,6 +99,14 @@ export function PlanDetailView({
     counts,
     adjust,
     loading,
+    loadingWeek,
+    weekStart,
+    weekEnd,
+    canGoToNextWeek,
+    isViewingCurrentWeek,
+    goToPreviousWeek,
+    goToNextWeek,
+    goToCurrentWeek,
     error,
     notFound,
     saveError,
@@ -183,6 +193,22 @@ export function PlanDetailView({
       window.clearTimeout(highlightTimer);
     };
   }, [plan, loading, focusExerciseId, planId, router]);
+
+  useEffect(() => {
+    if (!plan) return;
+
+    const visibleWeekStart = plan.weekStart ?? plan.weeklyDays[0]?.date;
+    if (!visibleWeekStart || previousWeekStartRef.current === visibleWeekStart) {
+      return;
+    }
+
+    previousWeekStartRef.current = visibleWeekStart;
+    queueMicrotask(() => {
+      setViewingDate((previous) =>
+        pickViewingDateForWeek(plan.weeklyDays, previous, todayIso),
+      );
+    });
+  }, [plan, todayIso]);
 
   const borrowedRoutineDate = plan?.adHocProtocolDays[viewingDate] ?? null;
 
@@ -398,11 +424,20 @@ export function PlanDetailView({
                   Quedan {protocolStats.remaining}
                 </span>
               </div>
-              <WeeklyDaysStrip
+              <WeeklyDaysNavigator
                 days={plan.weeklyDays}
                 selectedDate={viewingDate}
                 todayIso={todayIso}
+                weekStart={weekStart}
+                weekEnd={weekEnd}
+                weeklyCompliancePercent={plan.weeklyCompliancePercent}
+                loadingWeek={loadingWeek}
+                canGoToNextWeek={canGoToNextWeek}
+                isViewingCurrentWeek={isViewingCurrentWeek}
                 onSelectDate={handleSelectViewingDate}
+                onPreviousWeek={goToPreviousWeek}
+                onNextWeek={goToNextWeek}
+                onGoToCurrentWeek={goToCurrentWeek}
               />
               {isBorrowedView && borrowedRoutineDate && (
                 <ProtocolBorrowedBanner
@@ -692,12 +727,21 @@ export function PlanDetailView({
               </div>
 
               {tab === "exercises" && (
-                <WeeklyDaysStrip
+                <WeeklyDaysNavigator
                   className="mb-6"
                   days={plan.weeklyDays}
                   selectedDate={viewingDate}
                   todayIso={todayIso}
+                  weekStart={weekStart}
+                  weekEnd={weekEnd}
+                  weeklyCompliancePercent={plan.weeklyCompliancePercent}
+                  loadingWeek={loadingWeek}
+                  canGoToNextWeek={canGoToNextWeek}
+                  isViewingCurrentWeek={isViewingCurrentWeek}
                   onSelectDate={handleSelectViewingDate}
+                  onPreviousWeek={goToPreviousWeek}
+                  onNextWeek={goToNextWeek}
+                  onGoToCurrentWeek={goToCurrentWeek}
                 />
               )}
 

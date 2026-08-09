@@ -1,5 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RehabPlan } from "../../domain/RehabPlan";
+import {
+  isSameWeek,
+  shiftWeekIso,
+  startOfWeekIso,
+  todayDateIso,
+} from "../../domain/protocolSchedule";
 import {
   AddAppointmentInput,
   AddExerciseInput,
@@ -33,6 +39,9 @@ export function usePlan(repository: RehabRepository, planId: string) {
   const [plan, setPlan] = useState<RehabPlan | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [loadingWeek, setLoadingWeek] = useState(false);
+  const [weekReferenceDate, setWeekReferenceDate] = useState(() => todayDateIso());
+  const hasLoadedOnceRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -106,22 +115,26 @@ export function usePlan(repository: RehabRepository, planId: string) {
 
   const refresh = useCallback(async () => {
     const getPlan = new GetPlanUseCase(repository);
-    const refreshed = await getPlan.execute(planId);
+    const refreshed = await getPlan.execute(planId, { weekReferenceDate });
     applyPlan(refreshed);
-  }, [repository, planId, applyPlan]);
+  }, [repository, planId, applyPlan, weekReferenceDate]);
 
   useEffect(() => {
     let cancelled = false;
     Promise.resolve().then(() => {
       if (cancelled) return;
-      setLoading(true);
+      if (hasLoadedOnceRef.current) {
+        setLoadingWeek(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
       setNotFound(false);
     });
 
     const getPlan = new GetPlanUseCase(repository);
     getPlan
-      .execute(planId)
+      .execute(planId, { weekReferenceDate })
       .then((fetched) => {
         if (cancelled) return;
         applyPlan(fetched);
@@ -135,13 +148,45 @@ export function usePlan(repository: RehabRepository, planId: string) {
         setError(err instanceof Error ? err.message : "Error al cargar plan");
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setLoadingWeek(false);
+          hasLoadedOnceRef.current = true;
+        }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [repository, planId, applyPlan]);
+  }, [repository, planId, weekReferenceDate, applyPlan]);
+
+  const todayIso = useMemo(() => todayDateIso(), []);
+  const canGoToNextWeek = useMemo(
+    () => startOfWeekIso(weekReferenceDate) < startOfWeekIso(todayIso),
+    [weekReferenceDate, todayIso],
+  );
+  const isViewingCurrentWeek = useMemo(
+    () => isSameWeek(weekReferenceDate, todayIso),
+    [weekReferenceDate, todayIso],
+  );
+
+  const goToPreviousWeek = useCallback(() => {
+    setWeekReferenceDate((current) => shiftWeekIso(current, -1));
+  }, []);
+
+  const goToNextWeek = useCallback(() => {
+    setWeekReferenceDate((current) => {
+      const next = shiftWeekIso(current, 1);
+      if (startOfWeekIso(next) > startOfWeekIso(todayIso)) {
+        return current;
+      }
+      return next;
+    });
+  }, [todayIso]);
+
+  const goToCurrentWeek = useCallback(() => {
+    setWeekReferenceDate(todayIso);
+  }, [todayIso]);
 
   const ADJUST_DEBOUNCE_MS = 500;
   const pendingProgressRef = useRef<Record<string, number>>({});
@@ -575,6 +620,15 @@ export function usePlan(repository: RehabRepository, planId: string) {
     counts,
     adjust,
     loading,
+    loadingWeek,
+    weekReferenceDate,
+    weekStart: plan?.weekStart,
+    weekEnd: plan?.weekEnd,
+    canGoToNextWeek,
+    isViewingCurrentWeek,
+    goToPreviousWeek,
+    goToNextWeek,
+    goToCurrentWeek,
     error,
     notFound,
     saveError,

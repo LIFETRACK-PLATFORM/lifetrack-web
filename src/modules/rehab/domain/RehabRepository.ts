@@ -62,10 +62,14 @@ export interface AddMeasurementInput {
 
 export type UpdateMeasurementInput = AddMeasurementInput;
 
+export interface GetPlanOptions {
+  weekReferenceDate?: string;
+}
+
 export interface RehabRepository {
   /** Todos los planes activos del usuario, cada uno con su propio resumen. */
   getDashboard(): Promise<DashboardSummary[]>;
-  getPlan(id: string): Promise<RehabPlan>;
+  getPlan(id: string, options?: GetPlanOptions): Promise<RehabPlan>;
   updateExerciseProgress(
     planId: string,
     exerciseId: string,

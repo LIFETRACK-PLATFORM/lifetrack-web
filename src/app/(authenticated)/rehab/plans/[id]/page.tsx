@@ -7,5 +7,5 @@ export default async function PlanDetailPage({
 }) {
   const { id } = await params;
 
-  return <PlanDetailView planId={id} />;
+  return <PlanDetailView key={id} planId={id} />;
 }

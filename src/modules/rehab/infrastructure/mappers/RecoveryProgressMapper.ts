@@ -148,6 +148,8 @@ export function mapProgressToPlan(
       measurements,
       weeklyDays: weeklySummary.days,
       weeklyCompliancePercent: weeklySummary.weeklyCompliancePercent,
+      weekStart: weeklySummary.weekStart,
+      weekEnd: weeklySummary.weekEnd,
       streakDays: weeklySummary.streakDays,
       completedTodayCount: completedToday,
       scheduledTodayCount: scheduledToday.length,

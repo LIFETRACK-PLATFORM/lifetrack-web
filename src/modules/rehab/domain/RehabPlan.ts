@@ -47,6 +47,8 @@ interface RehabPlanProps {
   measurements: MeasurementPoint[];
   weeklyDays: WeeklyDayPoint[];
   weeklyCompliancePercent: number;
+  weekStart?: string;
+  weekEnd?: string;
   streakDays: number;
   completedTodayCount: number;
   scheduledTodayCount: number;
@@ -117,6 +119,14 @@ export class RehabPlan extends Entity<RehabPlanProps> {
 
   get weeklyCompliancePercent(): number {
     return this.props.weeklyCompliancePercent;
+  }
+
+  get weekStart(): string | undefined {
+    return this.props.weekStart;
+  }
+
+  get weekEnd(): string | undefined {
+    return this.props.weekEnd;
   }
 
   get streakDays(): number {
