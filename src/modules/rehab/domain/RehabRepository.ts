@@ -74,6 +74,7 @@ export interface RehabRepository {
     planId: string,
     exerciseId: string,
     current: number,
+    date?: string,
   ): Promise<void>;
   markExerciseCompletion(
     exerciseId: string,

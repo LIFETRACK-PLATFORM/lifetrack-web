@@ -87,13 +87,14 @@ export class HttpRehabRepository implements RehabRepository {
     _planId: string,
     exerciseId: string,
     current: number,
+    date?: string,
   ): Promise<void> {
     await rehabFetchStrict(`/rehab/exercises/${exerciseId}/logs`, {
       method: "POST",
       body: JSON.stringify({
         setsDone: 1,
         repsDone: current,
-        date: todayDateIso(),
+        date: date ?? todayDateIso(),
       }),
     });
   }

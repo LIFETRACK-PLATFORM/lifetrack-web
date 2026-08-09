@@ -45,6 +45,7 @@ export interface AppointmentDto {
   type: AppointmentTypeDto;
   notes?: string;
   attended?: boolean;
+  rescheduledFromDate?: string;
 }
 
 export interface MeasurementDto {

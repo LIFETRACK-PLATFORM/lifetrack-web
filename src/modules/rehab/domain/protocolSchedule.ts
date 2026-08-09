@@ -119,6 +119,16 @@ export function getProtocolStatsForDate(
   };
 }
 
+export function sumRepsForDate(
+  logs: readonly { date: string; repsDone: number }[],
+  dateIso: string,
+): number {
+  const day = dateIso.slice(0, 10);
+  return logs
+    .filter((log) => log.date.slice(0, 10) === day)
+    .reduce((acc, log) => acc + log.repsDone, 0);
+}
+
 export function isFutureDate(
   dateIso: string,
   todayIso: string = todayDateIso(),

@@ -2,6 +2,11 @@ import { Entity } from "@/shared/domain/building-blocks/Entity";
 
 export type ExerciseMetricType = "REPS" | "DURATION";
 
+export interface ExerciseLogPoint {
+  date: string;
+  repsDone: number;
+}
+
 interface ExerciseProps {
   name: string;
   detail: string;
@@ -18,6 +23,7 @@ interface ExerciseProps {
   daysOfWeek: number[];
   /** Fechas (YYYY-MM-DD) en las que este ejercicio quedo marcado como hecho. */
   completions: string[];
+  logs: ExerciseLogPoint[];
   scheduledToday: boolean;
   completedToday: boolean;
   urgent: boolean;
@@ -82,6 +88,10 @@ export class Exercise extends Entity<ExerciseProps> {
 
   get completions(): string[] {
     return this.props.completions;
+  }
+
+  get logs(): ExerciseLogPoint[] {
+    return this.props.logs;
   }
 
   get scheduledToday(): boolean {

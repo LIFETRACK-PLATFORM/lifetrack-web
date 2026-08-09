@@ -106,7 +106,6 @@ export function PlanDetailView({
     isViewingCurrentWeek,
     goToPreviousWeek,
     goToNextWeek,
-    goToCurrentWeek,
     error,
     notFound,
     saveError,
@@ -153,7 +152,7 @@ export function PlanDetailView({
     clearAdHocProtocolDay,
     savingAdHocProtocol,
     adHocProtocolError,
-  } = usePlan(activeRepository, planId);
+  } = usePlan(activeRepository, planId, viewingDate);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -437,7 +436,6 @@ export function PlanDetailView({
                 onSelectDate={handleSelectViewingDate}
                 onPreviousWeek={goToPreviousWeek}
                 onNextWeek={goToNextWeek}
-                onGoToCurrentWeek={goToCurrentWeek}
               />
               {isBorrowedView && borrowedRoutineDate && (
                 <ProtocolBorrowedBanner
@@ -470,6 +468,7 @@ export function PlanDetailView({
                     showMedia={false}
                     completedOnDate={isCompletedOnDate(ex, viewingDate)}
                     isFutureDay={viewingIsFuture}
+                    isEditableDay={!viewingIsFuture}
                     isViewingToday={isViewingToday}
                     onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
                     onToggleCompletion={() => {
@@ -741,7 +740,6 @@ export function PlanDetailView({
                   onSelectDate={handleSelectViewingDate}
                   onPreviousWeek={goToPreviousWeek}
                   onNextWeek={goToNextWeek}
-                  onGoToCurrentWeek={goToCurrentWeek}
                 />
               )}
 
@@ -771,6 +769,7 @@ export function PlanDetailView({
                       showMedia
                       completedOnDate={isCompletedOnDate(ex, viewingDate)}
                       isFutureDay={viewingIsFuture}
+                      isEditableDay={!viewingIsFuture}
                       isViewingToday={isViewingToday}
                       onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
                       onToggleCompletion={() => {
@@ -836,6 +835,7 @@ export function PlanDetailView({
                       showMedia
                       completedOnDate={ex.completedToday}
                       isFutureDay={false}
+                      isEditableDay
                       isViewingToday
                       onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
                       onToggleCompletion={() => {
@@ -878,14 +878,30 @@ export function PlanDetailView({
 
               {tab === "appointments" && (
                 <div className="space-y-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddAppointmentOpen(true)}
-                    className="flex items-center gap-1 rounded-lg border border-primary/40 px-4 py-2 font-label text-label-md text-primary transition-all active:scale-95"
-                  >
-                    <Icon name="add" className="text-[20px]" />
-                    Agregar cita
-                  </button>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="hidden items-center gap-1.5 lg:flex">
+                      <Badge variant="success" showDot>
+                        Asistió
+                      </Badge>
+                      <Badge variant="destructive" showDot>
+                        No asistió
+                      </Badge>
+                      <Badge variant="warning" showDot>
+                        Hoy
+                      </Badge>
+                      <Badge variant="default" showDot>
+                        Reprogramada
+                      </Badge>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddAppointmentOpen(true)}
+                      className="flex items-center gap-1 rounded-lg border border-primary/40 px-4 py-2 font-label text-label-md text-primary transition-all active:scale-95"
+                    >
+                      <Icon name="add" className="text-[20px]" />
+                      Agregar cita
+                    </button>
+                  </div>
                   {plan.appointments.map((apt) => (
                     <AppointmentListItem
                       key={apt.id}
@@ -1266,13 +1282,25 @@ function formatAppointmentTime(dateIso: string): string {
   });
 }
 
-type AppointmentCardStatus = "attended" | "missed" | "today" | "pending" | "upcoming";
+function formatRescheduledFromLabel(dateIso: string): string {
+  const date = new Date(dateIso);
+  const day = date.toLocaleDateString("es-PE", { day: "numeric", month: "short" });
+  return `${day} · ${formatAppointmentTime(dateIso)}`;
+}
+
+type AppointmentCardStatus =
+  | "attended"
+  | "missed"
+  | "today"
+  | "pending"
+  | "rescheduled"
+  | "upcoming";
 
 const APPOINTMENT_STATUS_STYLE: Record<
   AppointmentCardStatus,
   {
     border: string;
-    badgeVariant: "success" | "destructive" | "warning" | "secondary";
+    badgeVariant: "success" | "destructive" | "warning" | "secondary" | "default";
     badgeLabel: string;
     dateBg: string;
     dateText: string;
@@ -1306,6 +1334,13 @@ const APPOINTMENT_STATUS_STYLE: Record<
     dateBg: "bg-surface-3",
     dateText: "text-text-3",
   },
+  rescheduled: {
+    border: "var(--accent-tint)",
+    badgeVariant: "default",
+    badgeLabel: "Reprogramada",
+    dateBg: "bg-accent-tint/15",
+    dateText: "text-accent-tint",
+  },
   upcoming: {
     border: "var(--primary)",
     badgeVariant: "secondary",
@@ -1324,6 +1359,7 @@ function getAppointmentStatus(apt: Appointment): AppointmentCardStatus {
   if (apt.attended === false) return "missed";
   if (isSameCalendarDay(apt.date)) return "today";
   if (isPastOrToday(apt.date)) return "pending";
+  if (apt.rescheduledFrom) return "rescheduled";
   return "upcoming";
 }
 
@@ -1381,6 +1417,11 @@ function AppointmentListItem({
           {apt.notes && (
             <p className="font-label text-label-md text-text-3">
               {apt.notes}
+            </p>
+          )}
+          {apt.rescheduledFrom && (
+            <p className="font-label text-label-md text-accent-tint">
+              Antes: {formatRescheduledFromLabel(apt.rescheduledFrom)}
             </p>
           )}
           {isPastOrToday(apt.date) && (
