@@ -199,6 +199,7 @@ export function ExerciseCard({
             >
               <Checkbox
                 id={checkboxId}
+                variant="success"
                 checked={completedOnDate}
                 disabled={pendingCompletion}
                 onCheckedChange={onToggleCompletion}
