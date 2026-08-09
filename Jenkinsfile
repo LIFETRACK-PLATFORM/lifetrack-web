@@ -8,8 +8,13 @@ pipeline {
   stages {
     stage("Install") {
       steps {
-        sh "npm install -g pnpm@10.21.0"
-        sh "pnpm install --frozen-lockfile"
+        sh '''
+          set -e
+          corepack enable
+          corepack prepare pnpm@10.21.0 --activate
+          pnpm --version
+          pnpm install --frozen-lockfile
+        '''
       }
     }
 
