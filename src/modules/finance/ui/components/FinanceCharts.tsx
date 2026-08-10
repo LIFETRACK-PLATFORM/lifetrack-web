@@ -23,18 +23,19 @@ import { Category } from "@/modules/finance/domain/Category";
 import { Account } from "@/modules/finance/domain/Account";
 import { formatMoney } from "@/modules/finance/domain/formatMoney";
 
-/** Escala alrededor de primary para que los 3 charts compartan la misma familia. */
-const CHART_PALETTE = [
-  "var(--primary)",
-  "color-mix(in srgb, var(--primary) 72%, #818cf8)",
-  "color-mix(in srgb, var(--primary) 58%, #a78bfa)",
-  "color-mix(in srgb, var(--primary) 48%, #c4b5fd)",
-  "color-mix(in srgb, var(--primary) 65%, #6366f1)",
-  "color-mix(in srgb, var(--primary) 55%, #7c3aed)",
+/** Cada card tiene su acento; el donut usa una familia alrededor de accent-tint. */
+const CATEGORY_PALETTE = [
+  "var(--accent-tint)",
+  "color-mix(in srgb, var(--accent-tint) 70%, #38bdf8)",
+  "color-mix(in srgb, var(--accent-tint) 55%, #0ea5e9)",
+  "color-mix(in srgb, var(--accent-tint) 45%, #22d3ee)",
+  "color-mix(in srgb, var(--accent-tint) 60%, #0284c7)",
+  "color-mix(in srgb, var(--accent-tint) 50%, #67e8f9)",
 ];
 
-const CHART_CARD =
-  "border-t-[3px] border-t-primary bg-primary/[0.03]";
+const CARD_SUCCESS = "border-t-[3px] border-t-success bg-success/[0.03]";
+const CARD_ACCENT = "border-t-[3px] border-t-accent-tint bg-accent-tint/[0.03]";
+const CARD_PRIMARY = "border-t-[3px] border-t-primary bg-primary/[0.03]";
 
 const TOOLTIP_STYLE = {
   background: "var(--surface-1)",
@@ -141,12 +142,12 @@ export function FinanceCharts({
             {
               name: "Ingresos",
               value: summary.totalIncome,
-              fill: "color-mix(in srgb, var(--primary) 55%, #a78bfa)",
+              fill: "var(--success)",
             },
             {
               name: "Gastos",
               value: summary.totalExpense,
-              fill: "var(--primary)",
+              fill: "var(--error)",
             },
           ]
         : [],
@@ -167,7 +168,7 @@ export function FinanceCharts({
         name: category?.name ?? "Otro",
         value: e.amount,
         pct: Math.round((e.amount / total) * 100),
-        fill: CHART_PALETTE[i % CHART_PALETTE.length],
+        fill: CATEGORY_PALETTE[i % CATEGORY_PALETTE.length],
       };
     });
   }, [summary, categories]);
@@ -188,7 +189,7 @@ export function FinanceCharts({
 
   if (!summary) {
     return (
-      <Card className={CHART_CARD}>
+      <Card className={CARD_PRIMARY}>
         <CardContent>
           <p className="text-body-md text-text-3">Sin datos para gráficos.</p>
         </CardContent>
@@ -201,7 +202,7 @@ export function FinanceCharts({
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-      <Card className={CHART_CARD}>
+      <Card className={CARD_SUCCESS}>
         <CardHeader>
           <CardTitle className="text-body-md">
             Ingresos vs gastos ({chartCurrency})
@@ -242,7 +243,7 @@ export function FinanceCharts({
                   formatter={moneyTooltip(chartCurrency)}
                   contentStyle={TOOLTIP_STYLE}
                   cursor={{
-                    fill: "color-mix(in srgb, var(--primary) 6%, transparent)",
+                    fill: "color-mix(in srgb, var(--success) 8%, transparent)",
                     radius: 8,
                   }}
                 />
@@ -276,7 +277,7 @@ export function FinanceCharts({
         </CardContent>
       </Card>
 
-      <Card className={CHART_CARD}>
+      <Card className={CARD_ACCENT}>
         <CardHeader>
           <CardTitle className="text-body-md">Gastos por categoría</CardTitle>
         </CardHeader>
@@ -337,7 +338,7 @@ export function FinanceCharts({
         </CardContent>
       </Card>
 
-      <Card className={CHART_CARD}>
+      <Card className={CARD_PRIMARY}>
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-body-md">Gasto acumulado diario</CardTitle>

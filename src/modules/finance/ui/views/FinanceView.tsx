@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { MoreHorizontal, Plus, Wallet } from "lucide-react";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import {
-  Badge,
   Button,
   Card,
   CardContent,
@@ -814,6 +813,9 @@ function CategoriesSection({
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
 }) {
+  const income = categories.filter((c) => c.kind === "INCOME");
+  const expense = categories.filter((c) => c.kind === "EXPENSE");
+
   return (
     <Card>
       <CardHeader>
@@ -825,36 +827,84 @@ function CategoriesSection({
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-wrap gap-2">
-        {categories.map((c) => {
+      <CardContent className="flex flex-col gap-4">
+        {categories.length === 0 ? (
+          <p className="text-body-md text-text-3">
+            Todavía no tenés categorías. Creá la primera.
+          </p>
+        ) : (
+          <>
+            {expense.length > 0 ? (
+              <CategoryGroup
+                label="Gastos"
+                items={expense}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ) : null}
+            {income.length > 0 ? (
+              <CategoryGroup
+                label="Ingresos"
+                items={income}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ) : null}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CategoryGroup({
+  label,
+  items,
+  onEdit,
+  onDelete,
+}: {
+  label: string;
+  items: Category[];
+  onEdit: (category: Category) => void;
+  onDelete: (category: Category) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="font-label text-label-md text-text-3">{label}</p>
+      <div className="flex flex-col gap-1">
+        {items.map((c) => {
           const hex = c.color || DEFAULT_COLOR_BY_KIND[c.kind];
           return (
-            <div key={c.id} className="flex items-center gap-1">
-              <Badge
-                variant="outline"
-                className="gap-1.5 border-transparent"
+            <div
+              key={c.id}
+              className="group flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-surface-2/70"
+            >
+              <div
+                className="flex size-8 shrink-0 items-center justify-center rounded-[9px]"
                 style={{
                   color: hex,
-                  backgroundColor: `color-mix(in srgb, ${hex} 14%, transparent)`,
+                  backgroundColor: `color-mix(in srgb, ${hex} 16%, transparent)`,
                 }}
               >
                 <Icon
                   name={(c.icon as IconName) || DEFAULT_ICON_BY_KIND[c.kind]}
-                  className="text-[14px]"
+                  className="text-[15px]"
                 />
+              </div>
+              <p className="min-w-0 flex-1 truncate text-body-md text-text-1">
                 {c.name}
-              </Badge>
-              <RowMenu onEdit={() => onEdit(c)} onDelete={() => onDelete(c)} />
+              </p>
+              <div className="opacity-60 transition-opacity group-hover:opacity-100">
+                <RowMenu
+                  onEdit={() => onEdit(c)}
+                  onDelete={() => onDelete(c)}
+                />
+              </div>
             </div>
           );
         })}
-        {categories.length === 0 && (
-          <p className="text-body-md text-text-3">
-            Todavía no tenés categorías. Creá la primera.
-          </p>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
