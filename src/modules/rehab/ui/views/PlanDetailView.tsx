@@ -103,7 +103,6 @@ export function PlanDetailView({
     plan,
     counts,
     adjust,
-    flushPendingProgress,
     loading,
     loadingWeek,
     weekStart,
@@ -519,16 +518,11 @@ export function PlanDetailView({
                   <Badge variant="destructive" showDot>
                     Vencido
                   </Badge>
+                  <Badge variant="secondary" showDot>
+                    Agendado
+                  </Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => void flushPendingProgress()}
-                  >
-                    Guardar
-                  </Button>
                   <Button
                     type="button"
                     size="sm"
@@ -863,14 +857,10 @@ export function PlanDetailView({
                         <Badge variant="destructive" showDot>
                           Vencido
                         </Badge>
+                        <Badge variant="secondary" showDot>
+                          Agendado
+                        </Badge>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={() => void flushPendingProgress()}
-                      >
-                        Guardar
-                      </Button>
                       <Button
                         type="button"
                         onClick={() => setIsAddExerciseOpen(true)}

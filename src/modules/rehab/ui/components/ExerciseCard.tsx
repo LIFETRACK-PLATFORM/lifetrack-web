@@ -103,7 +103,11 @@ export function ExerciseCard({
   onDelete: () => void;
 }) {
   const target = exercise.target;
-  const showUrgent = isViewingToday && exercise.urgent && !completedOnDate;
+  // Un dia pasado (ni hoy ni futuro) que no se completo ya vencio, sin
+  // depender del flag `urgent` (que solo cubre el arrastre de ayer sobre hoy).
+  const isPastDay = !isFutureDay && !isViewingToday;
+  const showUrgent =
+    !completedOnDate && (isPastDay || (isViewingToday && exercise.urgent));
   const status = getCardStatus(completedOnDate, isFutureDay, showUrgent);
   const style = STATUS_STYLE[status];
   const checkboxId = `exercise-done-${exercise.id}`;

@@ -1,7 +1,19 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Icon } from "@/shared/ui/Icon";
+import { Lock, Plus } from "lucide-react";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  EmptyState,
+  SearchInput,
+  Skeleton,
+} from "@lifetrack/system-design";
+import { Icon, type IconName } from "@/shared/ui/Icon";
 import { VaultRepository } from "../../domain/VaultRepository";
 import { VaultItem } from "../../domain/VaultItem";
 import { groupVaultItemsByCategory } from "../../domain/groupVaultItemsByCategory";
@@ -9,6 +21,7 @@ import {
   getCategoryIcon,
   getCategorySortIndex,
   normalizeVaultCategory,
+  VAULT_CATEGORIES,
 } from "../../domain/vaultCategories";
 import { createVaultRepository } from "../../infrastructure/createVaultRepository";
 import {
@@ -21,6 +34,12 @@ import { CreateVaultItemDialog } from "../components/CreateVaultItemDialog";
 import { VaultItemCard } from "../components/VaultItemCard";
 
 type DialogKind = "create" | "edit" | null;
+type VaultTab = "entradas" | "categorias";
+
+const VAULT_TABS: { id: VaultTab; label: string }[] = [
+  { id: "entradas", label: "Entradas" },
+  { id: "categorias", label: "Categorías" },
+];
 
 function VaultViewContent({ repository }: { repository: VaultRepository }) {
   const { isUnlocked, masterKey, unlocking, unlockError, unlock, lock } =
@@ -41,6 +60,7 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [tab, setTab] = useState<VaultTab>("entradas");
 
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -84,10 +104,27 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
     [categoryCounts],
   );
 
+  const categoryDirectory = useMemo(() => {
+    const used = new Set(categoryCounts.keys());
+    const custom = categoryList.filter(
+      (c) => !(VAULT_CATEGORIES as readonly string[]).includes(c),
+    );
+    return [...VAULT_CATEGORIES, ...custom].map((category) => ({
+      category,
+      count: categoryCounts.get(category) ?? 0,
+      used: used.has(category),
+    }));
+  }, [categoryCounts, categoryList]);
+
   const closeDialog = () => {
     setOpenDialog(null);
     setEditingItem(null);
     setSubmitError(null);
+  };
+
+  const openCategory = (category: string) => {
+    setSelectedCategory(category);
+    setTab("entradas");
   };
 
   if (!isUnlocked) {
@@ -96,12 +133,12 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
         <div className="mx-auto flex max-w-app flex-col items-center">
           <div className="mb-6 text-center">
             <div className="mb-6 flex justify-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-surface-2 text-primary">
-                <Icon name="encrypted" className="text-[36px]" />
+              <div className="flex size-16 items-center justify-center rounded-2xl bg-primary/12 text-primary">
+                <Lock className="size-8" />
               </div>
             </div>
             <h2 className="mb-2 text-headline-lg text-text-1">Bóveda</h2>
-            <p className="text-body-lg text-text-3">
+            <p className="mx-auto max-w-md text-body-lg text-text-3">
               Tus contraseñas cifradas de extremo a extremo. Solo vos podés
               descifrarlas con tu contraseña maestra.
             </p>
@@ -118,8 +155,8 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
 
   return (
     <main className="min-h-screen bg-background p-6 pb-32 text-text-1 md:p-10 md:pb-10">
-      <div className="mx-auto max-w-app">
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="mx-auto flex max-w-app flex-col gap-5">
+        <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-headline-lg text-text-1">Bóveda</h2>
             <p className="text-body-lg text-text-3">
@@ -128,135 +165,249 @@ function VaultViewContent({ repository }: { repository: VaultRepository }) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setOpenDialog("create")}
-              className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground hover:opacity-90"
-            >
-              <Icon name="add" className="text-[16px]" />
+            <Button type="button" size="sm" onClick={() => setOpenDialog("create")}>
+              <Plus />
               Nueva
-            </button>
-            <button
-              type="button"
-              onClick={lock}
-              className="flex items-center gap-1 rounded-lg border border-border bg-surface-2 px-4 py-2 font-label text-label-md text-text-2 hover:bg-surface-3"
-            >
-              <Icon name="lock" className="text-[16px]" />
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={lock}>
+              <Lock />
               Bloquear
-            </button>
+            </Button>
           </div>
         </header>
 
-        <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
-          {!loading && !error && items.length > 0 && (
-            <>
-              <div className="relative mb-4">
-                <Icon
-                  name="search"
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-text-3"
-                />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar por sitio, usuario o categoría…"
-                  className="w-full rounded-lg border border-border bg-surface-1 py-2.5 pl-10 pr-3 text-body-md text-text-1 placeholder:text-text-3 focus:border-primary focus:outline-none"
-                />
-              </div>
-
-              <div className="mb-6 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory(null)}
-                  className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-label text-label-md transition-colors ${
-                    selectedCategory === null
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-surface-2 text-text-2 hover:bg-surface-3"
+        <div className="sticky top-0 z-30 -mx-1 flex gap-2 overflow-x-auto bg-background/95 px-1 py-2 no-scrollbar">
+          {VAULT_TABS.map((item) => {
+            const active = tab === item.id;
+            const count =
+              item.id === "entradas"
+                ? items.length
+                : categoryDirectory.filter((c) => c.used).length;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setTab(item.id)}
+                className={`flex shrink-0 items-center gap-2 rounded-full px-5 py-2 font-label text-label-md transition-all ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-surface-2 text-text-3 hover:bg-surface-3 hover:text-text-1"
+                }`}
+              >
+                {item.label}
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
+                    active
+                      ? "bg-primary-foreground/20 text-primary-foreground"
+                      : "bg-surface-3 text-text-3"
                   }`}
                 >
-                  Todas
-                  <span className="opacity-80">({items.length})</span>
-                </button>
-                {categoryList.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    onClick={() => setSelectedCategory(category)}
-                    className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-label text-label-md transition-colors ${
-                      selectedCategory === category
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-surface-2 text-text-2 hover:bg-surface-3"
-                    }`}
-                  >
-                    <Icon
-                      name={getCategoryIcon(category)}
-                      className="text-[14px]"
-                    />
-                    {category}
-                    <span className="opacity-80">
-                      ({categoryCounts.get(category)})
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
 
-          {loading && (
-            <p className="text-body-md text-text-3">Cargando contraseñas…</p>
-          )}
-
-          {error && (
-            <div className="flex flex-col items-center gap-4 py-8 text-center">
-              <p className="text-error">{error}</p>
-            </div>
-          )}
-
-          {!loading && !error && (
-            <div className="space-y-6">
-              {groupedItems.map((group) => (
-                <div key={group.category}>
-                  <div className="mb-3 flex items-center gap-2">
-                    <Icon
-                      name={getCategoryIcon(normalizeVaultCategory(group.category))}
-                      className="text-[16px] text-primary"
-                    />
-                    <h3 className="font-label text-label-md font-semibold uppercase tracking-wide text-text-3">
-                      {group.category}
-                    </h3>
-                    <span className="rounded-full bg-surface-3 px-2 py-0.5 font-label text-label-md text-text-3">
-                      {group.items.length}
-                    </span>
+        {tab === "entradas" && (
+          <Card className="border-t-[3px] border-t-primary bg-primary/[0.02]">
+            <CardHeader>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <CardTitle className="text-body-md">
+                      {selectedCategory
+                        ? `Entradas · ${selectedCategory}`
+                        : "Todas las entradas"}
+                    </CardTitle>
+                    <p className="mt-1 font-label text-label-md text-text-3">
+                      Buscá y filtrá tus contraseñas guardadas
+                    </p>
                   </div>
-                  <div className="space-y-3">
-                    {group.items.map((item) => (
-                      <VaultItemCard
-                        key={item.id}
-                        item={item}
-                        onReveal={revealPassword}
-                        onEdit={(vaultItem) => {
-                          setEditingItem(vaultItem);
-                          setOpenDialog("edit");
-                        }}
-                        onDelete={deleteItem}
-                      />
-                    ))}
-                  </div>
+                  {selectedCategory ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedCategory(null)}
+                    >
+                      Quitar filtro
+                    </Button>
+                  ) : null}
                 </div>
-              ))}
-              {items.length === 0 && (
-                <p className="py-8 text-center text-body-md text-text-3">
-                  Todavía no guardaste ninguna contraseña. Creá la primera.
-                </p>
-              )}
-              {items.length > 0 && filteredItems.length === 0 && (
+
+                {!loading && !error && items.length > 0 ? (
+                  <>
+                    <SearchInput
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Buscar por sitio, usuario o categoría…"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategory(null)}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-label text-label-md transition-colors ${
+                          selectedCategory === null
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-surface-2 text-text-2 hover:bg-surface-3"
+                        }`}
+                      >
+                        Todas
+                        <span className="opacity-80">({items.length})</span>
+                      </button>
+                      {categoryList.map((category) => (
+                        <button
+                          key={category}
+                          type="button"
+                          onClick={() => setSelectedCategory(category)}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-label text-label-md transition-colors ${
+                            selectedCategory === category
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-surface-2 text-text-2 hover:bg-surface-3"
+                          }`}
+                        >
+                          <Icon
+                            name={getCategoryIcon(category) as IconName}
+                            className="text-[14px]"
+                          />
+                          {category}
+                          <span className="opacity-80">
+                            ({categoryCounts.get(category)})
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-14 w-full rounded-xl" />
+                  <Skeleton className="h-14 w-full rounded-xl" />
+                  <Skeleton className="h-14 w-full rounded-xl" />
+                </div>
+              ) : null}
+
+              {error ? (
+                <p className="py-6 text-center text-body-md text-error">{error}</p>
+              ) : null}
+
+              {!loading && !error && items.length === 0 ? (
+                <div className="flex justify-center py-6">
+                  <EmptyState
+                    icon={<Lock className="size-6" />}
+                    title="Tu bóveda está vacía"
+                    description="Guardá la primera contraseña cifrada para empezar."
+                    action={
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setOpenDialog("create")}
+                      >
+                        <Plus />
+                        Nueva entrada
+                      </Button>
+                    }
+                  />
+                </div>
+              ) : null}
+
+              {!loading && !error && items.length > 0 && filteredItems.length === 0 ? (
                 <p className="py-8 text-center text-body-md text-text-3">
                   Ninguna contraseña coincide con tu búsqueda o filtro.
                 </p>
-              )}
-            </div>
-          )}
-        </section>
+              ) : null}
+
+              {!loading && !error && filteredItems.length > 0 ? (
+                <div className="flex flex-col gap-5">
+                  {groupedItems.map((group) => (
+                    <div key={group.category} className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <Icon
+                          name={
+                            getCategoryIcon(
+                              normalizeVaultCategory(group.category),
+                            ) as IconName
+                          }
+                          className="text-[16px] text-primary"
+                        />
+                        <p className="font-label text-label-md text-text-3">
+                          {group.category}
+                        </p>
+                        <Badge variant="secondary">{group.items.length}</Badge>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        {group.items.map((item) => (
+                          <VaultItemCard
+                            key={item.id}
+                            item={item}
+                            showCategoryBadge={false}
+                            onReveal={revealPassword}
+                            onEdit={(vaultItem) => {
+                              setEditingItem(vaultItem);
+                              setOpenDialog("edit");
+                            }}
+                            onDelete={deleteItem}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </CardContent>
+          </Card>
+        )}
+
+        {tab === "categorias" && (
+          <Card className="border-t-[3px] border-t-accent-tint bg-accent-tint/[0.03]">
+            <CardHeader>
+              <CardTitle className="text-body-md">Categorías</CardTitle>
+              <p className="mt-1 font-label text-label-md text-text-3">
+                Organizá tus entradas. Tocá una categoría para filtrar.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-1">
+                {categoryDirectory.map(({ category, count, used }) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => openCategory(category)}
+                    className="group flex items-center gap-3 rounded-xl px-2 py-2.5 text-left transition-colors hover:bg-surface-2/70"
+                  >
+                    <div
+                      className={`flex size-9 shrink-0 items-center justify-center rounded-[10px] ${
+                        used
+                          ? "bg-primary/12 text-primary"
+                          : "bg-surface-2 text-text-3"
+                      }`}
+                    >
+                      <Icon
+                        name={getCategoryIcon(category) as IconName}
+                        className="text-[16px]"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-body-md text-text-1">
+                        {category}
+                      </p>
+                      <p className="font-label text-label-md text-text-3">
+                        {used
+                          ? `${count} entrada${count === 1 ? "" : "s"}`
+                          : "Sin entradas todavía"}
+                      </p>
+                    </div>
+                    <Badge variant={used ? "default" : "secondary"}>{count}</Badge>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {openDialog === "create" && (

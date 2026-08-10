@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Icon } from "@/shared/ui/Icon";
+import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
+import { Badge, Button } from "@lifetrack/system-design";
+import { Icon, type IconName } from "@/shared/ui/Icon";
 import { VaultItem } from "../../domain/VaultItem";
 import { formatSiteLabel, getSiteHref } from "../../domain/formatSiteLabel";
 import {
@@ -39,11 +41,13 @@ export function VaultItemCard({
   onReveal,
   onEdit,
   onDelete,
+  showCategoryBadge = true,
 }: {
   item: VaultItem;
   onReveal: (itemId: string) => Promise<string>;
   onEdit: (item: VaultItem) => void;
   onDelete: (itemId: string) => Promise<void>;
+  showCategoryBadge?: boolean;
 }) {
   const [revealed, setRevealed] = useState<string | null>(null);
   const [revealing, setRevealing] = useState(false);
@@ -90,101 +94,112 @@ export function VaultItemCard({
   };
 
   return (
-    <div className="rounded-lg border border-border/30 bg-surface-2 p-4">
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+    <div className="rounded-xl border border-border/40 bg-surface-1 px-3 py-3 transition-colors hover:bg-surface-2/60">
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/12 text-primary">
+          <Icon
+            name={getCategoryIcon(category) as IconName}
+            className="text-[16px]"
+          />
+        </div>
+
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             {siteHref ? (
               <a
                 href={siteHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="truncate font-label text-label-lg font-semibold text-primary hover:underline"
+                className="truncate text-body-md font-medium text-primary hover:underline"
               >
                 {siteLabel}
               </a>
             ) : (
-              <h4 className="truncate font-label text-label-lg font-semibold text-text-1">
+              <p className="truncate text-body-md font-medium text-text-1">
                 {siteLabel}
-              </h4>
+              </p>
             )}
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 font-label text-label-md text-primary">
-              <Icon
-                name={getCategoryIcon(category)}
-                className="text-[14px]"
-              />
-              {category}
-            </span>
+            {showCategoryBadge ? (
+              <Badge variant="outline" className="gap-1 border-primary/20 bg-primary/8 text-primary">
+                {category}
+              </Badge>
+            ) : null}
           </div>
-          {updatedLabel && (
-            <p className="font-label text-label-md text-text-3">{updatedLabel}</p>
-          )}
+          <p className="truncate font-label text-label-md text-text-3">
+            {item.username}
+            {updatedLabel ? ` · ${updatedLabel}` : ""}
+          </p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-1">
-          <button
+        <div className="flex shrink-0 items-center gap-0.5">
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={handleReveal}
             disabled={revealing || deleting}
-            className="rounded-lg p-2 text-text-3 transition-colors hover:bg-surface-3 hover:text-primary disabled:opacity-50"
+            aria-label={revealed !== null ? "Ocultar" : "Revelar contraseña"}
             title={revealed !== null ? "Ocultar" : "Revelar contraseña"}
           >
-            <Icon
-              name={revealed !== null ? "visibility_off" : "visibility"}
-              className="text-[18px]"
-            />
-          </button>
-          <button
+            {revealed !== null ? <EyeOff /> : <Eye />}
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={() => onEdit(item)}
             disabled={deleting}
-            className="rounded-lg p-2 text-text-3 transition-colors hover:bg-surface-3 hover:text-text-1 disabled:opacity-50"
+            aria-label="Editar"
             title="Editar"
           >
-            <Icon name="edit" className="text-[18px]" />
-          </button>
-          <button
+            <Pencil />
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={handleDelete}
             disabled={deleting}
-            className="rounded-lg p-2 text-text-3 transition-colors hover:bg-surface-3 hover:text-error disabled:opacity-50"
+            aria-label="Eliminar"
             title="Eliminar"
+            className="text-text-3 hover:text-error"
           >
-            <Icon name="trash" className="text-[18px]" />
-          </button>
+            <Trash2 />
+          </Button>
         </div>
       </div>
 
-      <div className="space-y-3">
-        <CopyField label="Usuario" value={item.username} mono />
-
-        {revealed !== null && (
-          <div className="space-y-2">
-            <CopyField
-              label="Contraseña"
-              value={revealed}
-              mono
-              masked
-              visible={showPassword}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="inline-flex items-center gap-1 font-label text-label-md text-text-3 transition-colors hover:text-text-1"
-            >
-              <Icon
-                name={showPassword ? "visibility_off" : "visibility"}
-                className="text-[16px]"
+      {revealed !== null || revealError ? (
+        <div className="mt-3 flex flex-col gap-2 border-t border-border/40 pt-3">
+          <CopyField label="Usuario" value={item.username} mono />
+          {revealed !== null ? (
+            <div className="flex flex-col gap-2">
+              <CopyField
+                label="Contraseña"
+                value={revealed}
+                mono
+                masked
+                visible={showPassword}
               />
-              {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-            </button>
-          </div>
-        )}
-
-        {revealError && (
-          <p className="text-body-md text-error">{revealError}</p>
-        )}
-      </div>
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="inline-flex w-fit items-center gap-1.5 font-label text-label-md text-text-3 transition-colors hover:text-text-1"
+              >
+                {showPassword ? (
+                  <EyeOff className="size-3.5" />
+                ) : (
+                  <Eye className="size-3.5" />
+                )}
+                {showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+              </button>
+            </div>
+          ) : null}
+          {revealError ? (
+            <p className="text-body-md text-error">{revealError}</p>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }
