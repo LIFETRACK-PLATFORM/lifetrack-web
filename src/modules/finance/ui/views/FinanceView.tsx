@@ -2,8 +2,21 @@
 
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
+import { MoreHorizontal, Plus, Wallet } from "lucide-react";
 import { Icon, type IconName } from "@/shared/ui/Icon";
-import { Badge, Skeleton, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@lifetrack/system-design";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  KpiCard,
+  Skeleton,
+} from "@lifetrack/system-design";
 import {
   DEFAULT_COLOR_BY_KIND,
   DEFAULT_ICON_BY_KIND,
@@ -19,7 +32,6 @@ import { Transaction } from "@/modules/finance/domain/Transaction";
 import { BudgetListItem } from "@/modules/finance/domain/BudgetListItem";
 import { RecurringItem } from "@/modules/finance/domain/RecurringItem";
 import { MonthSelector } from "@/modules/finance/ui/components/MonthSelector";
-import { PatrimonioSection } from "@/modules/finance/ui/components/PatrimonioSection";
 import { CreateAccountDialog } from "@/modules/finance/ui/components/CreateAccountDialog";
 import { CreateCategoryDialog } from "@/modules/finance/ui/components/CreateCategoryDialog";
 import { CreateTransactionDialog } from "@/modules/finance/ui/components/CreateTransactionDialog";
@@ -32,13 +44,13 @@ import { EditBudgetDialog } from "@/modules/finance/ui/components/EditBudgetDial
 import { DeleteConfirmDialog } from "@/modules/finance/ui/components/DeleteConfirmDialog";
 import { BudgetListSection } from "@/modules/finance/ui/components/BudgetListSection";
 import { TodaySection } from "@/modules/finance/ui/components/TodaySection";
-import { MonthlySummarySection } from "@/modules/finance/ui/components/MonthlySummarySection";
 import {
   CreateRecurringDialog,
   EditRecurringDialog,
   RecurringSection,
 } from "@/modules/finance/ui/components/RecurringSection";
 import { PendingRemindersBanner } from "@/modules/finance/ui/components/PendingRemindersBanner";
+
 const FinanceCharts = dynamic(
   () =>
     import("@/modules/finance/ui/components/FinanceCharts").then(
@@ -46,9 +58,10 @@ const FinanceCharts = dynamic(
     ),
   {
     loading: () => (
-      <div className="space-y-4">
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <Skeleton className="h-48 w-full rounded-xl" />
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Skeleton className="h-[280px] w-full rounded-xl" />
+        <Skeleton className="h-[280px] w-full rounded-xl" />
+        <Skeleton className="h-[280px] w-full rounded-xl" />
       </div>
     ),
     ssr: false,
@@ -78,6 +91,15 @@ type DeleteTarget =
   | { type: "budget"; item: BudgetListItem }
   | null;
 
+type FinanceTab = "resumen" | "movimientos" | "cuentas" | "planificacion";
+
+const FINANCE_TABS: { id: FinanceTab; label: string }[] = [
+  { id: "resumen", label: "Resumen" },
+  { id: "movimientos", label: "Movimientos" },
+  { id: "cuentas", label: "Cuentas y categorías" },
+  { id: "planificacion", label: "Planificación" },
+];
+
 export function FinanceView({
   repository,
 }: { repository?: FinanceRepository } = {}) {
@@ -102,6 +124,7 @@ export function FinanceView({
     reload,
   } = useFinanceData(activeRepository, month, year);
 
+  const [tab, setTab] = useState<FinanceTab>("resumen");
   const [openDialog, setOpenDialog] = useState<DialogKind>(null);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
@@ -130,13 +153,9 @@ export function FinanceView({
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
         <p className="text-error">{error}</p>
-        <button
-          type="button"
-          onClick={() => reload()}
-          className="rounded-xl bg-primary px-4 py-2 text-primary-foreground"
-        >
+        <Button type="button" onClick={() => reload()}>
           Reintentar
-        </button>
+        </Button>
       </div>
     );
   }
@@ -148,46 +167,138 @@ export function FinanceView({
   const categoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name ?? "—";
 
+  const penTotal = accounts
+    .filter((a) => a.currency === "PEN")
+    .reduce((sum, a) => sum + a.balance, 0);
+  const usdTotal = accounts
+    .filter((a) => a.currency === "USD")
+    .reduce((sum, a) => sum + a.balance, 0);
+  const penSummary = summaries.find((s) => s.currency === "PEN") ?? summaries[0];
+  const income = penSummary?.totalIncome ?? 0;
+  const expense = penSummary?.totalExpense ?? 0;
+  const net = penSummary?.netAmount ?? 0;
+  const summaryCurrency = penSummary?.currency ?? "PEN";
+  const canCreateTransaction =
+    accounts.length > 0 && categories.length > 0;
+
   return (
     <main className="min-h-screen bg-background p-6 pb-32 text-text-1 md:p-10 md:pb-10">
-      <div className="mx-auto max-w-app">
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="mx-auto flex max-w-app flex-col gap-5">
+        <header className="mb-2 flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-headline-lg text-text-1">Finanzas</h2>
             <p className="text-body-lg text-text-3">
-              Tus cuentas, gastos e ingresos en un solo lugar.
+              Cuentas, gastos e ingresos en un solo lugar.
             </p>
           </div>
-          <MonthSelector month={month} year={year} onChange={handlePeriodChange} />
+          <div className="flex flex-wrap items-center gap-3">
+            <MonthSelector
+              month={month}
+              year={year}
+              onChange={handlePeriodChange}
+            />
+            <Button
+              type="button"
+              size="sm"
+              disabled={!canCreateTransaction}
+              onClick={() => setOpenDialog("transaction")}
+            >
+              <Plus />
+              Transacción
+            </Button>
+          </div>
         </header>
 
-        <PendingRemindersBanner
-          reminders={pendingReminders}
-          accounts={accounts}
-          onRegister={async (item, amount) => {
-            await activeRepository.createTransaction({
-              accountId: item.accountId,
-              categoryId: item.categoryId,
-              amount,
-              kind: item.kind,
-              description: item.name,
-              occurredAt: new Date().toISOString(),
-            });
-            reload();
-          }}
-          onDismiss={(id) =>
-            setPendingReminders((prev) =>
-              prev.filter((r) => r.recurringItemId !== id),
-            )
-          }
-        />
+        <div className="sticky top-0 z-30 -mx-1 flex gap-2 overflow-x-auto bg-background/95 px-1 py-2 no-scrollbar">
+          {FINANCE_TABS.map((item) => {
+            const pendingCount =
+              item.id === "planificacion" ? pendingReminders.length : 0;
+            const active = tab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setTab(item.id)}
+                className={`flex shrink-0 items-center gap-2 rounded-full px-5 py-2 font-label text-label-md transition-all ${
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-surface-2 text-text-3 hover:bg-surface-3 hover:text-text-1"
+                }`}
+              >
+                {item.label}
+                {pendingCount > 0 ? (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
+                      active
+                        ? "bg-primary-foreground/20 text-primary-foreground"
+                        : "bg-warning/15 text-warning"
+                    }`}
+                  >
+                    {pendingCount}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
 
-        <PatrimonioSection accounts={accounts} />
+        {tab === "resumen" && (
+          <div className="flex flex-col gap-5">
+            <PendingRemindersBanner
+              reminders={pendingReminders}
+              accounts={accounts}
+              onRegister={async (item, amount) => {
+                await activeRepository.createTransaction({
+                  accountId: item.accountId,
+                  categoryId: item.categoryId,
+                  amount,
+                  kind: item.kind,
+                  description: item.name,
+                  occurredAt: new Date().toISOString(),
+                });
+                reload();
+              }}
+              onDismiss={(id) =>
+                setPendingReminders((prev) =>
+                  prev.filter((r) => r.recurringItemId !== id),
+                )
+              }
+            />
 
-        <div className="mb-6 space-y-6">
-          <MonthlySummarySection summaries={summaries} />
-          <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
-            <h3 className="mb-4 text-headline-md">Gráficos</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+              <KpiCard
+                label="Patrimonio PEN"
+                value={formatMoney(penTotal, "PEN")}
+                tone="primary"
+                sparklinePoints="0,20 20,18 40,16 60,14 80,10 100,8"
+              />
+              <KpiCard
+                label="Patrimonio USD"
+                value={formatMoney(usdTotal, "USD")}
+                tone="neutral"
+                sparklinePoints="0,14 20,14 40,14 60,14 80,14 100,14"
+              />
+              <KpiCard
+                label="Ingresos"
+                value={formatMoney(income, summaryCurrency)}
+                tone="success"
+                sparklinePoints="0,22 20,20 40,18 60,12 80,8 100,4"
+              />
+              <KpiCard
+                label="Gastos"
+                value={formatMoney(expense, summaryCurrency)}
+                tone="error"
+                sparklinePoints="0,8 20,10 40,12 60,16 80,18 100,22"
+              />
+              <KpiCard
+                label="Neto del mes"
+                value={formatMoney(net, summaryCurrency)}
+                delta={net >= 0 ? "superávit" : "déficit"}
+                tone={net >= 0 ? "success" : "error"}
+                sparklinePoints="0,6 20,8 40,10 60,14 80,18 100,24"
+              />
+            </div>
+
             <FinanceCharts
               summaries={summaries}
               transactions={transactions}
@@ -196,72 +307,116 @@ export function FinanceView({
               month={month}
               year={year}
             />
-          </section>
-        </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <TodaySection
-            transactions={todayTransactions}
-            accounts={accounts}
-            categories={categories}
-            onEdit={(t) => setEditTarget({ type: "transaction", item: t })}
-            onDelete={(t) => setDeleteTarget({ type: "transaction", item: t })}
-          />
-
-          <AccountsSection
-            accounts={accounts}
-            onCreate={() => setOpenDialog("account")}
-            onEdit={(a) => setEditTarget({ type: "account", item: a })}
-            onDelete={(a) => setDeleteTarget({ type: "account", item: a })}
-          />
-
-          <CategoriesSection
-            categories={categories}
-            onCreate={() => setOpenDialog("category")}
-            onEdit={(c) => setEditTarget({ type: "category", item: c })}
-            onDelete={(c) => setDeleteTarget({ type: "category", item: c })}
-          />
-
-          <BudgetListSection
-            budgets={budgets}
-            categories={categories}
-            month={month}
-            year={year}
-            repository={activeRepository}
-            onEdit={(b) => setEditTarget({ type: "budget", item: b })}
-            onDelete={(b) => setDeleteTarget({ type: "budget", item: b })}
-            onCreate={() => setOpenDialog("budget")}
-          />
-
-          <RecurringSection
-            items={recurringItems}
-            accounts={accounts}
-            onCreate={() => setOpenDialog("recurring")}
-            onEdit={(item) => setEditTarget({ type: "recurring", item })}
-          />
-
-          <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation lg:col-span-2">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-headline-md">Transacciones del mes</h3>
-              <button
-                type="button"
-                onClick={() => setOpenDialog("transaction")}
-                disabled={accounts.length === 0 || categories.length === 0}
-                className="flex items-center gap-1 rounded-lg bg-surface-3 px-3 py-1.5 font-label text-label-md text-primary hover:bg-surface-4 disabled:opacity-50"
-              >
-                <Icon name="add" className="text-[16px]" />
-                Nueva
-              </button>
-            </div>
-            <TransactionList
-              transactions={transactions}
+            <TodaySection
+              transactions={todayTransactions}
               accounts={accounts}
               categories={categories}
               onEdit={(t) => setEditTarget({ type: "transaction", item: t })}
-              onDelete={(t) => setDeleteTarget({ type: "transaction", item: t })}
+              onDelete={(t) =>
+                setDeleteTarget({ type: "transaction", item: t })
+              }
             />
-          </section>
-        </div>
+          </div>
+        )}
+
+        {tab === "movimientos" && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <CardTitle>Transacciones del mes</CardTitle>
+                  <p className="mt-1 font-label text-label-md text-text-3">
+                    Todos los movimientos del período seleccionado
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!canCreateTransaction}
+                  onClick={() => setOpenDialog("transaction")}
+                >
+                  <Plus />
+                  Nueva
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <TransactionList
+                transactions={transactions}
+                accounts={accounts}
+                categories={categories}
+                onEdit={(t) => setEditTarget({ type: "transaction", item: t })}
+                onDelete={(t) =>
+                  setDeleteTarget({ type: "transaction", item: t })
+                }
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {tab === "cuentas" && (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <AccountsSection
+              accounts={accounts}
+              onCreate={() => setOpenDialog("account")}
+              onEdit={(a) => setEditTarget({ type: "account", item: a })}
+              onDelete={(a) => setDeleteTarget({ type: "account", item: a })}
+            />
+            <CategoriesSection
+              categories={categories}
+              onCreate={() => setOpenDialog("category")}
+              onEdit={(c) => setEditTarget({ type: "category", item: c })}
+              onDelete={(c) => setDeleteTarget({ type: "category", item: c })}
+            />
+          </div>
+        )}
+
+        {tab === "planificacion" && (
+          <div className="flex flex-col gap-4">
+            {pendingReminders.length > 0 ? (
+              <PendingRemindersBanner
+                reminders={pendingReminders}
+                accounts={accounts}
+                onRegister={async (item, amount) => {
+                  await activeRepository.createTransaction({
+                    accountId: item.accountId,
+                    categoryId: item.categoryId,
+                    amount,
+                    kind: item.kind,
+                    description: item.name,
+                    occurredAt: new Date().toISOString(),
+                  });
+                  reload();
+                }}
+                onDismiss={(id) =>
+                  setPendingReminders((prev) =>
+                    prev.filter((r) => r.recurringItemId !== id),
+                  )
+                }
+              />
+            ) : null}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+              <BudgetListSection
+                budgets={budgets}
+                categories={categories}
+                month={month}
+                year={year}
+                repository={activeRepository}
+                onEdit={(b) => setEditTarget({ type: "budget", item: b })}
+                onDelete={(b) => setDeleteTarget({ type: "budget", item: b })}
+                onCreate={() => setOpenDialog("budget")}
+              />
+              <RecurringSection
+                items={recurringItems}
+                accounts={accounts}
+                pendingIds={pendingReminders.map((r) => r.recurringItemId)}
+                onCreate={() => setOpenDialog("recurring")}
+                onEdit={(item) => setEditTarget({ type: "recurring", item })}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {openDialog === "account" && (
@@ -602,36 +757,39 @@ function AccountsSection({
   onDelete: (account: Account) => void;
 }) {
   return (
-    <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-headline-md">Cuentas</h3>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="flex items-center gap-1 rounded-lg bg-surface-3 px-3 py-1.5 font-label text-label-md text-primary hover:bg-surface-4"
-        >
-          <Icon name="add" className="text-[16px]" />
-          Nueva
-        </button>
-      </div>
-      <div className="space-y-2">
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle>Cuentas</CardTitle>
+          <Button type="button" variant="ghost" size="sm" onClick={onCreate}>
+            <Plus />
+            Nueva
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
         {accounts.map((a) => (
-          <div
-            key={a.id}
-            className="flex items-center justify-between rounded-lg border border-border/30 bg-surface-2 p-4"
-          >
-            <div>
-              <p className="text-body-md font-semibold text-text-1">{a.name}</p>
+          <div key={a.id} className="flex items-center gap-3">
+            <div
+              className="flex size-8 shrink-0 items-center justify-center rounded-[9px]"
+              style={{
+                background:
+                  "color-mix(in srgb, var(--primary) 15%, transparent)",
+                color: "var(--primary)",
+              }}
+            >
+              <Wallet size={15} strokeWidth={1.75} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-body-md text-text-1">{a.name}</p>
               <p className="font-label text-label-md text-text-3">
                 {a.type} · {a.currency}
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <p className="font-metric text-metric-sm text-text-1">
-                {formatMoney(a.balance, a.currency)}
-              </p>
-              <RowMenu onEdit={() => onEdit(a)} onDelete={() => onDelete(a)} />
-            </div>
+            <p className="shrink-0 font-metric text-body-md text-text-1">
+              {formatMoney(a.balance, a.currency)}
+            </p>
+            <RowMenu onEdit={() => onEdit(a)} onDelete={() => onDelete(a)} />
           </div>
         ))}
         {accounts.length === 0 && (
@@ -639,8 +797,8 @@ function AccountsSection({
             Todavía no tenés cuentas. Creá la primera.
           </p>
         )}
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -655,48 +813,98 @@ function CategoriesSection({
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
 }) {
+  const income = categories.filter((c) => c.kind === "INCOME");
+  const expense = categories.filter((c) => c.kind === "EXPENSE");
+
   return (
-    <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-headline-md">Categorías</h3>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="flex items-center gap-1 rounded-lg bg-surface-3 px-3 py-1.5 font-label text-label-md text-primary hover:bg-surface-4"
-        >
-          <Icon name="add" className="text-[16px]" />
-          Nueva
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {categories.map((c) => {
-          const hex = c.color || DEFAULT_COLOR_BY_KIND[c.kind];
-          return (
-            <div key={c.id} className="flex items-center gap-1">
-              <Badge
-                variant="outline"
-                className="gap-1.5 border-transparent"
-                style={{ color: hex, backgroundColor: `${hex}1A` }}
-              >
-                <Icon
-                  name={
-                    (c.icon as IconName) || DEFAULT_ICON_BY_KIND[c.kind]
-                  }
-                  className="text-[14px]"
-                />
-                {c.name}
-              </Badge>
-              <RowMenu onEdit={() => onEdit(c)} onDelete={() => onDelete(c)} />
-            </div>
-          );
-        })}
-        {categories.length === 0 && (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle>Categorías</CardTitle>
+          <Button type="button" variant="ghost" size="sm" onClick={onCreate}>
+            <Plus />
+            Nueva
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {categories.length === 0 ? (
           <p className="text-body-md text-text-3">
             Todavía no tenés categorías. Creá la primera.
           </p>
+        ) : (
+          <>
+            {expense.length > 0 ? (
+              <CategoryGroup
+                label="Gastos"
+                items={expense}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ) : null}
+            {income.length > 0 ? (
+              <CategoryGroup
+                label="Ingresos"
+                items={income}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ) : null}
+          </>
         )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CategoryGroup({
+  label,
+  items,
+  onEdit,
+  onDelete,
+}: {
+  label: string;
+  items: Category[];
+  onEdit: (category: Category) => void;
+  onDelete: (category: Category) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <p className="font-label text-label-md text-text-3">{label}</p>
+      <div className="flex flex-col gap-1">
+        {items.map((c) => {
+          const hex = c.color || DEFAULT_COLOR_BY_KIND[c.kind];
+          return (
+            <div
+              key={c.id}
+              className="group flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-surface-2/70"
+            >
+              <div
+                className="flex size-8 shrink-0 items-center justify-center rounded-[9px]"
+                style={{
+                  color: hex,
+                  backgroundColor: `color-mix(in srgb, ${hex} 16%, transparent)`,
+                }}
+              >
+                <Icon
+                  name={(c.icon as IconName) || DEFAULT_ICON_BY_KIND[c.kind]}
+                  className="text-[15px]"
+                />
+              </div>
+              <p className="min-w-0 flex-1 truncate text-body-md text-text-1">
+                {c.name}
+              </p>
+              <div className="opacity-60 transition-opacity group-hover:opacity-100">
+                <RowMenu
+                  onEdit={() => onEdit(c)}
+                  onDelete={() => onDelete(c)}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -710,13 +918,14 @@ function RowMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button
           type="button"
-          className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-surface-3"
+          variant="ghost"
+          size="icon-sm"
           aria-label="Opciones"
         >
-          <Icon name="more_vert" className="text-[16px] text-text-3" />
-        </button>
+          <MoreHorizontal />
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onEdit}>Editar</DropdownMenuItem>

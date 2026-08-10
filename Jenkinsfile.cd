@@ -11,7 +11,7 @@ pipeline {
   stages {
     stage("Docker Build") {
       steps {
-        sh "docker buildx build --builder lifetrack-builder -t ${IMAGE}:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=${API_URL} --load ."
+        sh "docker buildx build --builder lifetrack-builder --provenance=false --sbom=false -t ${IMAGE}:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=${API_URL} --load ."
       }
     }
 

@@ -14,6 +14,7 @@ import {
   AddExerciseInput,
   AddMeasurementInput,
   AddPainLogInput,
+  DashboardBundle,
   GetPlanOptions,
   RecoveryPlanStatus,
   RehabRepository,
@@ -343,8 +344,8 @@ function replaceExerciseInPlan(
 }
 
 export class MockRehabRepository implements RehabRepository {
-  async getDashboard(): Promise<DashboardSummary[]> {
-    return [dashboard];
+  async getDashboard(): Promise<DashboardBundle> {
+    return { active: [dashboard], inactive: [] };
   }
 
   async getPlan(id: string, options?: GetPlanOptions): Promise<RehabPlan> {
@@ -484,6 +485,8 @@ export class MockRehabRepository implements RehabRepository {
     _planId: string,
     _status: RecoveryPlanStatus,
   ): Promise<void> {}
+
+  async deletePlan(_planId: string): Promise<void> {}
 
   async addExercise(planId: string, input: AddExerciseInput): Promise<void> {
     const plan = plans[planId];

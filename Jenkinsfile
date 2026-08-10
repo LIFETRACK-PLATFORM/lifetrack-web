@@ -35,7 +35,7 @@ pipeline {
 
     stage("Docker Build") {
       steps {
-        sh "docker buildx build --builder lifetrack-builder -t lifetrack-web:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=https://api.tracklywork.com --load ."
+        sh "docker buildx build --builder lifetrack-builder --provenance=false --sbom=false -t lifetrack-web:latest --build-arg NEXT_PUBLIC_API_GATEWAY_URL=https://api.tracklywork.com --load ."
       }
     }
   }

@@ -1,8 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Icon } from "@/shared/ui/Icon";
-import { StatusBadge } from "@lifetrack/system-design";
+import { Plus } from "lucide-react";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Progress,
+} from "@lifetrack/system-design";
 import { BudgetListItem } from "@/modules/finance/domain/BudgetListItem";
 import { Category } from "@/modules/finance/domain/Category";
 import { FinanceRepository } from "@/modules/finance/domain/FinanceRepository";
@@ -74,80 +82,76 @@ export function BudgetListSection({
         : [];
 
   return (
-    <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-headline-md">Presupuestos del mes</h3>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="flex items-center gap-1 rounded-lg bg-surface-3 px-3 py-1.5 font-label text-label-md text-primary hover:bg-surface-4"
-        >
-          <Icon name="add" className="text-[16px]" />
-          Nuevo
-        </button>
-      </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle>Presupuestos del mes</CardTitle>
+          <Button type="button" variant="ghost" size="sm" onClick={onCreate}>
+            <Plus />
+            Nuevo
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {loading && <p className="text-body-md text-text-3">Cargando…</p>}
 
-      {loading && <p className="text-body-md text-text-3">Cargando…</p>}
+        {!loading && items.length === 0 && (
+          <p className="text-body-md text-text-3">
+            No hay presupuestos para este mes.
+          </p>
+        )}
 
-      {!loading && items.length === 0 && (
-        <p className="text-body-md text-text-3">
-          No hay presupuestos para este mes.
-        </p>
-      )}
-
-      <div className="space-y-3">
         {items.map((b) => {
           const status = b.status;
           const spent = status?.spentAmount ?? 0;
           const pct =
-            b.amount > 0 ? Math.min(100, (spent / b.amount) * 100) : 0;
+            b.amount > 0 ? Math.min(100, Math.round((spent / b.amount) * 100)) : 0;
           const exceeded = status?.exceeded ?? false;
           return (
-            <div
-              key={b.budgetId}
-              className="rounded-lg border border-border/30 bg-surface-2 p-4"
-            >
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="text-body-md font-semibold text-text-1">
+            <div key={b.budgetId} className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-body-md text-text-1">
                   {categoryName(b.categoryId)}
                 </p>
-                <div className="flex items-center gap-2">
-                  <StatusBadge
-                    status={exceeded ? "overdue" : "active"}
-                    label={exceeded ? "Excedido" : "En rango"}
-                  />
-                  <button
+                <div className="flex items-center gap-1">
+                  <Badge variant={exceeded ? "destructive" : "success"} showDot>
+                    {exceeded ? "Excedido" : "En rango"}
+                  </Badge>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => onEdit(b)}
-                    className="rounded-lg px-2 py-1 font-label text-label-md text-primary hover:bg-surface-3"
                   >
                     Editar
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-error"
                     onClick={() => onDelete(b)}
-                    className="rounded-lg px-2 py-1 font-label text-label-md text-error hover:bg-surface-3"
                   >
                     Eliminar
-                  </button>
+                  </Button>
                 </div>
               </div>
-              <p className="font-metric text-metric-sm text-text-1">
-                {formatMoney(spent, "PEN")}{" "}
-                <span className="text-body-md font-normal text-text-3">
-                  / {formatMoney(b.amount, "PEN")}
+              <Progress
+                value={pct}
+                indicatorClassName={exceeded ? "lt:bg-error" : undefined}
+              />
+              <div className="flex justify-between gap-2">
+                <span className="font-label text-label-md text-text-3">
+                  {formatMoney(spent, "PEN")} / {formatMoney(b.amount, "PEN")}
                 </span>
-              </p>
-              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
-                <div
-                  className={`h-full rounded-full ${exceeded ? "bg-error" : "bg-primary"}`}
-                  style={{ width: `${pct}%` }}
-                />
+                <span className="font-label text-label-md text-text-3">
+                  {pct}%
+                </span>
               </div>
             </div>
           );
         })}
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }

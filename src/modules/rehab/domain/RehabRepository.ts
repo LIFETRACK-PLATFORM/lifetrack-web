@@ -66,9 +66,21 @@ export interface GetPlanOptions {
   weekReferenceDate?: string;
 }
 
+export interface InactivePlanSummary {
+  planId: string;
+  bodyPart: string;
+  injuryType: string;
+  status: Exclude<RecoveryPlanStatus, "ACTIVE">;
+}
+
+export interface DashboardBundle {
+  active: DashboardSummary[];
+  inactive: InactivePlanSummary[];
+}
+
 export interface RehabRepository {
-  /** Todos los planes activos del usuario, cada uno con su propio resumen. */
-  getDashboard(): Promise<DashboardSummary[]>;
+  /** Planes activos (detalle) + pausados/completados (resumen). */
+  getDashboard(): Promise<DashboardBundle>;
   getPlan(id: string, options?: GetPlanOptions): Promise<RehabPlan>;
   updateExerciseProgress(
     planId: string,
@@ -83,6 +95,7 @@ export interface RehabRepository {
   ): Promise<void>;
   createPlan(input: CreateRecoveryPlanInput): Promise<string>;
   updatePlanStatus(planId: string, status: RecoveryPlanStatus): Promise<void>;
+  deletePlan(planId: string): Promise<void>;
   addExercise(planId: string, input: AddExerciseInput): Promise<void>;
   updateExercise(
     planId: string,
