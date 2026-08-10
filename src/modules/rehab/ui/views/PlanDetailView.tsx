@@ -296,7 +296,7 @@ export function PlanDetailView({
     if (fromMeasurements.length > 0) return fromMeasurements;
     const fallback = parseMetricNumber(plan?.metrics.kneeExtensionNote ?? "");
     return fallback === null ? [] : [fallback];
-  }, [plan?.measurements, plan?.metrics.kneeExtensionNote]);
+  }, [plan?.measurements, plan?.metrics]);
 
   const latestWeight = useMemo(() => {
     const weights = (plan?.measurements ?? [])
@@ -332,7 +332,7 @@ export function PlanDetailView({
         month: "short",
       }),
     };
-  }, [plan?.painHistory, plan?.metrics.painLevel]);
+  }, [plan?.painHistory, plan?.metrics]);
 
   const handleSelectViewingDate = (date: string) => {
     setViewingDate(date);
