@@ -120,14 +120,22 @@ export function MeasurementTrendChart({
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={series}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--border)"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="date"
                   tickFormatter={formatShortDate}
                   tick={{ fill: "var(--text-3)", fontSize: 11 }}
+                  axisLine={{ stroke: "var(--border)" }}
+                  tickLine={false}
                 />
                 <YAxis
                   tick={{ fill: "var(--text-3)", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
                   unit={activeUnit}
                 />
                 <Tooltip
@@ -142,7 +150,18 @@ export function MeasurementTrendChart({
                   dataKey="value"
                   stroke="var(--primary)"
                   strokeWidth={2}
-                  dot
+                  dot={{
+                    r: 3.5,
+                    fill: "var(--surface-1)",
+                    stroke: "var(--primary)",
+                    strokeWidth: 2,
+                  }}
+                  activeDot={{
+                    r: 5,
+                    fill: "var(--primary)",
+                    stroke: "var(--surface-1)",
+                    strokeWidth: 2,
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>

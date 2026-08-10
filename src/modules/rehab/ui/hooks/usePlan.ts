@@ -271,6 +271,18 @@ export function usePlan(
     [plan, commitProgress, viewingDate, todayIso],
   );
 
+  /** Fuerza el guardado inmediato de reps pendientes (botón Guardar). */
+  const flushPendingProgress = useCallback(async () => {
+    const ids = Object.keys(pendingProgressRef.current);
+    for (const id of ids) {
+      if (progressTimersRef.current[id]) {
+        clearTimeout(progressTimersRef.current[id]);
+        delete progressTimersRef.current[id];
+      }
+    }
+    await Promise.all(ids.map((id) => commitProgress(id)));
+  }, [commitProgress]);
+
   const addExercise = useCallback(
     async (input: AddExerciseInput) => {
       if (!plan) return false;
@@ -589,6 +601,23 @@ export function usePlan(
     [plan, repository, refresh],
   );
 
+  const deletePlan = useCallback(async () => {
+    if (!plan) return false;
+    setUpdatingStatus(true);
+    setUpdateStatusError(null);
+    try {
+      await repository.deletePlan(plan.id);
+      return true;
+    } catch (err) {
+      setUpdateStatusError(
+        err instanceof Error ? err.message : "No se pudo eliminar el plan",
+      );
+      return false;
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }, [plan, repository]);
+
   const setAdHocProtocolDay = useCallback(
     async (targetDate: string, sourceDate: string) => {
       if (!plan) return false;
@@ -643,6 +672,7 @@ export function usePlan(
     plan,
     counts,
     adjust,
+    flushPendingProgress,
     loading,
     loadingWeek,
     weekReferenceDate,
@@ -669,6 +699,7 @@ export function usePlan(
     completionError,
     pendingCompletionIds,
     updateStatus,
+    deletePlan,
     updatingStatus,
     updateStatusError,
     addAppointment,

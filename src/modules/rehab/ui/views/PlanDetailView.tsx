@@ -31,7 +31,12 @@ import { MeasurementDialog } from "@/modules/rehab/ui/components/MeasurementDial
 import { MeasurementTrendChart } from "@/modules/rehab/ui/components/MeasurementTrendChart";
 import { MeasurementHistoryList } from "@/modules/rehab/ui/components/MeasurementHistoryList";
 import {
+  MeasurementBarKpi,
+  MeasurementKpiCard,
+} from "@/modules/rehab/ui/components/MeasurementBarKpi";
+import {
   formatCompletionLabel,
+  formatDateIsoCalendar,
   formatProtocolTitle,
   getExercisesForProtocolView,
   getProtocolStatsForExercises,
@@ -55,7 +60,7 @@ import type {
   AddMeasurementInput,
   RecoveryPlanStatus,
 } from "@/modules/rehab/domain/RehabRepository";
-import type { MeasurementPoint, PainLogPoint } from "@/modules/rehab/domain/RehabPlan";
+import type { MeasurementPoint } from "@/modules/rehab/domain/RehabPlan";
 import type { StatusBadgeStatus } from "@lifetrack/system-design";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
 import Image from "next/image";
@@ -98,6 +103,7 @@ export function PlanDetailView({
     plan,
     counts,
     adjust,
+    flushPendingProgress,
     loading,
     loadingWeek,
     weekStart,
@@ -122,6 +128,7 @@ export function PlanDetailView({
     completionError,
     pendingCompletionIds,
     updateStatus,
+    deletePlan,
     updatingStatus,
     updateStatusError,
     addAppointment,
@@ -249,6 +256,83 @@ export function PlanDetailView({
   const isBorrowedView =
     borrowedRoutineDate !== null &&
     getProtocolStatsForDate(plan?.exercises ?? [], viewingDate).due === 0;
+
+  const inProgressCount = useMemo(() => {
+    return protocolExercises.filter((ex) => {
+      const current = counts[ex.id] ?? 0;
+      return current > 0 && !isCompletedOnDate(ex, viewingDate);
+    }).length;
+  }, [protocolExercises, counts, viewingDate]);
+
+  const protocolDayLabel = useMemo(() => {
+    const match = plan?.dayProgress?.match(/(\d+)/);
+    if (match) return match[1];
+    return viewingDate.slice(8).replace(/^0/, "");
+  }, [plan?.dayProgress, viewingDate]);
+
+  const protocolSubtitle = `Día ${protocolDayLabel} · ${protocolStats.completed}/${protocolStats.due} completados · ${inProgressCount} en progreso`;
+
+  const appointmentSummary = useMemo(() => {
+    const appointments = plan?.appointments ?? [];
+    const attended = appointments.filter((a) => a.attended === true).length;
+    const missed = appointments.filter((a) => a.attended === false).length;
+    const rescheduled = appointments.filter((a) => a.rescheduledFrom).length;
+    const pendingToday = appointments.filter(
+      (a) => isSameCalendarDay(a.date) && a.attended === null,
+    ).length;
+    // El dominio aún no modela "llegó tarde"; se muestra 0 para alinear el copy del design.
+    const late = 0;
+    return { attended, late, rescheduled, pendingToday, missed };
+  }, [plan?.appointments]);
+
+  const appointmentSubtitle = `${appointmentSummary.attended} asistidas · ${appointmentSummary.late} tarde · ${appointmentSummary.rescheduled} reprogramadas · ${appointmentSummary.pendingToday} pendientes hoy`;
+
+  const extensionValues = useMemo(() => {
+    const fromMeasurements = (plan?.measurements ?? [])
+      .filter((m) => m.type === "EXTENSION_DEGREES")
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((m) => m.value)
+      .slice(-4);
+    if (fromMeasurements.length > 0) return fromMeasurements;
+    const fallback = parseMetricNumber(plan?.metrics.kneeExtensionNote ?? "");
+    return fallback === null ? [] : [fallback];
+  }, [plan?.measurements, plan?.metrics.kneeExtensionNote]);
+
+  const latestWeight = useMemo(() => {
+    const weights = (plan?.measurements ?? [])
+      .filter((m) => m.type === "WEIGHT_KG")
+      .sort((a, b) => a.date.localeCompare(b.date));
+    if (weights.length === 0) return null;
+    const latest = weights[weights.length - 1];
+    const first = weights[0];
+    const delta = latest.value - first.value;
+    return {
+      value: `${latest.value}${latest.unit}`,
+      delta:
+        weights.length > 1 && delta !== 0
+          ? `${delta > 0 ? "+" : ""}${delta.toFixed(1)} kg`
+          : undefined,
+    };
+  }, [plan?.measurements]);
+
+  const lastPainRecord = useMemo(() => {
+    const history = [...(plan?.painHistory ?? [])].sort((a, b) =>
+      a.date.localeCompare(b.date),
+    );
+    const last = history[history.length - 1];
+    if (!last) {
+      const level = plan?.metrics.painLevel;
+      if (!level) return null;
+      return { value: level.includes("/") ? level : `${level}/10`, dateLabel: undefined as string | undefined };
+    }
+    return {
+      value: `${last.level}/10`,
+      dateLabel: formatDateIsoCalendar(last.date.slice(0, 10), {
+        day: "2-digit",
+        month: "short",
+      }),
+    };
+  }, [plan?.painHistory, plan?.metrics.painLevel]);
 
   const handleSelectViewingDate = (date: string) => {
     setViewingDate(date);
@@ -390,6 +474,9 @@ export function PlanDetailView({
               status={plan.status}
               updating={updatingStatus}
               onChangeStatus={updateStatus}
+              onDelete={async () => {
+                if (await deletePlan()) router.push("/rehab");
+              }}
             />
             {updateStatusError && (
               <p className="mt-2 text-body-md text-error">{updateStatusError}</p>
@@ -415,13 +502,43 @@ export function PlanDetailView({
 
           {tab === "exercises" && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-headline-md font-semibold text-text-1">
-                  {protocolTitle}
-                </h3>
-                <span className="font-label text-label-md text-primary">
-                  Quedan {protocolStats.remaining}
-                </span>
+              <div className="space-y-3 px-1">
+                <div>
+                  <h3 className="text-headline-md font-semibold text-text-1">
+                    {protocolTitle}
+                  </h3>
+                  <p className="mt-1 text-body-md text-text-3">{protocolSubtitle}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge variant="success" showDot>
+                    Completado
+                  </Badge>
+                  <Badge variant="warning" showDot>
+                    En progreso
+                  </Badge>
+                  <Badge variant="destructive" showDot>
+                    Vencido
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => void flushPendingProgress()}
+                  >
+                    Guardar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => setIsAddExerciseOpen(true)}
+                    className="flex-1"
+                  >
+                    <Icon name="add" className="text-[18px]" />
+                    Agregar ejercicio
+                  </Button>
+                </div>
               </div>
               <WeeklyDaysNavigator
                 days={plan.weeklyDays}
@@ -447,14 +564,6 @@ export function PlanDetailView({
                   onClear={handleClearBorrowedRoutine}
                 />
               )}
-              <button
-                type="button"
-                onClick={() => setIsAddExerciseOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
-              >
-                <Icon name="add" className="text-[20px]" />
-                Agregar ejercicio
-              </button>
               {protocolExercises
                 .filter((e) => e.id !== "glute")
                 .map((ex) => (
@@ -522,19 +631,44 @@ export function PlanDetailView({
 
           {tab === "appointments" && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-headline-md font-semibold text-text-1">
-                  Próximas sesiones
-                </h3>
+              <div className="space-y-3 px-1">
+                <div>
+                  <h3 className="text-headline-md font-semibold text-text-1">
+                    Citas del plan
+                  </h3>
+                  <p className="mt-1 text-body-md text-text-3">
+                    {appointmentSubtitle}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge variant="warning" showDot>
+                    Hoy
+                  </Badge>
+                  <Badge variant="secondary" showDot>
+                    Próxima
+                  </Badge>
+                  <Badge variant="default" showDot>
+                    Reprogramada
+                  </Badge>
+                  <Badge variant="success" showDot>
+                    Asistió
+                  </Badge>
+                  <Badge variant="warning" showDot>
+                    Llegó tarde
+                  </Badge>
+                  <Badge variant="destructive" showDot>
+                    No asistió
+                  </Badge>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => setIsAddAppointmentOpen(true)}
+                  className="w-full"
+                >
+                  <Icon name="calendar_today" className="text-[18px]" />
+                  Agendar cita
+                </Button>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsAddAppointmentOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
-              >
-                <Icon name="add" className="text-[20px]" />
-                Agregar cita
-              </button>
               {plan.appointments.map((apt) => (
                 <AppointmentListItem
                   key={apt.id}
@@ -568,28 +702,45 @@ export function PlanDetailView({
 
           {tab === "metrics" && (
             <div className="space-y-4">
-              <h3 className="px-1 text-headline-md font-semibold text-text-1">
-                Indicadores de recuperación
-              </h3>
-              <Card className="border-t-[3px] border-t-primary bg-primary/[0.03]">
-                <CardContent className="flex items-center justify-between gap-3">
-                  <span className="font-label text-label-md text-text-3">
-                    Rango de extensión de rodilla
-                  </span>
-                  <span className="font-metric text-metric-lg text-primary">
-                    {plan.metrics.kneeExtensionNote}
-                  </span>
-                </CardContent>
-              </Card>
+              <div className="space-y-3 px-1">
+                <div>
+                  <h3 className="text-headline-md font-semibold text-text-1">
+                    Mediciones del plan
+                  </h3>
+                  <p className="mt-1 text-body-md text-text-3">
+                    Seguimiento separado por tipo · extensión, peso y dolor
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => setIsAddMeasurementOpen(true)}
+                  className="w-full"
+                >
+                  <Icon name="add" className="text-[18px]" />
+                  Registrar medición
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <MeasurementBarKpi
+                  label="Rango de extensión de rodilla"
+                  values={extensionValues}
+                  unit="°"
+                  tone="primary"
+                />
+                <MeasurementKpiCard
+                  label="Último dolor registrado"
+                  value={lastPainRecord?.value ?? "—"}
+                  tone="error"
+                  delta={lastPainRecord?.dateLabel}
+                />
+                <MeasurementKpiCard
+                  label="Peso actual"
+                  value={latestWeight?.value ?? "—"}
+                  tone="success"
+                  delta={latestWeight?.delta}
+                />
+              </div>
               <MeasurementTrendChart measurements={plan.measurements} />
-              <button
-                type="button"
-                onClick={() => setIsAddMeasurementOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
-              >
-                <Icon name="add" className="text-[20px]" />
-                Registrar medición
-              </button>
               <MeasurementHistoryList
                 measurements={plan.measurements}
                 onEdit={setEditingMeasurement}
@@ -599,10 +750,6 @@ export function PlanDetailView({
               {deleteMeasurementError && (
                 <p className="text-body-md text-error">{deleteMeasurementError}</p>
               )}
-              <PainHistoryCard
-                painLevel={plan.metrics.painLevel}
-                history={plan.painHistory}
-              />
               <PainLogForm
                 painLevel={painLevel}
                 setPainLevel={setPainLevel}
@@ -640,6 +787,9 @@ export function PlanDetailView({
                 status={plan.status}
                 updating={updatingStatus}
                 onChangeStatus={updateStatus}
+                onDelete={async () => {
+                  if (await deletePlan()) router.push("/rehab");
+                }}
               />
               <div className="hidden items-center rounded-full border border-border/30 bg-surface-1 px-4 py-1 sm:flex">
                 <Icon name="search" className="mr-2 text-text-3" />
@@ -691,216 +841,243 @@ export function PlanDetailView({
 
           <div className="flex flex-col gap-8 p-6 lg:flex-row lg:gap-10">
             <section className="flex-1 space-y-6">
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-headline-md text-text-1">{protocolTitle}</h3>
-                <div className="flex items-center gap-3">
-                  {tab === "exercises" && (
-                    <div className="hidden items-center gap-1.5 lg:flex">
-                      <Badge variant="success" showDot>
-                        Completado
-                      </Badge>
-                      <Badge variant="warning" showDot>
-                        En progreso
-                      </Badge>
-                      <Badge variant="destructive" showDot>
-                        Vencido
-                      </Badge>
-                    </div>
-                  )}
-                  {tab === "exercises" && (
-                    <span className="font-label text-label-md text-primary">
-                      Quedan {protocolStats.remaining}
-                    </span>
-                  )}
-                  {tab === "exercises" && (
-                    <button
-                      type="button"
-                      onClick={() => setIsAddExerciseOpen(true)}
-                      className="flex items-center gap-1 rounded-lg border border-primary/40 px-4 py-2 font-label text-label-md text-primary transition-all active:scale-95"
-                    >
-                      <Icon name="add" className="text-[20px]" />
-                      Agregar ejercicio
-                    </button>
-                  )}
-                </div>
-              </div>
-
               {tab === "exercises" && (
-                <WeeklyDaysNavigator
-                  className="mb-6"
-                  days={plan.weeklyDays}
-                  selectedDate={viewingDate}
-                  todayIso={todayIso}
-                  weekStart={weekStart}
-                  weekEnd={weekEnd}
-                  weeklyCompliancePercent={plan.weeklyCompliancePercent}
-                  loadingWeek={loadingWeek}
-                  canGoToNextWeek={canGoToNextWeek}
-                  isViewingCurrentWeek={isViewingCurrentWeek}
-                  onSelectDate={handleSelectViewingDate}
-                  onPreviousWeek={goToPreviousWeek}
-                  onNextWeek={goToNextWeek}
-                />
-              )}
+                <>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-headline-md font-semibold text-text-1">
+                        {protocolTitle}
+                      </h3>
+                      <p className="mt-1 text-body-md text-text-3">
+                        {protocolSubtitle}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="success" showDot>
+                          Completado
+                        </Badge>
+                        <Badge variant="warning" showDot>
+                          En progreso
+                        </Badge>
+                        <Badge variant="destructive" showDot>
+                          Vencido
+                        </Badge>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => void flushPendingProgress()}
+                      >
+                        Guardar
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setIsAddExerciseOpen(true)}
+                      >
+                        <Icon name="add" className="text-[18px]" />
+                        Agregar ejercicio
+                      </Button>
+                    </div>
+                  </div>
 
-              {tab === "exercises" && isBorrowedView && borrowedRoutineDate && (
-                <div className="mb-6">
-                  <ProtocolBorrowedBanner
-                    sourceDate={borrowedRoutineDate}
-                    targetDate={viewingDate}
-                    completedCount={protocolStats.completed}
-                    totalCount={protocolStats.due}
-                    onFinish={handleFinishBorrowedRoutine}
-                    onClear={handleClearBorrowedRoutine}
+                  <WeeklyDaysNavigator
+                    days={plan.weeklyDays}
+                    selectedDate={viewingDate}
+                    todayIso={todayIso}
+                    weekStart={weekStart}
+                    weekEnd={weekEnd}
+                    weeklyCompliancePercent={plan.weeklyCompliancePercent}
+                    loadingWeek={loadingWeek}
+                    canGoToNextWeek={canGoToNextWeek}
+                    isViewingCurrentWeek={isViewingCurrentWeek}
+                    onSelectDate={handleSelectViewingDate}
+                    onPreviousWeek={goToPreviousWeek}
+                    onNextWeek={goToNextWeek}
                   />
-                </div>
-              )}
 
-              {tab === "exercises" && (
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                  {protocolExercises.map((ex) => (
-                    <ExerciseCard
-                      key={ex.id}
-                      exercise={ex}
-                      current={counts[ex.id] ?? 0}
-                      highlighted={highlightExerciseId === ex.id}
-                      pendingCompletion={pendingCompletionIds.has(ex.id)}
-                      deleting={deletingExerciseId === ex.id}
-                      showMedia
-                      completedOnDate={isCompletedOnDate(ex, viewingDate)}
-                      isFutureDay={viewingIsFuture}
-                      isEditableDay={!viewingIsFuture}
-                      isViewingToday={isViewingToday}
-                      onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
-                      onToggleCompletion={() => {
-                        if (viewingIsFuture) return;
-                        void toggleExerciseCompletion(
-                          ex.id,
-                          !isCompletedOnDate(ex, viewingDate),
-                          viewingDate,
-                        );
-                      }}
-                      onEdit={() => setEditingExercise(ex)}
-                      onDelete={() => void deleteExercise(ex.id)}
+                  {isBorrowedView && borrowedRoutineDate && (
+                    <ProtocolBorrowedBanner
+                      sourceDate={borrowedRoutineDate}
+                      targetDate={viewingDate}
+                      completedCount={protocolStats.completed}
+                      totalCount={protocolStats.due}
+                      onFinish={handleFinishBorrowedRoutine}
+                      onClear={handleClearBorrowedRoutine}
                     />
-                  ))}
-                  {protocolExercises.length === 0 && (
-                    <div className="col-span-full">
-                      <ProtocolEmptyDay
-                      viewingDate={viewingDate}
-                      weeklyDays={plan.weeklyDays}
-                      exercises={plan.exercises}
-                      onBorrowRoutine={handleBorrowRoutine}
+                  )}
+
+                  <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                    {protocolExercises.map((ex) => (
+                      <ExerciseCard
+                        key={ex.id}
+                        exercise={ex}
+                        current={counts[ex.id] ?? 0}
+                        highlighted={highlightExerciseId === ex.id}
+                        pendingCompletion={pendingCompletionIds.has(ex.id)}
+                        deleting={deletingExerciseId === ex.id}
+                        showMedia
+                        completedOnDate={isCompletedOnDate(ex, viewingDate)}
+                        isFutureDay={viewingIsFuture}
+                        isEditableDay={!viewingIsFuture}
+                        isViewingToday={isViewingToday}
+                        onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
+                        onToggleCompletion={() => {
+                          if (viewingIsFuture) return;
+                          void toggleExerciseCompletion(
+                            ex.id,
+                            !isCompletedOnDate(ex, viewingDate),
+                            viewingDate,
+                          );
+                        }}
+                        onEdit={() => setEditingExercise(ex)}
+                        onDelete={() => void deleteExercise(ex.id)}
+                      />
+                    ))}
+                    {protocolExercises.length === 0 && (
+                      <div className="col-span-full">
+                        <ProtocolEmptyDay
+                          viewingDate={viewingDate}
+                          weeklyDays={plan.weeklyDays}
+                          exercises={plan.exercises}
+                          onBorrowRoutine={handleBorrowRoutine}
+                        />
+                      </div>
+                    )}
+                    {saveError && (
+                      <p className="col-span-full text-body-md text-error">
+                        {saveError}
+                      </p>
+                    )}
+                    {updateExerciseError && (
+                      <p className="col-span-full text-body-md text-error">
+                        {updateExerciseError}
+                      </p>
+                    )}
+                    {completionError && (
+                      <p className="col-span-full text-body-md text-error">
+                        {completionError}
+                      </p>
+                    )}
+                    {adHocProtocolError && (
+                      <p className="col-span-full text-body-md text-error">
+                        {adHocProtocolError}
+                      </p>
+                    )}
+                    {deleteExerciseError && (
+                      <p className="col-span-full text-body-md text-error">
+                        {deleteExerciseError}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="border-t border-border/20 pt-8">
+                    <PainLogForm
+                      painLevel={painLevel}
+                      setPainLevel={setPainLevel}
+                      painNote={painNote}
+                      setPainNote={setPainNote}
+                      onSubmit={handleAddPainLog}
+                      submitting={addingPainLog}
+                      error={addPainLogError}
                     />
-                    </div>
-                  )}
-                  {saveError && (
-                    <p className="col-span-full text-body-md text-error">
-                      {saveError}
-                    </p>
-                  )}
-                  {updateExerciseError && (
-                    <p className="col-span-full text-body-md text-error">
-                      {updateExerciseError}
-                    </p>
-                  )}
-                  {completionError && (
-                    <p className="col-span-full text-body-md text-error">
-                      {completionError}
-                    </p>
-                  )}
-                  {adHocProtocolError && (
-                    <p className="col-span-full text-body-md text-error">
-                      {adHocProtocolError}
-                    </p>
-                  )}
-                  {deleteExerciseError && (
-                    <p className="col-span-full text-body-md text-error">
-                      {deleteExerciseError}
-                    </p>
-                  )}
-                </div>
+                  </div>
+                </>
               )}
 
               {tab === "photos" && (
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                  {plan.exercises.map((ex) => (
-                    <ExerciseCard
-                      key={ex.id}
-                      exercise={ex}
-                      current={counts[ex.id] ?? 0}
-                      highlighted={highlightExerciseId === ex.id}
-                      pendingCompletion={pendingCompletionIds.has(ex.id)}
-                      deleting={deletingExerciseId === ex.id}
-                      showMedia
-                      completedOnDate={ex.completedToday}
-                      isFutureDay={false}
-                      isEditableDay
-                      isViewingToday
-                      onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
-                      onToggleCompletion={() => {
-                        void toggleExerciseCompletion(
-                          ex.id,
-                          !ex.completedToday,
-                          todayIso,
-                        );
-                      }}
-                      onEdit={() => setEditingExercise(ex)}
-                      onDelete={() => void deleteExercise(ex.id)}
+                <>
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                    {plan.exercises.map((ex) => (
+                      <ExerciseCard
+                        key={ex.id}
+                        exercise={ex}
+                        current={counts[ex.id] ?? 0}
+                        highlighted={highlightExerciseId === ex.id}
+                        pendingCompletion={pendingCompletionIds.has(ex.id)}
+                        deleting={deletingExerciseId === ex.id}
+                        showMedia
+                        completedOnDate={ex.completedToday}
+                        isFutureDay={false}
+                        isEditableDay
+                        isViewingToday
+                        onAdjust={(delta) => adjust(ex.id, delta, ex.target)}
+                        onToggleCompletion={() => {
+                          void toggleExerciseCompletion(
+                            ex.id,
+                            !ex.completedToday,
+                            todayIso,
+                          );
+                        }}
+                        onEdit={() => setEditingExercise(ex)}
+                        onDelete={() => void deleteExercise(ex.id)}
+                      />
+                    ))}
+                    {saveError && (
+                      <p className="col-span-full text-body-md text-error">
+                        {saveError}
+                      </p>
+                    )}
+                    {updateExerciseError && (
+                      <p className="col-span-full text-body-md text-error">
+                        {updateExerciseError}
+                      </p>
+                    )}
+                  </div>
+                  <div className="border-t border-border/20 pt-8">
+                    <PainLogForm
+                      painLevel={painLevel}
+                      setPainLevel={setPainLevel}
+                      painNote={painNote}
+                      setPainNote={setPainNote}
+                      onSubmit={handleAddPainLog}
+                      submitting={addingPainLog}
+                      error={addPainLogError}
                     />
-                  ))}
-                  {saveError && (
-                    <p className="col-span-full text-body-md text-error">
-                      {saveError}
-                    </p>
-                  )}
-                  {updateExerciseError && (
-                    <p className="col-span-full text-body-md text-error">
-                      {updateExerciseError}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {(tab === "exercises" || tab === "photos") && (
-                <div className="mt-8 border-t border-border/20 pt-8">
-                  <PainLogForm
-                    painLevel={painLevel}
-                    setPainLevel={setPainLevel}
-                    painNote={painNote}
-                    setPainNote={setPainNote}
-                    onSubmit={handleAddPainLog}
-                    submitting={addingPainLog}
-                    error={addPainLogError}
-                  />
-                </div>
+                  </div>
+                </>
               )}
 
               {tab === "appointments" && (
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="hidden items-center gap-1.5 lg:flex">
-                      <Badge variant="success" showDot>
-                        Asistió
-                      </Badge>
-                      <Badge variant="destructive" showDot>
-                        No asistió
-                      </Badge>
-                      <Badge variant="warning" showDot>
-                        Hoy
-                      </Badge>
-                      <Badge variant="default" showDot>
-                        Reprogramada
-                      </Badge>
+                    <div>
+                      <h3 className="text-headline-md font-semibold text-text-1">
+                        Citas del plan
+                      </h3>
+                      <p className="mt-1 text-body-md text-text-3">
+                        {appointmentSubtitle}
+                      </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsAddAppointmentOpen(true)}
-                      className="flex items-center gap-1 rounded-lg border border-primary/40 px-4 py-2 font-label text-label-md text-primary transition-all active:scale-95"
-                    >
-                      <Icon name="add" className="text-[20px]" />
-                      Agregar cita
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="warning" showDot>
+                          Hoy
+                        </Badge>
+                        <Badge variant="secondary" showDot>
+                          Próxima
+                        </Badge>
+                        <Badge variant="default" showDot>
+                          Reprogramada
+                        </Badge>
+                        <Badge variant="success" showDot>
+                          Asistió
+                        </Badge>
+                        <Badge variant="warning" showDot>
+                          Llegó tarde
+                        </Badge>
+                        <Badge variant="destructive" showDot>
+                          No asistió
+                        </Badge>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => setIsAddAppointmentOpen(true)}
+                      >
+                        <Icon name="calendar_today" className="text-[18px]" />
+                        Agendar cita
+                      </Button>
+                    </div>
                   </div>
                   {plan.appointments.map((apt) => (
                     <AppointmentListItem
@@ -927,54 +1104,69 @@ export function PlanDetailView({
               )}
 
               {tab === "metrics" && (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <Card className="border-t-[3px] border-t-primary bg-primary/[0.03]">
-                    <CardContent className="flex items-center justify-between gap-3">
-                      <span className="font-label text-label-md text-text-3">
-                        Rango de extensión de rodilla
-                      </span>
-                      <span className="font-metric text-metric-lg text-primary">
-                        {plan.metrics.kneeExtensionNote}
-                      </span>
-                    </CardContent>
-                  </Card>
-                  <PainHistoryCard
-                    painLevel={plan.metrics.painLevel}
-                    history={plan.painHistory}
-                  />
-                  <div className="md:col-span-2">
-                    <MeasurementTrendChart measurements={plan.measurements} />
-                  </div>
-                  <div className="md:col-span-2 space-y-4">
-                    <button
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-headline-md font-semibold text-text-1">
+                        Mediciones del plan
+                      </h3>
+                      <p className="mt-1 text-body-md text-text-3">
+                        Seguimiento separado por tipo · extensión, peso y dolor
+                      </p>
+                    </div>
+                    <Button
                       type="button"
                       onClick={() => setIsAddMeasurementOpen(true)}
-                      className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 py-3 font-label text-label-md text-primary transition-all active:scale-95"
                     >
-                      <Icon name="add" className="text-[20px]" />
+                      <Icon name="add" className="text-[18px]" />
                       Registrar medición
-                    </button>
-                    <MeasurementHistoryList
-                      measurements={plan.measurements}
-                      onEdit={setEditingMeasurement}
-                      onDelete={deleteMeasurement}
-                      deletingId={deletingMeasurementId}
-                    />
-                    {deleteMeasurementError && (
-                      <p className="text-body-md text-error">{deleteMeasurementError}</p>
-                    )}
+                    </Button>
                   </div>
-                  <div className="md:col-span-2 space-y-4">
-                    <PainLogForm
-                      painLevel={painLevel}
-                      setPainLevel={setPainLevel}
-                      painNote={painNote}
-                      setPainNote={setPainNote}
-                      onSubmit={handleAddPainLog}
-                      submitting={addingPainLog}
-                      error={addPainLogError}
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <MeasurementBarKpi
+                      label="Rango de extensión de rodilla"
+                      values={extensionValues}
+                      unit="°"
+                      tone="primary"
+                    />
+                    <MeasurementKpiCard
+                      label="Último dolor registrado"
+                      value={lastPainRecord?.value ?? "—"}
+                      tone="error"
+                      delta={lastPainRecord?.dateLabel}
+                    />
+                    <MeasurementKpiCard
+                      label="Peso actual"
+                      value={latestWeight?.value ?? "—"}
+                      tone="success"
+                      delta={latestWeight?.delta}
                     />
                   </div>
+
+                  <MeasurementTrendChart measurements={plan.measurements} />
+
+                  <MeasurementHistoryList
+                    measurements={plan.measurements}
+                    onEdit={setEditingMeasurement}
+                    onDelete={deleteMeasurement}
+                    deletingId={deletingMeasurementId}
+                  />
+                  {deleteMeasurementError && (
+                    <p className="text-body-md text-error">
+                      {deleteMeasurementError}
+                    </p>
+                  )}
+
+                  <PainLogForm
+                    painLevel={painLevel}
+                    setPainLevel={setPainLevel}
+                    painNote={painNote}
+                    setPainNote={setPainNote}
+                    onSubmit={handleAddPainLog}
+                    submitting={addingPainLog}
+                    error={addPainLogError}
+                  />
                 </div>
               )}
             </section>
@@ -1221,54 +1413,11 @@ function PlanDetailSkeleton() {
   );
 }
 
-function PainHistoryCard({
-  painLevel,
-  history,
-}: {
-  painLevel: string;
-  history: PainLogPoint[];
-}) {
-  const recent = history.slice(-10);
-  return (
-    <Card className="border-t-[3px] border-t-error bg-error/[0.03]">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-body-md">Último dolor registrado</CardTitle>
-          <span className="font-metric text-metric-xl text-error">
-            {painLevel}
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {recent.length > 0 ? (
-          <div className="flex h-24 items-end gap-1.5">
-            {recent.map((point) => (
-              <div
-                key={point.date}
-                className="flex flex-1 flex-col items-center gap-1"
-              >
-                <div
-                  className="w-full rounded-t-sm bg-error/70"
-                  style={{ height: `${Math.max((point.level / 10) * 100, 4)}%` }}
-                  title={`${point.level}/10 · ${new Date(point.date).toLocaleDateString("es-PE", { day: "numeric", month: "short" })}`}
-                />
-                <span className="text-[10px] text-text-3">
-                  {new Date(point.date).toLocaleDateString("es-PE", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-body-md text-text-3">
-            Todavía no hay registros de dolor.
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
+function parseMetricNumber(value: string): number | null {
+  const match = value.match(/-?\d+(\.\d+)?/);
+  if (!match) return null;
+  const parsed = Number(match[0]);
+  return Number.isFinite(parsed) ? parsed : null;
 }
 
 function isPastOrToday(dateIso: string): boolean {
@@ -1392,10 +1541,12 @@ function AppointmentListItem({
     >
       <div className="flex min-w-0 flex-1 items-start gap-4">
         <div
-          className={`flex min-w-[64px] shrink-0 flex-col items-center rounded-lg px-3 py-2 ${style.dateBg} ${style.dateText}`}
+          className={`flex min-w-[72px] shrink-0 flex-col items-center rounded-xl px-3 py-2.5 text-center ${style.dateBg} ${style.dateText}`}
         >
-          <span className="font-label text-label-md font-bold">{apt.month}</span>
-          <span className="font-metric text-[24px] sm:text-[28px]">{apt.day}</span>
+          <Icon name="calendar" className="mb-1 text-[18px]" />
+          <span className="font-label text-label-md font-bold uppercase">
+            {apt.month} {apt.day}
+          </span>
           <span className="font-label text-[11px] opacity-80">
             {formatAppointmentTime(apt.date)}
           </span>
@@ -1410,10 +1561,16 @@ function AppointmentListItem({
               status={apt.type === "THERAPY" ? "therapy" : "medical"}
             />
           </div>
-          <p className="flex items-center gap-1 font-label text-label-md text-text-3">
-            <Icon name="person" className="text-[14px]" />
+          <p className="flex items-center gap-1.5 font-label text-label-md text-text-3">
+            <Icon name="stethoscope" className="text-[14px]" />
             {apt.provider}
           </p>
+          {apt.detail && (
+            <p className="flex items-center gap-1.5 font-label text-label-md text-text-3">
+              <Icon name="map_pin" className="text-[14px]" />
+              {apt.detail}
+            </p>
+          )}
           {apt.notes && (
             <p className="font-label text-label-md text-text-3">
               {apt.notes}
@@ -1424,15 +1581,14 @@ function AppointmentListItem({
               Antes: {formatRescheduledFromLabel(apt.rescheduledFrom)}
             </p>
           )}
-          {isPastOrToday(apt.date) && (
-            <div className="mt-2">
-              <AppointmentAttendanceControl
-                attended={apt.attended}
-                pending={pendingAttendance}
-                onMark={onMarkAttendance}
-              />
-            </div>
-          )}
+          <div className="mt-2.5">
+            <AppointmentAttendanceControl
+              attended={apt.attended}
+              pending={pendingAttendance}
+              onMark={onMarkAttendance}
+              onReschedule={onEdit}
+            />
+          </div>
         </div>
       </div>
       <div className="flex shrink-0 items-center gap-1 self-end sm:self-start">
@@ -1505,10 +1661,12 @@ function AppointmentAttendanceControl({
   attended,
   pending,
   onMark,
+  onReschedule,
 }: {
   attended: boolean | null;
   pending: boolean;
   onMark: (attended: boolean) => void;
+  onReschedule?: () => void;
 }) {
   const label =
     attended === true
@@ -1535,7 +1693,7 @@ function AppointmentAttendanceControl({
       >
         {label}
       </span>
-      <div className="flex gap-1.5">
+      <div className="flex items-center gap-1.5">
         <Button
           type="button"
           variant={attended === true ? "success" : "outline"}
@@ -1547,6 +1705,19 @@ function AppointmentAttendanceControl({
         >
           <Icon name="check" />
         </Button>
+        {onReschedule && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            disabled={pending}
+            onClick={onReschedule}
+            aria-label="Reprogramar cita"
+            title="Reprogramar cita"
+          >
+            <Icon name="clock" />
+          </Button>
+        )}
         <Button
           type="button"
           variant={attended === false ? "destructive" : "outline"}
@@ -1578,25 +1749,41 @@ function PlanStatusControl({
   status,
   updating,
   onChangeStatus,
+  onDelete,
 }: {
   status: RecoveryPlanStatus;
   updating: boolean;
   onChangeStatus: (status: RecoveryPlanStatus) => void;
+  onDelete: () => void;
 }) {
-  if (status === "COMPLETED") return null;
+  const deleteButton = (
+    <ConfirmStatusButton
+      label="Eliminar plan"
+      icon="trash"
+      className="border-error/40 bg-error/10 text-error hover:bg-error/20"
+      confirmTitle="Eliminar plan"
+      confirmDescription="Se borrará el plan y todos sus ejercicios, citas y mediciones. Esta acción no se puede deshacer."
+      confirmLabel="Eliminar"
+      disabled={updating}
+      onConfirm={onDelete}
+    />
+  );
 
-  if (status === "PAUSED") {
+  if (status === "COMPLETED" || status === "PAUSED") {
     return (
-      <ConfirmStatusButton
-        label="Reactivar plan"
-        icon="play_circle"
-        className="border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
-        confirmTitle="Reactivar plan"
-        confirmDescription="El plan volverá a estar activo y aparecerá de nuevo en tu panel de rehabilitación."
-        confirmLabel="Reactivar"
-        disabled={updating}
-        onConfirm={() => onChangeStatus("ACTIVE")}
-      />
+      <div className="flex flex-wrap items-center gap-2">
+        <ConfirmStatusButton
+          label="Reactivar plan"
+          icon="play_circle"
+          className="border-primary/40 bg-primary/10 text-primary hover:bg-primary/20"
+          confirmTitle="Reactivar plan"
+          confirmDescription="El plan volverá a estar activo y aparecerá de nuevo en tu panel de rehabilitación."
+          confirmLabel="Reactivar"
+          disabled={updating}
+          onConfirm={() => onChangeStatus("ACTIVE")}
+        />
+        {deleteButton}
+      </div>
     );
   }
 
@@ -1607,7 +1794,7 @@ function PlanStatusControl({
         icon="check_circle"
         className="border-success/40 bg-success/10 text-success hover:bg-success/20"
         confirmTitle="Completar plan"
-        confirmDescription="El plan pasará a estado completado y podrás crear un nuevo plan de recuperación. Esta acción no se puede deshacer."
+        confirmDescription="El plan pasará a estado completado. Podrás reactivarlo después desde el panel."
         confirmLabel="Completar"
         disabled={updating}
         onConfirm={() => onChangeStatus("COMPLETED")}
@@ -1617,11 +1804,12 @@ function PlanStatusControl({
         icon="pause_circle"
         className="border-warning/40 bg-warning/10 text-warning hover:bg-warning/20"
         confirmTitle="Pausar plan"
-        confirmDescription="El plan dejará de estar activo hasta que lo reactives."
+        confirmDescription="El plan dejará de estar activo, pero lo vas a poder reactivar desde el panel de rehabilitación."
         confirmLabel="Pausar"
         disabled={updating}
         onConfirm={() => onChangeStatus("PAUSED")}
       />
+      {deleteButton}
     </div>
   );
 }

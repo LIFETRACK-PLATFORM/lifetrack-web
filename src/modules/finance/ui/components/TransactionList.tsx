@@ -1,7 +1,14 @@
 "use client";
 
+import { MoreHorizontal } from "lucide-react";
 import { Icon, type IconName } from "@/shared/ui/Icon";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@lifetrack/system-design";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@lifetrack/system-design";
 import { Transaction } from "@/modules/finance/domain/Transaction";
 import { Account } from "@/modules/finance/domain/Account";
 import { Category } from "@/modules/finance/domain/Category";
@@ -58,50 +65,48 @@ export function TransactionList({
   }
 
   return (
-    <div className="space-y-2">
-      {transactions.map((t) => (
-        <div
-          key={t.id}
-          className="flex items-center justify-between rounded-lg border border-border/30 bg-surface-2 p-4"
-        >
-          <div className="flex min-w-0 flex-1 items-center gap-4">
+    <div className="flex flex-col gap-3.5">
+      {transactions.map((t) => {
+        const color = categoryColor(t.categoryId);
+        const isIncome = t.kind === "INCOME";
+        return (
+          <div key={t.id} className="flex items-center gap-3">
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              className="flex size-8 shrink-0 items-center justify-center rounded-[9px]"
               style={{
-                backgroundColor: `${categoryColor(t.categoryId)}1A`,
-                color: categoryColor(t.categoryId),
+                backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)`,
+                color,
               }}
             >
-              <Icon name={categoryIcon(t.categoryId)} className="text-[18px]" />
+              <Icon name={categoryIcon(t.categoryId)} className="text-[15px]" />
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-body-md font-semibold text-text-1">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-body-md text-text-1">
                 {t.description || categoryName(t.categoryId)}
               </p>
-              <p className="font-label text-label-md text-text-3">
+              <p className="truncate font-label text-label-md text-text-3">
                 {accountName(t.accountId)} · {categoryName(t.categoryId)} ·{" "}
                 {formatDate(t.occurredAt)}
               </p>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
             <p
-              className={`font-metric text-metric-sm ${
-                t.kind === "INCOME" ? "text-success" : "text-error"
+              className={`shrink-0 font-metric text-body-md ${
+                isIncome ? "text-success" : "text-error"
               }`}
             >
-              {t.kind === "INCOME" ? "+" : "-"}
+              {isIncome ? "+" : "-"}
               {formatMoney(t.amount, accountCurrency(t.accountId))}
             </p>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
+                <Button
                   type="button"
-                  className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-3"
+                  variant="ghost"
+                  size="icon-sm"
                   aria-label="Opciones"
                 >
-                  <Icon name="more_vert" className="text-text-3" />
-                </button>
+                  <MoreHorizontal />
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => onEdit(t)}>
@@ -116,8 +121,8 @@ export function TransactionList({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

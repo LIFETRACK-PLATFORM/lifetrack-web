@@ -4,10 +4,26 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAuthenticatedUser } from "@/modules/auth/ui/context/AuthenticatedUserContext";
-import { StatusBadge, Skeleton } from "@lifetrack/system-design";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  Button,
+  StatusBadge,
+  Skeleton,
+} from "@lifetrack/system-design";
 import { Icon } from "@/shared/ui/Icon";
 import { Logo } from "@/shared/ui/Logo";
-import { RehabRepository } from "@/modules/rehab/domain/RehabRepository";
+import {
+  InactivePlanSummary,
+  RehabRepository,
+} from "@/modules/rehab/domain/RehabRepository";
 import { DashboardSummary } from "@/modules/rehab/domain/DashboardSummary";
 import { createRehabRepository } from "@/modules/rehab/infrastructure/createRehabRepository";
 import { useDashboard } from "@/modules/rehab/ui/hooks/useDashboard";
@@ -17,6 +33,55 @@ const DEFAULT_AVATAR =
   "https://ui-avatars.com/api/?background=random&color=fff&name=LT";
 
 const WEEKDAY_LABELS = ["DOM", "LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
+
+type PlanAccent = {
+  color: string;
+  softBg: string;
+  softBorder: string;
+  badgeBg: string;
+  badgeText: string;
+};
+
+const PLAN_ACCENTS: PlanAccent[] = [
+  {
+    color: "var(--primary)",
+    softBg: "color-mix(in srgb, var(--primary) 8%, var(--surface-1))",
+    softBorder: "color-mix(in srgb, var(--primary) 28%, var(--border))",
+    badgeBg: "var(--primary)",
+    badgeText: "var(--primary-foreground)",
+  },
+  {
+    color: "var(--success)",
+    softBg: "color-mix(in srgb, var(--success) 10%, var(--surface-1))",
+    softBorder: "color-mix(in srgb, var(--success) 30%, var(--border))",
+    badgeBg: "color-mix(in srgb, var(--success) 18%, transparent)",
+    badgeText: "var(--success)",
+  },
+  {
+    color: "var(--warning)",
+    softBg: "color-mix(in srgb, var(--warning) 10%, var(--surface-1))",
+    softBorder: "color-mix(in srgb, var(--warning) 32%, var(--border))",
+    badgeBg: "color-mix(in srgb, var(--warning) 18%, transparent)",
+    badgeText: "var(--warning)",
+  },
+  {
+    color: "var(--accent-tint)",
+    softBg: "color-mix(in srgb, var(--accent-tint) 14%, var(--surface-1))",
+    softBorder: "color-mix(in srgb, var(--accent-tint) 35%, var(--border))",
+    badgeBg: "color-mix(in srgb, var(--accent-tint) 22%, transparent)",
+    badgeText: "var(--primary)",
+  },
+];
+
+function planAccent(index: number): PlanAccent {
+  return PLAN_ACCENTS[index % PLAN_ACCENTS.length]!;
+}
+
+function complianceTone(percent: number): string {
+  if (percent >= 80) return "var(--success)";
+  if (percent >= 40) return "var(--warning)";
+  return "var(--error)";
+}
 
 function todayLabel(): string {
   const now = new Date();
@@ -31,10 +96,12 @@ function ProgressRing({
   percent,
   size = 64,
   stroke = 8,
+  color = "var(--primary)",
 }: {
   percent: number;
   size?: number;
   stroke?: number;
+  color?: string;
 }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -43,28 +110,29 @@ function ProgressRing({
     <div className="relative" style={{ width: size, height: size }}>
       <svg className="h-full w-full -rotate-90 transform">
         <circle
-          className="text-surface-3"
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="transparent"
-          stroke="currentColor"
+          stroke="var(--surface-3)"
           strokeWidth={stroke}
         />
         <circle
-          className="text-primary"
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="transparent"
-          stroke="currentColor"
+          stroke={color}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={offset}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center font-label text-label-md text-primary">
+      <div
+        className="absolute inset-0 flex items-center justify-center font-label text-label-md font-bold"
+        style={{ color }}
+      >
         {percent}%
       </div>
     </div>
@@ -79,7 +147,18 @@ export function DashboardView({
     [repository],
   );
   const authUser = useAuthenticatedUser();
-  const { dashboards, loading, error, isEmpty } = useDashboard(activeRepository);
+  const {
+    dashboards,
+    inactivePlans,
+    loading,
+    error,
+    isEmpty,
+    actionError,
+    actingPlanId,
+    reactivatePlan,
+    deletePlan,
+    reload,
+  } = useDashboard(activeRepository);
   const [bodyPart, setBodyPart] = useState("Rodilla");
   const [injuryType, setInjuryType] = useState("Recuperación de LCA");
   const [creating, setCreating] = useState(false);
@@ -95,7 +174,8 @@ export function DashboardView({
         injuryType,
         surgeryDate: new Date().toISOString(),
       });
-      window.location.reload();
+      setIsCreatePlanOpen(false);
+      await reload();
     } catch (err) {
       setCreateError(
         err instanceof Error ? err.message : "No se pudo crear el plan",
@@ -156,8 +236,6 @@ export function DashboardView({
     );
   }
 
-  if (dashboards.length === 0) return null;
-
   const displayName = authUser.email.split("@")[0] ?? authUser.email;
   const showPlanTitle = dashboards.length > 1;
 
@@ -198,9 +276,26 @@ export function DashboardView({
         </header>
 
         <main className="mt-20 space-y-10 px-5">
-          {dashboards.map((d) => (
-            <MobilePlanSection key={d.planId} d={d} showTitle={showPlanTitle} />
+          {dashboards.map((d, index) => (
+            <MobilePlanSection
+              key={d.planId}
+              d={d}
+              showTitle={showPlanTitle}
+              accent={planAccent(index)}
+            />
           ))}
+          {dashboards.length === 0 && inactivePlans.length > 0 && (
+            <p className="text-body-md text-text-3">
+              No tenés planes activos. Reactivá uno de abajo o creá uno nuevo.
+            </p>
+          )}
+          <InactivePlansSection
+            plans={inactivePlans}
+            actingPlanId={actingPlanId}
+            actionError={actionError}
+            onReactivate={reactivatePlan}
+            onDelete={deletePlan}
+          />
         </main>
       </div>
 
@@ -240,9 +335,26 @@ export function DashboardView({
             </header>
 
             <div className="space-y-10">
-              {dashboards.map((d) => (
-                <WebPlanSection key={d.planId} d={d} showTitle={showPlanTitle} />
+              {dashboards.map((d, index) => (
+                <WebPlanSection
+                  key={d.planId}
+                  d={d}
+                  showTitle={showPlanTitle}
+                  accent={planAccent(index)}
+                />
               ))}
+              {dashboards.length === 0 && inactivePlans.length > 0 && (
+                <p className="text-body-md text-text-3">
+                  No tenés planes activos. Reactivá uno de abajo o creá uno nuevo.
+                </p>
+              )}
+              <InactivePlansSection
+                plans={inactivePlans}
+                actingPlanId={actingPlanId}
+                actionError={actionError}
+                onReactivate={reactivatePlan}
+                onDelete={deletePlan}
+              />
             </div>
           </div>
         </main>
@@ -434,13 +546,123 @@ function DashboardSkeleton() {
   );
 }
 
+function InactivePlansSection({
+  plans,
+  actingPlanId,
+  actionError,
+  onReactivate,
+  onDelete,
+}: {
+  plans: InactivePlanSummary[];
+  actingPlanId: string | null;
+  actionError: string | null;
+  onReactivate: (planId: string) => Promise<void>;
+  onDelete: (planId: string) => Promise<void>;
+}) {
+  if (plans.length === 0) return null;
+
+  return (
+    <section className="space-y-4">
+      <div>
+        <h3 className="text-headline-md text-text-1">Otros planes</h3>
+        <p className="text-body-md text-text-3">
+          Pausados o completados. Podés reactivarlos o eliminarlos.
+        </p>
+      </div>
+      {actionError && <p className="text-body-md text-error">{actionError}</p>}
+      <div className="space-y-3">
+        {plans.map((plan) => {
+          const busy = actingPlanId === plan.planId;
+          const isPaused = plan.status === "PAUSED";
+          return (
+            <div
+              key={plan.planId}
+              className="flex flex-col gap-3 rounded-xl border border-border/30 bg-surface-1 p-4 card-elevation sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0">
+                <div className="mb-1 flex flex-wrap items-center gap-2">
+                  <p className="truncate text-body-md font-semibold text-text-1">
+                    {plan.bodyPart}
+                  </p>
+                  <StatusBadge
+                    status={isPaused ? "paused" : "completed"}
+                    label={isPaused ? "Pausado" : "Completado"}
+                  />
+                </div>
+                <p className="truncate font-label text-label-md text-text-3">
+                  {plan.injuryType}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/rehab/plans/${plan.planId}`}
+                  className="rounded-lg border border-border px-3 py-2 font-label text-label-md text-text-1 hover:bg-surface-2"
+                >
+                  Abrir
+                </Link>
+                {isPaused && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => void onReactivate(plan.planId)}
+                  >
+                    {busy ? "…" : "Reactivar"}
+                  </Button>
+                )}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={busy}
+                      className="border-error/40 text-error hover:bg-error/10"
+                    >
+                      Eliminar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Eliminar plan</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Se borrará el plan “{plan.bodyPart}” y todos sus
+                        ejercicios, citas y mediciones. Esta acción no se puede
+                        deshacer.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        variant="destructive"
+                        onClick={() => void onDelete(plan.planId)}
+                      >
+                        Eliminar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function MobilePlanSection({
   d,
   showTitle,
+  accent,
 }: {
   d: DashboardSummary;
   showTitle: boolean;
+  accent: PlanAccent;
 }) {
+  const weeklyColor = complianceTone(d.weeklyCompliance);
+  const recoveryColor = complianceTone(d.recoveryScore);
+
   return (
     <div className="space-y-6">
       {showTitle && (
@@ -449,15 +671,26 @@ function MobilePlanSection({
 
       <section className="negative-space-pocket">
         <div className="mb-6 flex flex-col gap-2">
-          <span className="font-label text-label-md font-bold uppercase tracking-wider text-primary">
+          <span
+            className="font-label text-label-md font-bold uppercase tracking-wider"
+            style={{ color: accent.color }}
+          >
             Enfoque de hoy
           </span>
           {!showTitle && (
             <h2 className="text-headline-lg-mobile text-text-1">{d.focusTitle}</h2>
           )}
         </div>
-        <div className="relative overflow-hidden rounded-xl border border-border bg-surface-1 p-6 card-elevation">
-          <div className="absolute right-0 top-0 p-6 opacity-10">
+        <div
+          className="relative overflow-hidden rounded-xl border p-6 card-elevation"
+          style={{
+            borderColor: accent.softBorder,
+            background: accent.softBg,
+            borderLeftWidth: 4,
+            borderLeftColor: accent.color,
+          }}
+        >
+          <div className="absolute right-0 top-0 p-6 opacity-10" style={{ color: accent.color }}>
             <Icon name="stabilization" filled className="text-[80px]" />
           </div>
           <div className="relative z-10 flex flex-col gap-4">
@@ -466,18 +699,28 @@ function MobilePlanSection({
                 <p className="text-body-md text-text-3">
                   Progreso de ejercicios de hoy
                 </p>
-                <p className="font-metric text-metric-xl text-primary">
+                <p
+                  className="font-metric text-metric-xl"
+                  style={{ color: accent.color }}
+                >
                   {d.exerciseProgress.done}{" "}
                   <span className="text-headline-md font-normal text-text-3">
                     / {d.exerciseProgress.total}
                   </span>
                 </p>
               </div>
-              <ProgressRing percent={d.exerciseProgress.percent} />
+              <ProgressRing
+                percent={d.exerciseProgress.percent}
+                color={accent.color}
+              />
             </div>
             <Link
               href={`/rehab/plans/${d.planId}`}
-              className="w-full rounded-lg bg-primary py-4 text-center font-label text-label-md text-primary-foreground  transition-transform active:scale-95"
+              className="w-full rounded-lg py-4 text-center font-label text-label-md transition-transform active:scale-95"
+              style={{
+                background: accent.color,
+                color: "var(--primary-foreground)",
+              }}
             >
               Continuar sesión
             </Link>
@@ -486,17 +729,17 @@ function MobilePlanSection({
       </section>
 
       <section className="negative-space-pocket">
-        <div className="flex items-center gap-6 rounded-xl border border-border bg-surface-2 p-6 text-text-1">
-          <div className="animate-float rounded-lg bg-primary/10 p-4">
+        <div className="flex items-center gap-6 rounded-xl border border-warning/25 bg-warning/10 p-6 text-text-1">
+          <div className="animate-float rounded-lg bg-warning/15 p-4 text-warning">
             <Icon name="calendar_today" filled />
           </div>
           <div>
             <h3 className="mb-1 font-label text-label-md font-bold">
               {d.nextAppointment.title}
             </h3>
-            <p className="text-body-md opacity-90">{d.nextAppointment.detail}</p>
+            <p className="text-body-md text-text-3">{d.nextAppointment.detail}</p>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto text-warning">
             <Icon name="chevron_right" />
           </div>
         </div>
@@ -508,7 +751,10 @@ function MobilePlanSection({
             <h3 className="font-label text-label-md text-text-3">
               Cumplimiento semanal
             </h3>
-            <span className="font-label text-label-md font-bold text-primary">
+            <span
+              className="font-label text-label-md font-bold"
+              style={{ color: weeklyColor }}
+            >
               {d.weeklyCompliance}%
             </span>
           </div>
@@ -516,8 +762,11 @@ function MobilePlanSection({
             {d.weeklyBars.map((h, i) => (
               <div
                 key={i}
-                className="w-full rounded-t-sm bg-primary"
-                style={{ height: `${h}%` }}
+                className="w-full rounded-t-sm"
+                style={{
+                  height: `${Math.max(h, 6)}%`,
+                  background: complianceTone(h),
+                }}
               />
             ))}
           </div>
@@ -527,24 +776,31 @@ function MobilePlanSection({
             ))}
           </div>
         </div>
-        <div className="flex flex-col gap-1 rounded-xl border border-border bg-surface-1 p-6">
+        <div className="flex flex-col gap-1 rounded-xl border border-success/25 bg-success/5 p-6">
           <p className="font-label text-label-md text-text-3">Recuperación</p>
-          <p className="text-headline-md text-text-1">
+          <p className="text-headline-md" style={{ color: recoveryColor }}>
             {d.recoveryScore}{" "}
-            <span className="text-body-md font-normal opacity-60">/ 100</span>
+            <span className="text-body-md font-normal text-text-3 opacity-60">
+              / 100
+            </span>
           </p>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
             <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${d.recoveryScore}%` }}
+              className="h-full rounded-full"
+              style={{
+                width: `${d.recoveryScore}%`,
+                background: recoveryColor,
+              }}
             />
           </div>
         </div>
-        <div className="flex flex-col gap-1 rounded-xl border border-border bg-surface-1 p-6">
+        <div className="flex flex-col gap-1 rounded-xl border border-warning/25 bg-warning/5 p-6">
           <p className="font-label text-label-md text-text-3">Racha</p>
-          <p className="text-headline-md text-text-1">
+          <p className="text-headline-md text-warning">
             {d.streakDays}{" "}
-            <span className="text-body-md font-normal opacity-60">días</span>
+            <span className="text-body-md font-normal text-text-3 opacity-60">
+              días
+            </span>
           </p>
         </div>
       </section>
@@ -588,175 +844,227 @@ function MobilePlanSection({
 function WebPlanSection({
   d,
   showTitle,
+  accent,
 }: {
   d: DashboardSummary;
   showTitle: boolean;
+  accent: PlanAccent;
 }) {
+  const weeklyColor = complianceTone(d.weeklyCompliance);
+
   return (
     <div className="space-y-6 border-b border-border/20 pb-10 last:border-b-0 last:pb-0">
       {showTitle && (
-        <h3 className="text-headline-md text-text-1">{d.focusTitle}</h3>
+        <div className="flex items-center gap-3">
+          <span
+            className="h-3 w-3 rounded-full"
+            style={{ background: accent.color }}
+          />
+          <h3 className="text-headline-md text-text-1">{d.focusTitle}</h3>
+        </div>
       )}
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 space-y-6 lg:col-span-7">
-        <section className="relative overflow-hidden rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
-          <div className="absolute right-0 top-0 p-6">
-            <span className="rounded-full bg-primary px-4 py-1 font-label text-label-md text-primary-foreground">
-              Fase actual
-            </span>
-          </div>
-          <div className="flex items-start gap-6">
-            <ProgressRing percent={d.phase.percent} size={80} />
-            <div>
-              <h3 className="mb-1 text-headline-md">{d.phase.name}</h3>
-              <p className="mb-4 text-body-md text-text-3">
-                {d.phase.description}
-              </p>
-              <div className="flex gap-4">
-                <Link
-                  href={`/rehab/plans/${d.planId}`}
-                  className="rounded-lg bg-primary px-6 py-2 font-label text-label-md text-primary-foreground hover:opacity-90"
-                >
-                  Ver detalles de la fase
-                </Link>
+          <section
+            className="relative overflow-hidden rounded-xl border p-6 card-elevation"
+            style={{
+              borderColor: accent.softBorder,
+              background: accent.softBg,
+              borderLeftWidth: 4,
+              borderLeftColor: accent.color,
+            }}
+          >
+            <div className="absolute right-0 top-0 p-6">
+              <span
+                className="rounded-full px-4 py-1 font-label text-label-md"
+                style={{
+                  background: accent.badgeBg,
+                  color: accent.badgeText,
+                }}
+              >
+                Fase actual
+              </span>
+            </div>
+            <div className="flex items-start gap-6">
+              <ProgressRing
+                percent={d.phase.percent}
+                size={80}
+                color={accent.color}
+              />
+              <div>
+                <h3 className="mb-1 text-headline-md">{d.phase.name}</h3>
+                <p className="mb-4 text-body-md text-text-3">
+                  {d.phase.description}
+                </p>
+                <div className="flex gap-4">
+                  <Link
+                    href={`/rehab/plans/${d.planId}`}
+                    className="rounded-lg px-6 py-2 font-label text-label-md hover:opacity-90"
+                    style={{
+                      background: accent.color,
+                      color: "var(--primary-foreground)",
+                    }}
+                  >
+                    Ver detalles de la fase
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
-          <div className="mb-6 flex items-center justify-between">
-            <h3 className="text-headline-md">Ejercicios de hoy</h3>
-            <span className="font-label text-label-md text-text-3 capitalize">
-              {todayLabel()}
-            </span>
-          </div>
-          <div className="space-y-4">
-            {d.todayExercises.map((ex) => {
-              const rowClassName = `flex items-center justify-between rounded-lg p-4 transition-all ${
-                ex.status === "completed"
-                  ? "border border-transparent bg-surface-1"
-                  : ex.status === "urgent"
-                    ? "cursor-pointer border border-error/30 bg-error/10 hover:border-error hover:bg-error/15"
-                    : "cursor-pointer border border-border/30 bg-surface-2 hover:border-primary hover:bg-surface-3"
-              }`;
+          <section className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="text-headline-md">Ejercicios de hoy</h3>
+              <span className="font-label text-label-md text-text-3 capitalize">
+                {todayLabel()}
+              </span>
+            </div>
+            <div className="space-y-4">
+              {d.todayExercises.map((ex) => {
+                const rowClassName = `flex items-center justify-between rounded-lg p-4 transition-all ${
+                  ex.status === "completed"
+                    ? "border border-success/25 bg-success/5"
+                    : ex.status === "urgent"
+                      ? "cursor-pointer border border-error/30 bg-error/10 hover:border-error hover:bg-error/15"
+                      : "cursor-pointer border border-border/30 bg-surface-2 hover:border-primary hover:bg-surface-3"
+                }`;
 
-              const rowContent = (
-                <>
-                  <div className="flex items-center gap-4">
-                    {ex.status === "completed" ? (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                        <Icon name="check" className="text-[18px]" />
-                      </div>
-                    ) : ex.status === "urgent" ? (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-error">
-                        <Icon
-                          name="priority_high"
-                          className="text-[18px] text-error"
+                const rowContent = (
+                  <>
+                    <div className="flex items-center gap-4">
+                      {ex.status === "completed" ? (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-success text-primary-foreground">
+                          <Icon name="check" className="text-[18px]" />
+                        </div>
+                      ) : ex.status === "urgent" ? (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-error">
+                          <Icon
+                            name="priority_high"
+                            className="text-[18px] text-error"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="h-6 w-6 rounded-full border-2"
+                          style={{ borderColor: accent.color }}
                         />
+                      )}
+                      <div>
+                        <p
+                          className={`font-bold ${
+                            ex.status === "urgent"
+                              ? "text-error"
+                              : "text-text-1"
+                          }`}
+                        >
+                          {ex.name}
+                        </p>
+                        <p className="text-[12px] text-text-3">{ex.detail}</p>
                       </div>
-                    ) : (
-                      <div className="h-6 w-6 rounded-full border-2 border-border" />
-                    )}
-                    <div>
-                      <p
-                        className={`font-bold ${
-                          ex.status === "urgent" ? "text-error" : "text-text-1"
-                        }`}
-                      >
-                        {ex.name}
-                      </p>
-                      <p className="text-[12px] text-text-3">{ex.detail}</p>
                     </div>
-                  </div>
-                  <StatusBadge
-                    status={
-                      ex.status === "completed"
-                        ? "completed"
-                        : ex.status === "urgent"
-                          ? "overdue"
-                          : "pending"
-                    }
-                    label={
-                      ex.status === "completed"
-                        ? "Completado"
-                        : ex.status === "urgent"
-                          ? "Vencido"
-                          : "Pendiente"
-                    }
-                  />
-                </>
-              );
-
-              if (ex.status === "completed") {
-                return (
-                  <div key={ex.id} className={rowClassName}>
-                    {rowContent}
-                  </div>
+                    <StatusBadge
+                      status={
+                        ex.status === "completed"
+                          ? "completed"
+                          : ex.status === "urgent"
+                            ? "overdue"
+                            : "pending"
+                      }
+                      label={
+                        ex.status === "completed"
+                          ? "Completado"
+                          : ex.status === "urgent"
+                            ? "Vencido"
+                            : "Pendiente"
+                      }
+                    />
+                  </>
                 );
-              }
 
-              return (
-                <Link
-                  key={ex.id}
-                  href={planExerciseHref(d.planId, ex.id)}
-                  className={rowClassName}
-                >
-                  {rowContent}
-                </Link>
-              );
-            })}
-            {d.todayExercises.length === 0 && (
-              <p className="text-body-md text-text-3">
-                No tenés ejercicios agendados para hoy.
-              </p>
-            )}
-          </div>
-        </section>
+                if (ex.status === "completed") {
+                  return (
+                    <div key={ex.id} className={rowClassName}>
+                      {rowContent}
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={ex.id}
+                    href={planExerciseHref(d.planId, ex.id)}
+                    className={rowClassName}
+                  >
+                    {rowContent}
+                  </Link>
+                );
+              })}
+              {d.todayExercises.length === 0 && (
+                <p className="text-body-md text-text-3">
+                  No tenés ejercicios agendados para hoy.
+                </p>
+              )}
+            </div>
+          </section>
         </div>
 
-      <div className="col-span-12 space-y-6 lg:col-span-5">
-        <section className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-label text-label-md text-text-3">
-              Cumplimiento semanal
-            </h3>
-            <span className="font-metric text-metric-xl text-primary">
-              {d.weeklyCompliance}%
-            </span>
-          </div>
-          <div className="flex h-28 items-end justify-between gap-2">
-            {d.weeklyBars.map((h, i) => (
-              <div
-                key={i}
-                className="w-full rounded-t-sm bg-primary"
-                style={{ height: `${h}%` }}
-              />
-            ))}
-          </div>
-          <p className="mt-4 font-label text-label-md text-text-3">
-            Racha actual: <span className="font-bold text-primary">{d.streakDays} días</span>
-          </p>
-        </section>
+        <div className="col-span-12 space-y-6 lg:col-span-5">
+          <section className="rounded-xl border border-border/30 bg-surface-1 p-6 card-elevation">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-label text-label-md text-text-3">
+                Cumplimiento semanal
+              </h3>
+              <span
+                className="font-metric text-metric-xl"
+                style={{ color: weeklyColor }}
+              >
+                {d.weeklyCompliance}%
+              </span>
+            </div>
+            <div className="flex h-28 items-end justify-between gap-2">
+              {d.weeklyBars.map((h, i) => (
+                <div
+                  key={i}
+                  className="w-full rounded-t-md"
+                  style={{
+                    height: `${Math.max(h, 6)}%`,
+                    background: `linear-gradient(180deg, ${complianceTone(h)}, color-mix(in srgb, ${complianceTone(h)} 55%, transparent))`,
+                  }}
+                />
+              ))}
+            </div>
+            <p className="mt-4 font-label text-label-md text-text-3">
+              Racha actual:{" "}
+              <span className="font-bold text-warning">
+                {d.streakDays} días
+              </span>
+            </p>
+          </section>
 
-        <section className="rounded-xl border border-border bg-surface-2 p-6 text-text-1">
-          <div className="mb-2 flex items-center gap-2">
-            <Icon name="calendar_today" filled />
-            <h3 className="font-label text-label-md font-bold">
-              {d.nextAppointment.title}
-            </h3>
-          </div>
-          <p className="text-body-md opacity-90">{d.nextAppointment.detail}</p>
-        </section>
+          <section className="rounded-xl border border-warning/25 bg-warning/10 p-6 text-text-1">
+            <div className="mb-2 flex items-center gap-2 text-warning">
+              <Icon name="calendar_today" filled />
+              <h3 className="font-label text-label-md font-bold text-text-1">
+                {d.nextAppointment.title}
+              </h3>
+            </div>
+            <p className="text-body-md text-text-3">
+              {d.nextAppointment.detail}
+            </p>
+          </section>
 
-        <Link
-          href={`/rehab/plans/${d.planId}`}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-4 font-label text-label-md text-primary-foreground  transition-all hover:opacity-90"
-        >
-          Abrir plan de recuperación
-          <Icon name="arrow_forward" />
-        </Link>
-      </div>
+          <Link
+            href={`/rehab/plans/${d.planId}`}
+            className="flex w-full items-center justify-center gap-2 rounded-xl py-4 font-label text-label-md transition-all hover:opacity-90"
+            style={{
+              background: accent.color,
+              color: "var(--primary-foreground)",
+            }}
+          >
+            Abrir plan de recuperación
+            <Icon name="arrow_forward" />
+          </Link>
+        </div>
       </div>
     </div>
   );

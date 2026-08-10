@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { Plus, TrendingUp } from "lucide-react";
 import { Icon } from "@/shared/ui/Icon";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@lifetrack/system-design";
 import { RecurringItem } from "@/modules/finance/domain/RecurringItem";
 import { Account } from "@/modules/finance/domain/Account";
 import { Category } from "@/modules/finance/domain/Category";
@@ -241,45 +250,88 @@ export function EditRecurringDialog({
 export function RecurringSection({
   items,
   accounts,
+  pendingIds = [],
   onCreate,
   onEdit,
 }: {
   items: RecurringItem[];
   accounts: Account[];
+  pendingIds?: string[];
   onCreate: () => void;
   onEdit: (item: RecurringItem) => void;
 }) {
   const active = items.filter((i) => i.active);
-  const accountName = (id: string) => accounts.find((a) => a.id === id)?.name ?? "—";
+  const pendingSet = new Set(pendingIds);
+  const accountName = (id: string) =>
+    accounts.find((a) => a.id === id)?.name ?? "—";
 
   return (
-    <section className="rounded-xl border border-border bg-surface-1 p-6 card-elevation">
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-headline-md">Recurrentes</h3>
-        <button type="button" onClick={onCreate} className="flex items-center gap-1 rounded-lg bg-surface-3 px-3 py-1.5 font-label text-label-md text-primary hover:bg-surface-4">
-          <Icon name="add" className="text-[16px]" />
-          Nuevo
-        </button>
-      </div>
-      <div className="space-y-2">
-        {active.map((item) => (
-          <div key={item.recurringItemId} className="flex items-center justify-between rounded-lg border border-border/30 bg-surface-2 p-4">
-            <div>
-              <p className="text-body-md font-semibold text-text-1">{item.name}</p>
-              <p className="font-label text-label-md text-text-3">
-                Día {item.dayOfMonth} · {item.mode === "AUTO" ? "Automático" : "Recordatorio"} · {accountName(item.accountId)}
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle>Recurrentes</CardTitle>
+          <Button type="button" variant="ghost" size="sm" onClick={onCreate}>
+            <Plus />
+            Nuevo
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {active.map((item) => {
+          const isPending = pendingSet.has(item.recurringItemId);
+          return (
+            <div
+              key={item.recurringItemId}
+              className="flex items-center gap-3"
+            >
+              <div
+                className="flex size-8 shrink-0 items-center justify-center rounded-[9px]"
+                style={{
+                  background: isPending
+                    ? "color-mix(in srgb, var(--warning) 15%, transparent)"
+                    : "color-mix(in srgb, var(--primary) 15%, transparent)",
+                  color: isPending ? "var(--warning)" : "var(--primary)",
+                }}
+              >
+                <TrendingUp size={15} strokeWidth={1.75} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-body-md text-text-1">{item.name}</p>
+                <p className="truncate font-label text-label-md text-text-3">
+                  Día {item.dayOfMonth} ·{" "}
+                  {item.mode === "AUTO" ? "Automático" : "Recordatorio"} ·{" "}
+                  {accountName(item.accountId)}
+                </p>
+              </div>
+              <p className="shrink-0 font-metric text-body-md text-text-1">
+                {formatMoney(
+                  item.amount,
+                  accounts.find((a) => a.id === item.accountId)?.currency ??
+                    "PEN",
+                )}
               </p>
+              {isPending ? (
+                <Badge variant="warning" showDot>
+                  Pendiente
+                </Badge>
+              ) : null}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(item)}
+              >
+                Editar
+              </Button>
             </div>
-            <div className="flex items-center gap-2">
-              <p className="font-metric text-metric-sm text-error">{formatMoney(item.amount, accounts.find((a) => a.id === item.accountId)?.currency ?? "PEN")}</p>
-              <button type="button" onClick={() => onEdit(item)} className="rounded-lg px-2 py-1 font-label text-label-md text-primary hover:bg-surface-3">Editar</button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {active.length === 0 && (
-          <p className="text-body-md text-text-3">No tenés ítems recurrentes activos.</p>
+          <p className="text-body-md text-text-3">
+            No tenés ítems recurrentes activos.
+          </p>
         )}
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   );
 }

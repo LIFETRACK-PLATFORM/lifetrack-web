@@ -1,4 +1,3 @@
-import { DashboardSummary } from "../domain/DashboardSummary";
 import { todayDateIso } from "../domain/protocolSchedule";
 import { RehabPlan } from "../domain/RehabPlan";
 import {
@@ -6,7 +5,9 @@ import {
   AddExerciseInput,
   AddMeasurementInput,
   AddPainLogInput,
+  DashboardBundle,
   GetPlanOptions,
+  InactivePlanSummary,
   RecoveryPlanStatus,
   RehabRepository,
   UpdateExerciseInput,
@@ -53,16 +54,25 @@ export class HttpRehabRepository implements RehabRepository {
     );
   }
 
-  async getDashboard(): Promise<DashboardSummary[]> {
+  async getDashboard(): Promise<DashboardBundle> {
     const { plans = [] } = await rehabFetchStrict<{ plans?: RecoveryPlanSummaryDto[] }>(
       "/rehab/plans",
     );
     const activePlans = plans.filter((p) => p.status === "ACTIVE");
-    if (activePlans.length === 0) {
+    const inactive: InactivePlanSummary[] = plans
+      .filter((p) => p.status === "PAUSED" || p.status === "COMPLETED")
+      .map((p) => ({
+        planId: p.recoveryPlanId,
+        bodyPart: p.bodyPart,
+        injuryType: p.injuryType,
+        status: p.status as InactivePlanSummary["status"],
+      }));
+
+    if (activePlans.length === 0 && inactive.length === 0) {
       throw new NoRecoveryPlansError();
     }
 
-    return Promise.all(
+    const active = await Promise.all(
       activePlans.map(async (planSummary) => {
         const [progress, today, weeklySummary] = await Promise.all([
           this.getProgress(planSummary.recoveryPlanId),
@@ -72,6 +82,8 @@ export class HttpRehabRepository implements RehabRepository {
         return mapProgressToDashboard(planSummary, progress, today, weeklySummary);
       }),
     );
+
+    return { active, inactive };
   }
 
   async getPlan(id: string, options?: GetPlanOptions): Promise<RehabPlan> {
@@ -132,6 +144,12 @@ export class HttpRehabRepository implements RehabRepository {
     await rehabFetchStrict(`/rehab/plans/${planId}/status`, {
       method: "PATCH",
       body: JSON.stringify({ status }),
+    });
+  }
+
+  async deletePlan(planId: string): Promise<void> {
+    await rehabFetchStrict(`/rehab/plans/${planId}`, {
+      method: "DELETE",
     });
   }
 

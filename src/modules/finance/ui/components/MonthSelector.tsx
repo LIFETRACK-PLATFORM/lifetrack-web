@@ -1,6 +1,7 @@
 "use client";
 
-import { Icon } from "@/shared/ui/Icon";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@lifetrack/system-design";
 import { formatMonthLabel } from "@/modules/finance/domain/financePeriod";
 
 export function MonthSelector({
@@ -18,26 +19,28 @@ export function MonthSelector({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <button
+    <div className="flex items-center gap-1">
+      <Button
         type="button"
+        variant="outline"
+        size="icon-sm"
         onClick={() => shift(-1)}
-        className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-3 text-text-3 hover:bg-surface-4"
         aria-label="Mes anterior"
       >
-        <Icon name="chevron_left" />
-      </button>
+        <ChevronLeft />
+      </Button>
       <span className="min-w-[140px] text-center font-label text-label-md text-text-1">
         {formatMonthLabel(month, year)}
       </span>
-      <button
+      <Button
         type="button"
+        variant="outline"
+        size="icon-sm"
         onClick={() => shift(1)}
-        className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-3 text-text-3 hover:bg-surface-4"
         aria-label="Mes siguiente"
       >
-        <Icon name="chevron_right" />
-      </button>
+        <ChevronRight />
+      </Button>
     </div>
   );
 }
