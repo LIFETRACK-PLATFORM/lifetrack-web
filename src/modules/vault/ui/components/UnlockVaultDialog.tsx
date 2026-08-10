@@ -2,7 +2,19 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Icon } from "@/shared/ui/Icon";
+import { ArrowLeft, Eye, EyeOff, Lock, TriangleAlert } from "lucide-react";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+  Label,
+} from "@lifetrack/system-design";
 
 export function UnlockVaultDialog({
   onUnlock,
@@ -35,78 +47,79 @@ export function UnlockVaultDialog({
   };
 
   return (
-    <div className="w-full max-w-md rounded-xl border border-border bg-surface-1 p-6 card-elevation">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-surface-3 text-primary">
-          <Icon name="encrypted" className="text-[28px]" />
-        </div>
-        <div>
-          <h3 className="text-headline-md font-semibold text-text-1">
-            Desbloquear bóveda
-          </h3>
-          <p className="font-label text-label-md text-text-3">
-            Zero-knowledge: tus secretos nunca salen cifrados del dispositivo.
-          </p>
-        </div>
-      </div>
-
-      <div className="mb-4 rounded-lg border border-warning/30 bg-warning/10 p-3">
-        <p className="text-body-md text-text-2">
-          <strong className="text-warning">Importante:</strong> si olvidás tu
-          contraseña maestra, no hay forma de recuperar tus contraseñas
-          guardadas. No podemos restablecerla por vos.
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block font-label text-label-md text-text-3">
-            Contraseña maestra
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? "text" : "password"}
-              value={masterPassword}
-              onChange={(e) => setMasterPassword(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 pr-10 text-body-md text-text-1 focus:border-primary focus:outline-none"
-              placeholder="Tu contraseña maestra"
-              autoComplete="current-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-text-3 hover:text-text-1"
-              aria-label={
-                showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
-              }
-            >
-              <Icon name={showPassword ? "visibility_off" : "visibility"} />
-            </button>
+    <Card className="w-full max-w-md border-t-[3px] border-t-primary bg-primary/[0.03]">
+      <CardHeader>
+        <div className="flex items-start gap-3">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-[11px] bg-primary/15 text-primary">
+            <Lock className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <CardTitle className="text-body-md">Desbloquear bóveda</CardTitle>
+            <p className="mt-1 font-label text-label-md text-text-3">
+              Zero-knowledge: tus secretos nunca salen cifrados del dispositivo.
+            </p>
           </div>
         </div>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        <Alert variant="warning">
+          <TriangleAlert />
+          <AlertTitle>Importante</AlertTitle>
+          <AlertDescription>
+            Si olvidás tu contraseña maestra, no hay forma de recuperar tus
+            contraseñas guardadas. No podemos restablecerla por vos.
+          </AlertDescription>
+        </Alert>
 
-        {(clientError || error) && (
-          <p className="text-body-md text-error">{clientError ?? error}</p>
-        )}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="vault-master-password">Contraseña maestra</Label>
+            <div className="relative">
+              <Input
+                id="vault-master-password"
+                type={showPassword ? "text" : "password"}
+                value={masterPassword}
+                onChange={(e) => setMasterPassword(e.target.value)}
+                placeholder="Tu contraseña maestra"
+                autoComplete="current-password"
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-text-3 hover:text-text-1"
+                aria-label={
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
+              >
+                {showPassword ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </button>
+            </div>
+          </div>
 
-        <button
-          type="submit"
-          disabled={unlocking}
-          className="w-full rounded-lg bg-primary px-4 py-2.5 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
-        >
-          {unlocking ? "Desbloqueando…" : "Desbloquear bóveda"}
-        </button>
-      </form>
+          {(clientError || error) && (
+            <p className="text-body-md text-error">{clientError ?? error}</p>
+          )}
 
-      <div className="mt-4 border-t border-border pt-4 text-center">
-        <Link
-          href="/rehab"
-          className="inline-flex items-center gap-1 font-label text-label-md text-text-3 transition-colors hover:text-primary"
-        >
-          <Icon name="arrow_back" className="text-[18px]" />
-          Volver sin desbloquear
-        </Link>
-      </div>
-    </div>
+          <Button type="submit" disabled={unlocking} className="w-full">
+            {unlocking ? "Desbloqueando…" : "Desbloquear bóveda"}
+          </Button>
+        </form>
+
+        <div className="border-t border-border pt-4 text-center">
+          <Link
+            href="/rehab"
+            className="inline-flex items-center gap-1.5 font-label text-label-md text-text-3 transition-colors hover:text-primary"
+          >
+            <ArrowLeft className="size-4" />
+            Volver sin desbloquear
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
