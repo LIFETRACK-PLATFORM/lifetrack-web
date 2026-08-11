@@ -1,6 +1,13 @@
 "use client";
 
-import { SearchInput } from "@lifetrack/system-design";
+import {
+  SearchInput,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@lifetrack/system-design";
 import { Account } from "@/modules/finance/domain/Account";
 import { Category } from "@/modules/finance/domain/Category";
 import { TransactionKind } from "@/modules/finance/domain/Transaction";
@@ -12,6 +19,9 @@ const KIND_OPTIONS: { id: TransactionKindFilter; label: string }[] = [
   { id: "EXPENSE", label: "Gastos" },
   { id: "INCOME", label: "Ingresos" },
 ];
+
+const ALL_ACCOUNTS_OPTION = "__all_accounts__";
+const ALL_CATEGORIES_OPTION = "__all_categories__";
 
 export function TransactionsToolbar({
   search,
@@ -61,31 +71,45 @@ export function TransactionsToolbar({
           ))}
         </div>
 
-        <select
-          value={accountId}
-          onChange={(e) => onAccountChange(e.target.value)}
-          className="rounded-lg border border-border bg-surface-1 px-3 py-1.5 font-label text-label-md text-text-1 focus:border-primary focus:outline-none"
+        <Select
+          value={accountId || ALL_ACCOUNTS_OPTION}
+          onValueChange={(v) =>
+            onAccountChange(v === ALL_ACCOUNTS_OPTION ? "" : v)
+          }
         >
-          <option value="">Todas las cuentas</option>
-          {accounts.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-auto" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_ACCOUNTS_OPTION}>Todas las cuentas</SelectItem>
+            {accounts.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                {a.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <select
-          value={categoryId}
-          onChange={(e) => onCategoryChange(e.target.value)}
-          className="rounded-lg border border-border bg-surface-1 px-3 py-1.5 font-label text-label-md text-text-1 focus:border-primary focus:outline-none"
+        <Select
+          value={categoryId || ALL_CATEGORIES_OPTION}
+          onValueChange={(v) =>
+            onCategoryChange(v === ALL_CATEGORIES_OPTION ? "" : v)
+          }
         >
-          <option value="">Todas las categorías</option>
-          {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="w-auto" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_CATEGORIES_OPTION}>
+              Todas las categorías
+            </SelectItem>
+            {categories.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
