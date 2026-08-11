@@ -7,12 +7,18 @@ import { GetMonthlySummaryUseCase } from "../../application/GetMonthlySummaryUse
 import { ListBudgetsUseCase } from "../../application/ListBudgetsUseCase";
 import { ListRecurringItemsUseCase } from "../../application/ListRecurringItemsUseCase";
 import { ProcessRecurringItemsUseCase } from "../../application/ProcessRecurringItemsUseCase";
-import { getMonthDateRange } from "../../domain/financePeriod";
+import { DetectRecurringCandidatesUseCase } from "../../application/DetectRecurringCandidatesUseCase";
+import { ListDebtsUseCase } from "../../application/ListDebtsUseCase";
+import { GetDebtsSummaryUseCase } from "../../application/GetDebtsSummaryUseCase";
+import { getMonthDateRange, getPreviousPeriod } from "../../domain/financePeriod";
 import { FinanceOverview } from "../../application/GetFinanceOverviewUseCase";
 import { MonthlySummary } from "../../domain/MonthlySummary";
 import { BudgetListItem } from "../../domain/BudgetListItem";
 import { RecurringItem } from "../../domain/RecurringItem";
+import { RecurringCandidate } from "../../domain/FinanceRepository";
 import { Transaction } from "../../domain/Transaction";
+import { Debt } from "../../domain/Debt";
+import { DebtCurrencySummary } from "../../domain/DebtsSummary";
 
 export function useFinanceData(
   repository: FinanceRepository,
@@ -21,8 +27,16 @@ export function useFinanceData(
 ) {
   const [overview, setOverview] = useState<FinanceOverview | null>(null);
   const [summaries, setSummaries] = useState<MonthlySummary[]>([]);
+  const [previousSummaries, setPreviousSummaries] = useState<MonthlySummary[]>(
+    [],
+  );
   const [budgets, setBudgets] = useState<BudgetListItem[]>([]);
   const [recurringItems, setRecurringItems] = useState<RecurringItem[]>([]);
+  const [recurringCandidates, setRecurringCandidates] = useState<
+    RecurringCandidate[]
+  >([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
+  const [debtsSummary, setDebtsSummary] = useState<DebtCurrencySummary[]>([]);
   const [pendingReminders, setPendingReminders] = useState<RecurringItem[]>(
     [],
   );
@@ -52,21 +66,44 @@ export function useFinanceData(
         const budgetsUseCase = new ListBudgetsUseCase(repository);
         const recurringUseCase = new ListRecurringItemsUseCase(repository);
         const processUseCase = new ProcessRecurringItemsUseCase(repository);
+        const detectRecurringUseCase = new DetectRecurringCandidatesUseCase(
+          repository,
+        );
+        const listDebtsUseCase = new ListDebtsUseCase(repository);
+        const debtsSummaryUseCase = new GetDebtsSummaryUseCase(repository);
 
         const todayStart = new Date();
         todayStart.setHours(0, 0, 0, 0);
         const todayEnd = new Date();
         todayEnd.setHours(23, 59, 59, 999);
+        const previousPeriod = getPreviousPeriod(month, year);
 
-        const [overviewData, summaryData, budgetData, recurringData, processResult, todayTransactions] =
-          await Promise.all([
+        const [
+          overviewData,
+          summaryData,
+          previousSummaryData,
+          budgetData,
+          recurringData,
+          candidatesData,
+          debtsData,
+          debtsSummaryData,
+          processResult,
+          todayTransactions,
+        ] = await Promise.all([
             overviewUseCase.execute({
               fromDate: dateRange.fromDate,
               toDate: dateRange.toDate,
             }),
             summaryUseCase.execute({ periodMonth: month, periodYear: year }),
+            summaryUseCase.execute({
+              periodMonth: previousPeriod.month,
+              periodYear: previousPeriod.year,
+            }),
             budgetsUseCase.execute({ periodMonth: month, periodYear: year }),
             recurringUseCase.execute(),
+            detectRecurringUseCase.execute(),
+            listDebtsUseCase.execute(),
+            debtsSummaryUseCase.execute({ periodMonth: month, periodYear: year }),
             processUseCase.execute(),
             repository.getTransactions({
               fromDate: todayStart.toISOString(),
@@ -77,8 +114,12 @@ export function useFinanceData(
         if (cancelled) return;
         setOverview(overviewData);
         setSummaries(summaryData);
+        setPreviousSummaries(previousSummaryData);
         setBudgets(budgetData);
         setRecurringItems(recurringData);
+        setRecurringCandidates(candidatesData);
+        setDebts(debtsData);
+        setDebtsSummary(debtsSummaryData);
         setPendingReminders(processResult.pendingReminders);
         setTodayTransactions(todayTransactions);
       } catch (err) {
@@ -101,8 +142,12 @@ export function useFinanceData(
   return {
     overview,
     summaries,
+    previousSummaries,
     budgets,
     recurringItems,
+    recurringCandidates,
+    debts,
+    debtsSummary,
     pendingReminders,
     setPendingReminders,
     todayTransactions,

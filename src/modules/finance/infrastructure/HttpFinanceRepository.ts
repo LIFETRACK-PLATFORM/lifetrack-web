@@ -6,20 +6,29 @@ import { BudgetListItem } from "../domain/BudgetListItem";
 import { MonthlySummary } from "../domain/MonthlySummary";
 import { RecurringItem } from "../domain/RecurringItem";
 import { ProcessRecurringResult } from "../domain/ProcessRecurringResult";
+import { Debt, DebtStatus, DebtType } from "../domain/Debt";
+import { DebtCurrencySummary } from "../domain/DebtsSummary";
 import {
   CreateAccountInput,
   CreateBudgetInput,
   CreateCategoryInput,
+  CreateDebtInput,
   CreateRecurringItemInput,
   CreateTransactionInput,
+  DeleteDebtResult,
   FinanceRepository,
   GetBudgetStatusInput,
+  GetDebtsSummaryInput,
   GetMonthlySummaryInput,
   ListBudgetsInput,
+  RecurringCandidate,
+  RegisterDebtPaymentInput,
+  RegisterDebtPaymentResult,
   TransactionFilters,
   UpdateAccountInput,
   UpdateBudgetInput,
   UpdateCategoryInput,
+  UpdateDebtInput,
   UpdateRecurringItemInput,
   UpdateTransactionInput,
 } from "../domain/FinanceRepository";
@@ -71,6 +80,41 @@ interface RecurringItemDto {
   dayOfMonth: number;
   mode: string;
   active: boolean;
+}
+
+interface RecurringCandidateDto {
+  accountId: string;
+  categoryId: string;
+  amount: number;
+  kind: string;
+  dayOfMonth: number;
+  occurrences: number;
+  suggestedName: string;
+  lastOccurredAt: string;
+}
+
+interface DebtDto {
+  debtId: string;
+  name: string;
+  lender?: string;
+  type: string;
+  currency: string;
+  totalOwed: number;
+  originalAmount?: number;
+  minimumPayment?: number;
+  dueDay?: number;
+  accountId?: string;
+  categoryId: string;
+  status: string;
+  lastPaymentMonth?: number;
+  lastPaymentYear?: number;
+}
+
+interface DebtCurrencySummaryDto {
+  currency: string;
+  totalOwed: number;
+  totalDueThisPeriod: number;
+  activeCount: number;
 }
 
 function toAccount(dto: AccountDto): Account {
@@ -134,6 +178,47 @@ function toRecurringItem(dto: RecurringItemDto): RecurringItem {
     dayOfMonth: dto.dayOfMonth,
     mode: dto.mode as RecurringItem["mode"],
     active: dto.active,
+  };
+}
+
+function toRecurringCandidate(dto: RecurringCandidateDto): RecurringCandidate {
+  return {
+    accountId: dto.accountId,
+    categoryId: dto.categoryId,
+    amount: dto.amount,
+    kind: dto.kind as RecurringCandidate["kind"],
+    dayOfMonth: dto.dayOfMonth,
+    occurrences: dto.occurrences,
+    suggestedName: dto.suggestedName,
+    lastOccurredAt: dto.lastOccurredAt,
+  };
+}
+
+function toDebt(dto: DebtDto): Debt {
+  return {
+    debtId: dto.debtId,
+    name: dto.name,
+    lender: dto.lender,
+    type: dto.type as DebtType,
+    currency: dto.currency,
+    totalOwed: dto.totalOwed,
+    originalAmount: dto.originalAmount,
+    minimumPayment: dto.minimumPayment,
+    dueDay: dto.dueDay,
+    accountId: dto.accountId,
+    categoryId: dto.categoryId,
+    status: dto.status as DebtStatus,
+    lastPaymentMonth: dto.lastPaymentMonth,
+    lastPaymentYear: dto.lastPaymentYear,
+  };
+}
+
+function toDebtSummary(dto: DebtCurrencySummaryDto): DebtCurrencySummary {
+  return {
+    currency: dto.currency,
+    totalOwed: dto.totalOwed,
+    totalDueThisPeriod: dto.totalDueThisPeriod,
+    activeCount: dto.activeCount,
   };
 }
 
@@ -339,5 +424,72 @@ export class HttpFinanceRepository implements FinanceRepository {
       pendingReminders: result.pendingReminders.map(toRecurringItem),
       generatedTransactions: result.generatedTransactions.map(toTransaction),
     };
+  }
+
+  async detectRecurringCandidates(): Promise<RecurringCandidate[]> {
+    const { candidates } = await financeFetch<{
+      candidates: RecurringCandidateDto[];
+    }>("/finance/recurring-items/detect");
+    return candidates.map(toRecurringCandidate);
+  }
+
+  async getDebts(): Promise<Debt[]> {
+    const { debts } = await financeFetch<{ debts: DebtDto[] }>(
+      "/finance/debts",
+    );
+    return debts.map(toDebt);
+  }
+
+  async createDebt(input: CreateDebtInput): Promise<Debt> {
+    const dto = await financeFetch<DebtDto>("/finance/debts", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    return toDebt(dto);
+  }
+
+  async updateDebt(debtId: string, input: UpdateDebtInput): Promise<Debt> {
+    const dto = await financeFetch<DebtDto>(`/finance/debts/${debtId}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    });
+    return toDebt(dto);
+  }
+
+  async deleteDebt(debtId: string): Promise<DeleteDebtResult> {
+    return financeFetch<DeleteDebtResult>(`/finance/debts/${debtId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async registerDebtPayment(
+    debtId: string,
+    input: RegisterDebtPaymentInput,
+  ): Promise<RegisterDebtPaymentResult> {
+    return financeFetch<RegisterDebtPaymentResult>(
+      `/finance/debts/${debtId}/payments`,
+      { method: "POST", body: JSON.stringify(input) },
+    );
+  }
+
+  async adjustDebtBalance(debtId: string, newTotalOwed: number): Promise<Debt> {
+    const dto = await financeFetch<DebtDto>(
+      `/finance/debts/${debtId}/balance`,
+      { method: "PUT", body: JSON.stringify({ newTotalOwed }) },
+    );
+    return toDebt(dto);
+  }
+
+  async getDebtsSummary(
+    input: GetDebtsSummaryInput,
+  ): Promise<DebtCurrencySummary[]> {
+    const params = new URLSearchParams({
+      month: String(input.periodMonth),
+      year: String(input.periodYear),
+    });
+    const { summaries } = await financeFetch<{
+      summaries: DebtCurrencySummaryDto[];
+    }>(`/finance/debts/summary?${params.toString()}`);
+    return summaries.map(toDebtSummary);
   }
 }

@@ -6,6 +6,8 @@ import { BudgetListItem } from "./BudgetListItem";
 import { MonthlySummary } from "./MonthlySummary";
 import { RecurringItem, RecurringMode } from "./RecurringItem";
 import { ProcessRecurringResult } from "./ProcessRecurringResult";
+import { Debt, DebtType } from "./Debt";
+import { DebtCurrencySummary } from "./DebtsSummary";
 
 export type AccountCurrency = "PEN" | "USD";
 
@@ -106,6 +108,69 @@ export interface TransactionFilters {
   toDate?: string;
 }
 
+export interface RecurringCandidate {
+  accountId: string;
+  categoryId: string;
+  amount: number;
+  kind: TransactionKind;
+  dayOfMonth: number;
+  occurrences: number;
+  suggestedName: string;
+  lastOccurredAt: string;
+}
+
+export interface CreateDebtInput {
+  name: string;
+  lender?: string;
+  type: DebtType;
+  currency: string;
+  totalOwed: number;
+  originalAmount?: number;
+  minimumPayment?: number;
+  dueDay?: number;
+  accountId?: string;
+  categoryId: string;
+}
+
+export interface UpdateDebtInput {
+  name: string;
+  lender?: string;
+  type: DebtType;
+  currency: string;
+  originalAmount?: number;
+  minimumPayment?: number;
+  dueDay?: number;
+  accountId?: string;
+  categoryId: string;
+}
+
+export interface RegisterDebtPaymentInput {
+  accountId: string;
+  amount: number;
+  description?: string;
+  occurredAt: string;
+}
+
+export interface RegisterDebtPaymentResult {
+  transactionId: string;
+  debtId: string;
+  amount: number;
+  totalOwedAfter: number;
+  statusAfter: string;
+  accountBalanceAfter: number;
+  occurredAt: string;
+}
+
+export interface DeleteDebtResult {
+  deleted: boolean;
+  archived: boolean;
+}
+
+export interface GetDebtsSummaryInput {
+  periodMonth: number;
+  periodYear: number;
+}
+
 export interface FinanceRepository {
   getAccounts(): Promise<Account[]>;
   createAccount(input: CreateAccountInput): Promise<Account>;
@@ -144,4 +209,18 @@ export interface FinanceRepository {
   ): Promise<RecurringItem>;
   deleteRecurringItem(recurringItemId: string): Promise<void>;
   processRecurringItems(): Promise<ProcessRecurringResult>;
+  detectRecurringCandidates(): Promise<RecurringCandidate[]>;
+
+  getDebts(): Promise<Debt[]>;
+  createDebt(input: CreateDebtInput): Promise<Debt>;
+  updateDebt(debtId: string, input: UpdateDebtInput): Promise<Debt>;
+  deleteDebt(debtId: string): Promise<DeleteDebtResult>;
+  registerDebtPayment(
+    debtId: string,
+    input: RegisterDebtPaymentInput,
+  ): Promise<RegisterDebtPaymentResult>;
+  adjustDebtBalance(debtId: string, newTotalOwed: number): Promise<Debt>;
+  getDebtsSummary(
+    input: GetDebtsSummaryInput,
+  ): Promise<DebtCurrencySummary[]>;
 }

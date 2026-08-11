@@ -6,23 +6,35 @@ import { BudgetListItem } from "../domain/BudgetListItem";
 import { MonthlySummary } from "../domain/MonthlySummary";
 import { RecurringItem } from "../domain/RecurringItem";
 import { ProcessRecurringResult } from "../domain/ProcessRecurringResult";
+import { Debt } from "../domain/Debt";
+import { DebtCurrencySummary } from "../domain/DebtsSummary";
 import {
   CreateAccountInput,
   CreateBudgetInput,
   CreateCategoryInput,
+  CreateDebtInput,
   CreateRecurringItemInput,
   CreateTransactionInput,
+  DeleteDebtResult,
   FinanceRepository,
   GetBudgetStatusInput,
+  GetDebtsSummaryInput,
   GetMonthlySummaryInput,
   ListBudgetsInput,
+  RecurringCandidate,
+  RegisterDebtPaymentInput,
+  RegisterDebtPaymentResult,
   TransactionFilters,
   UpdateAccountInput,
   UpdateBudgetInput,
   UpdateCategoryInput,
+  UpdateDebtInput,
   UpdateRecurringItemInput,
   UpdateTransactionInput,
 } from "../domain/FinanceRepository";
+
+const RECURRING_AMOUNT_TOLERANCE_RATIO = 0.15;
+const RECURRING_MAX_DAY_SPREAD = 5;
 
 const accounts: Account[] = [
   new Account(
@@ -130,6 +142,23 @@ const recurringItems: RecurringItem[] = [
     dayOfMonth: 5,
     mode: "REMIND",
     active: true,
+  },
+];
+
+const debts: Debt[] = [
+  {
+    debtId: "mock-debt-1",
+    name: "Tarjeta BCP",
+    lender: "BCP",
+    type: "CREDIT_CARD",
+    currency: "PEN",
+    totalOwed: 1800,
+    originalAmount: 2500,
+    minimumPayment: 200,
+    dueDay: 15,
+    accountId: "mock-account-1",
+    categoryId: "mock-category-1",
+    status: "ACTIVE",
   },
 ];
 
@@ -506,4 +535,226 @@ export class MockFinanceRepository implements FinanceRepository {
 
     return { pendingReminders, generatedTransactions };
   }
+
+  async detectRecurringCandidates(): Promise<RecurringCandidate[]> {
+    const groups = new Map<string, Transaction[]>();
+    for (const t of transactions) {
+      const key = `${t.accountId}|${t.categoryId}|${t.kind}`;
+      const group = groups.get(key);
+      if (group) group.push(t);
+      else groups.set(key, [t]);
+    }
+
+    const candidates: RecurringCandidate[] = [];
+    for (const group of groups.values()) {
+      for (const cluster of clusterByAmount(group)) {
+        if (cluster.length < 2) continue;
+        const days = cluster.map((t) => new Date(t.occurredAt).getDate());
+        if (Math.max(...days) - Math.min(...days) > RECURRING_MAX_DAY_SPREAD) {
+          continue;
+        }
+        const alreadyDeclared = recurringItems.some(
+          (item) =>
+            item.accountId === cluster[0].accountId &&
+            item.categoryId === cluster[0].categoryId &&
+            item.kind === cluster[0].kind,
+        );
+        if (alreadyDeclared) continue;
+
+        const latest = [...cluster].sort(
+          (a, b) =>
+            new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
+        )[0];
+        candidates.push({
+          accountId: latest.accountId,
+          categoryId: latest.categoryId,
+          amount: latest.amount,
+          kind: latest.kind,
+          dayOfMonth: Math.min(28, Math.round(median(days))),
+          occurrences: cluster.length,
+          suggestedName: latest.description ?? "",
+          lastOccurredAt: latest.occurredAt,
+        });
+      }
+    }
+    return candidates;
+  }
+
+  async getDebts(): Promise<Debt[]> {
+    return [...debts];
+  }
+
+  async createDebt(input: CreateDebtInput): Promise<Debt> {
+    const debt: Debt = {
+      debtId: crypto.randomUUID(),
+      name: input.name,
+      lender: input.lender,
+      type: input.type,
+      currency: input.currency,
+      totalOwed: input.totalOwed,
+      originalAmount: input.originalAmount,
+      minimumPayment: input.minimumPayment,
+      dueDay: input.dueDay,
+      accountId: input.accountId,
+      categoryId: input.categoryId,
+      status: "ACTIVE",
+    };
+    debts.push(debt);
+    return debt;
+  }
+
+  async updateDebt(debtId: string, input: UpdateDebtInput): Promise<Debt> {
+    const idx = debts.findIndex((d) => d.debtId === debtId);
+    if (idx < 0) throw new Error("Deuda no encontrada");
+    const prev = debts[idx];
+    const updated: Debt = {
+      ...prev,
+      name: input.name,
+      lender: input.lender,
+      type: input.type,
+      currency: input.currency,
+      originalAmount: input.originalAmount,
+      minimumPayment: input.minimumPayment,
+      dueDay: input.dueDay,
+      accountId: input.accountId,
+      categoryId: input.categoryId,
+    };
+    debts[idx] = updated;
+    return updated;
+  }
+
+  async deleteDebt(debtId: string): Promise<DeleteDebtResult> {
+    const hasPayments = transactions.some((t) => t.debtId === debtId);
+    if (hasPayments) {
+      const idx = debts.findIndex((d) => d.debtId === debtId);
+      if (idx >= 0) debts[idx] = { ...debts[idx], status: "ARCHIVED" };
+      return { deleted: false, archived: true };
+    }
+    const idx = debts.findIndex((d) => d.debtId === debtId);
+    if (idx >= 0) debts.splice(idx, 1);
+    return { deleted: true, archived: false };
+  }
+
+  async registerDebtPayment(
+    debtId: string,
+    input: RegisterDebtPaymentInput,
+  ): Promise<RegisterDebtPaymentResult> {
+    const debtIdx = debts.findIndex((d) => d.debtId === debtId);
+    if (debtIdx < 0) throw new Error("Deuda no encontrada");
+    const debt = debts[debtIdx];
+    const account = accounts.find((a) => a.id === input.accountId);
+    if (!account) throw new Error("Cuenta no encontrada");
+    if (account.currency !== debt.currency) {
+      throw new Error(
+        `La cuenta es en ${account.currency} pero la deuda es en ${debt.currency}`,
+      );
+    }
+
+    const newBalance = updateAccountBalance(input.accountId, -input.amount);
+    const transaction = new Transaction(
+      {
+        accountId: input.accountId,
+        categoryId: debt.categoryId,
+        amount: input.amount,
+        kind: "EXPENSE",
+        description: input.description ?? `Pago ${debt.name}`,
+        occurredAt: input.occurredAt,
+        accountBalanceAfter: newBalance,
+        budgetExceeded: false,
+        debtId: debt.debtId,
+      },
+      crypto.randomUUID(),
+    );
+    transactions.push(transaction);
+
+    const occurredAt = new Date(input.occurredAt);
+    const totalOwedAfter = Math.max(0, debt.totalOwed - input.amount);
+    const statusAfter = totalOwedAfter === 0 ? "PAID_OFF" : "ACTIVE";
+    debts[debtIdx] = {
+      ...debt,
+      totalOwed: totalOwedAfter,
+      status: statusAfter,
+      lastPaymentMonth: occurredAt.getMonth() + 1,
+      lastPaymentYear: occurredAt.getFullYear(),
+    };
+
+    return {
+      transactionId: transaction.id,
+      debtId: debt.debtId,
+      amount: input.amount,
+      totalOwedAfter,
+      statusAfter,
+      accountBalanceAfter: newBalance,
+      occurredAt: input.occurredAt,
+    };
+  }
+
+  async adjustDebtBalance(
+    debtId: string,
+    newTotalOwed: number,
+  ): Promise<Debt> {
+    const idx = debts.findIndex((d) => d.debtId === debtId);
+    if (idx < 0) throw new Error("Deuda no encontrada");
+    const prev = debts[idx];
+    const status =
+      newTotalOwed === 0
+        ? "PAID_OFF"
+        : prev.status === "PAID_OFF"
+          ? "ACTIVE"
+          : prev.status;
+    const updated: Debt = { ...prev, totalOwed: newTotalOwed, status };
+    debts[idx] = updated;
+    return updated;
+  }
+
+  async getDebtsSummary(
+    input: GetDebtsSummaryInput,
+  ): Promise<DebtCurrencySummary[]> {
+    const active = debts.filter((d) => d.status === "ACTIVE");
+    const byCurrency = new Map<string, DebtCurrencySummary>();
+    for (const debt of active) {
+      const entry =
+        byCurrency.get(debt.currency) ??
+        ({
+          currency: debt.currency,
+          totalOwed: 0,
+          totalDueThisPeriod: 0,
+          activeCount: 0,
+        } satisfies DebtCurrencySummary);
+      entry.totalOwed += debt.totalOwed;
+      entry.activeCount += 1;
+      const paidThisPeriod =
+        debt.lastPaymentMonth === input.periodMonth &&
+        debt.lastPaymentYear === input.periodYear;
+      if (debt.minimumPayment && !paidThisPeriod) {
+        entry.totalDueThisPeriod += debt.minimumPayment;
+      }
+      byCurrency.set(debt.currency, entry);
+    }
+    return Array.from(byCurrency.values());
+  }
+}
+
+function clusterByAmount(transactions: Transaction[]): Transaction[][] {
+  const sorted = [...transactions].sort((a, b) => a.amount - b.amount);
+  const clusters: Transaction[][] = [];
+  for (const t of sorted) {
+    const current = clusters.at(-1);
+    const anchor = current?.[0];
+    const withinTolerance =
+      anchor &&
+      Math.abs(t.amount - anchor.amount) <=
+        anchor.amount * RECURRING_AMOUNT_TOLERANCE_RATIO;
+    if (current && withinTolerance) current.push(t);
+    else clusters.push([t]);
+  }
+  return clusters;
+}
+
+function median(values: number[]): number {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
 }

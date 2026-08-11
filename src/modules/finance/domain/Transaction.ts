@@ -11,6 +11,7 @@ interface TransactionProps {
   occurredAt: string;
   accountBalanceAfter: number;
   budgetExceeded: boolean;
+  debtId?: string;
 }
 
 export class Transaction extends Entity<TransactionProps> {
@@ -48,5 +49,9 @@ export class Transaction extends Entity<TransactionProps> {
 
   get budgetExceeded(): boolean {
     return this.props.budgetExceeded;
+  }
+
+  get debtId(): string | undefined {
+    return this.props.debtId;
   }
 }
