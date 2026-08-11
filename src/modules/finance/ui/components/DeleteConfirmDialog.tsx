@@ -17,6 +17,7 @@ export function DeleteConfirmDialog({
   description,
   confirmLabel = "Eliminar",
   loading,
+  error,
   onConfirm,
   onClose,
 }: {
@@ -25,6 +26,7 @@ export function DeleteConfirmDialog({
   description: string;
   confirmLabel?: string;
   loading?: boolean;
+  error?: string | null;
   onConfirm: () => void;
   onClose: () => void;
 }) {
@@ -35,6 +37,7 @@ export function DeleteConfirmDialog({
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
+        {error && <p className="text-body-md text-error">{error}</p>}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={loading}>Cancelar</AlertDialogCancel>
           <AlertDialogAction

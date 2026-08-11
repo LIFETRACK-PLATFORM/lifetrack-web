@@ -139,7 +139,7 @@ Radios moderados, ni muy angulares ni muy suaves — refuerzan "control técnico
 - **Chips/badges/avatares:** full (pill/círculo).
 
 ## Iconography
-Set **lucide-react** (viene por defecto con shadcn/ui — no mezclar con react-icons u otros sets para no romper consistencia de grosor). Stroke 1.75px, esquinas redondeadas. Iconos base del proyecto: `dashboard`, `tareas`, `finanzas`, `vault`, `rehab`, `carrera`, `calendario`, `notificación`, `búsqueda`, `usuario`, `check`, `alerta`, `config`, `chevron`, `cerrar`, `agregar`.
+Set **lucide-react** (dependencia directa del proyecto, también usada internamente por `@lifetrack/system-design` — no mezclar con react-icons u otros sets para no romper consistencia de grosor). Stroke 1.75px, esquinas redondeadas. Iconos base del proyecto: `dashboard`, `tareas`, `finanzas`, `vault`, `rehab`, `carrera`, `calendario`, `notificación`, `búsqueda`, `usuario`, `check`, `alerta`, `config`, `chevron`, `cerrar`, `agregar`.
 
 ## Components
 - **Botones:** variantes `primary` / `secondary` / `ghost` / `destructive` / `icon-button`, en 3 tamaños, con estados default/hover/focus/disabled explícitos (no solo opacidad — `primary-hover` y `primary-active` son tokens propios).
@@ -158,6 +158,6 @@ El isotipo es 3 círculos superpuestos en diagonal (misma familia visual que un 
 El topbar/header lleva además un fondo sutil de **dot-grid** (radial-gradient de puntos de 1px, `border` color, grilla de 18px) detrás del contenido, para dar textura sin romper la planitud del sistema. Utilidad: `.bg-dot-grid` en `globals.css`.
 
 ## Loading & Estados vacíos
-- **Skeletons:** gradiente `surface-2 → surface-3 → surface-2` en shimmer horizontal continuo (1.6s), no un `pulse` de opacidad — se siente más "vivo" sin ser ruidoso. Utilidad: `.animate-shimmer`; componente: `src/components/ui/skeleton.tsx`.
-- **Spinner:** anillo de 3px, `surface-3` como track y `primary` como indicador, rotación continua — para loaders puntuales (botón, sección chica), nunca pantalla completa. Componente: `src/components/ui/spinner.tsx`.
-- **Estados vacíos:** card centrada (ícono en halo `accent-tint` + título + descripción + CTA opcional), mismo lenguaje plano que el resto de cards. Se usa para "sin resultados", "vault vacío", "sin plan activo", etc. Componente: `src/components/ui/empty-state.tsx`.
+- **Skeletons:** gradiente `surface-2 → surface-3 → surface-2` en shimmer horizontal continuo (1.6s), no un `pulse` de opacidad — se siente más "vivo" sin ser ruidoso. Utilidad: `.animate-shimmer`; componente: `Skeleton` de `@lifetrack/system-design`.
+- **Spinner:** anillo de 3px, `surface-3` como track y `primary` como indicador, rotación continua — para loaders puntuales (botón, sección chica), nunca pantalla completa. Componente: `Spinner` de `@lifetrack/system-design`.
+- **Estados vacíos:** card centrada (ícono en halo `accent-tint` + título + descripción + CTA opcional), mismo lenguaje plano que el resto de cards. Se usa para "sin resultados", "vault vacío", "sin plan activo", etc. Componente: `EmptyState` de `@lifetrack/system-design`.

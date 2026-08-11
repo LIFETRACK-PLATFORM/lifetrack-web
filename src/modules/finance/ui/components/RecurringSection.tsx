@@ -10,12 +10,20 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@lifetrack/system-design";
 import { RecurringItem } from "@/modules/finance/domain/RecurringItem";
 import { Account } from "@/modules/finance/domain/Account";
 import { Category } from "@/modules/finance/domain/Category";
 import { formatMoney } from "@/modules/finance/domain/formatMoney";
-import { CreateRecurringItemInput } from "@/modules/finance/domain/FinanceRepository";
+import {
+  CreateRecurringItemInput,
+  RecurringCandidate,
+} from "@/modules/finance/domain/FinanceRepository";
 
 export function CreateRecurringDialog({
   accounts,
@@ -24,6 +32,7 @@ export function CreateRecurringDialog({
   onSubmit,
   submitting,
   error,
+  initial,
 }: {
   accounts: Account[];
   categories: Category[];
@@ -31,13 +40,31 @@ export function CreateRecurringDialog({
   onSubmit: (input: CreateRecurringItemInput) => Promise<boolean>;
   submitting: boolean;
   error: string | null;
+  initial?: {
+    name?: string;
+    amount?: number;
+    kind?: "INCOME" | "EXPENSE";
+    accountId?: string;
+    categoryId?: string;
+    dayOfMonth?: number;
+  };
 }) {
-  const [name, setName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [kind, setKind] = useState<"INCOME" | "EXPENSE">("EXPENSE");
-  const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
-  const [categoryId, setCategoryId] = useState(categories[0]?.id ?? "");
-  const [dayOfMonth, setDayOfMonth] = useState("1");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [amount, setAmount] = useState(
+    initial?.amount !== undefined ? String(initial.amount) : "",
+  );
+  const [kind, setKind] = useState<"INCOME" | "EXPENSE">(
+    initial?.kind ?? "EXPENSE",
+  );
+  const [accountId, setAccountId] = useState(
+    initial?.accountId ?? accounts[0]?.id ?? "",
+  );
+  const [categoryId, setCategoryId] = useState(
+    initial?.categoryId ?? categories[0]?.id ?? "",
+  );
+  const [dayOfMonth, setDayOfMonth] = useState(
+    initial?.dayOfMonth !== undefined ? String(initial.dayOfMonth) : "1",
+  );
   const [mode, setMode] = useState<"AUTO" | "REMIND">("REMIND");
   const [clientError, setClientError] = useState<string | null>(null);
 
@@ -104,15 +131,29 @@ export function CreateRecurringDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Cuenta</label>
-              <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1">
-                {accounts.map((a) => (<option key={a.id} value={a.id}>{a.name}</option>))}
-              </select>
+              <Select value={accountId} onValueChange={setAccountId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Categoría</label>
-              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1">
-                {categories.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
-              </select>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div>
@@ -217,15 +258,29 @@ export function EditRecurringDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Cuenta</label>
-              <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1">
-                {accounts.map((a) => (<option key={a.id} value={a.id}>{a.name}</option>))}
-              </select>
+              <Select value={accountId} onValueChange={setAccountId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Categoría</label>
-              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1">
-                {categories.map((c) => (<option key={c.id} value={c.id}>{c.name}</option>))}
-              </select>
+              <Select value={categoryId} onValueChange={setCategoryId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div>
@@ -250,20 +305,28 @@ export function EditRecurringDialog({
 export function RecurringSection({
   items,
   accounts,
+  categories,
+  candidates = [],
   pendingIds = [],
   onCreate,
   onEdit,
+  onAddCandidate,
 }: {
   items: RecurringItem[];
   accounts: Account[];
+  categories: Category[];
+  candidates?: RecurringCandidate[];
   pendingIds?: string[];
   onCreate: () => void;
   onEdit: (item: RecurringItem) => void;
+  onAddCandidate: (candidate: RecurringCandidate) => void;
 }) {
   const active = items.filter((i) => i.active);
   const pendingSet = new Set(pendingIds);
   const accountName = (id: string) =>
     accounts.find((a) => a.id === id)?.name ?? "—";
+  const categoryName = (id: string) =>
+    categories.find((c) => c.id === id)?.name ?? "—";
 
   return (
     <Card>
@@ -277,6 +340,44 @@ export function RecurringSection({
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
+        {candidates.length > 0 && (
+          <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border bg-surface-2 p-3">
+            <p className="font-label text-label-md text-text-3">
+              Detectamos estos pagos
+            </p>
+            {candidates.map((candidate) => (
+              <div
+                key={`${candidate.accountId}-${candidate.categoryId}-${candidate.amount}`}
+                className="flex items-center gap-3"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-body-md text-text-1">
+                    {candidate.suggestedName || categoryName(candidate.categoryId)}
+                  </p>
+                  <p className="truncate font-label text-label-md text-text-3">
+                    Día {candidate.dayOfMonth} · {candidate.occurrences} veces ·{" "}
+                    {accountName(candidate.accountId)}
+                  </p>
+                </div>
+                <p className="shrink-0 font-metric text-body-md text-text-1">
+                  {formatMoney(
+                    candidate.amount,
+                    accounts.find((a) => a.id === candidate.accountId)
+                      ?.currency ?? "PEN",
+                  )}
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => onAddCandidate(candidate)}
+                >
+                  Agregar
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
         {active.map((item) => {
           const isPending = pendingSet.has(item.recurringItemId);
           return (

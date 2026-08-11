@@ -2,6 +2,13 @@
 
 import { useState } from "react";
 import { Icon } from "@/shared/ui/Icon";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@lifetrack/system-design";
 import { Account, AccountType } from "@/modules/finance/domain/Account";
 import {
   AccountCurrency,
@@ -70,19 +77,29 @@ export function EditAccountDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Tipo</label>
-              <select value={type} onChange={(e) => setType(e.target.value as AccountType)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none">
-                {ACCOUNT_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
+              <Select value={type} onValueChange={(v) => setType(v as AccountType)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ACCOUNT_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Moneda</label>
-              <select value={currency} onChange={(e) => setCurrency(e.target.value as AccountCurrency)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none">
-                {CURRENCIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.label}</option>
-                ))}
-              </select>
+              <Select value={currency} onValueChange={(v) => setCurrency(v as AccountCurrency)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {(clientError || error) && <p className="text-body-md text-error">{clientError ?? error}</p>}

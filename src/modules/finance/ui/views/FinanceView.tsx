@@ -31,18 +31,31 @@ import { Category } from "@/modules/finance/domain/Category";
 import { Transaction } from "@/modules/finance/domain/Transaction";
 import { BudgetListItem } from "@/modules/finance/domain/BudgetListItem";
 import { RecurringItem } from "@/modules/finance/domain/RecurringItem";
+import { RecurringCandidate } from "@/modules/finance/domain/FinanceRepository";
+import { Debt } from "@/modules/finance/domain/Debt";
+import {
+  CreateDebtInput,
+  RegisterDebtPaymentInput,
+  UpdateDebtInput,
+} from "@/modules/finance/domain/FinanceRepository";
+import { isDueSoon, isOverdue } from "@/modules/finance/domain/debtStatus";
 import { MonthSelector } from "@/modules/finance/ui/components/MonthSelector";
 import { CreateAccountDialog } from "@/modules/finance/ui/components/CreateAccountDialog";
 import { CreateCategoryDialog } from "@/modules/finance/ui/components/CreateCategoryDialog";
 import { CreateTransactionDialog } from "@/modules/finance/ui/components/CreateTransactionDialog";
 import { CreateBudgetDialog } from "@/modules/finance/ui/components/CreateBudgetDialog";
 import { TransactionList } from "@/modules/finance/ui/components/TransactionList";
+import {
+  TransactionsToolbar,
+  type TransactionKindFilter,
+} from "@/modules/finance/ui/components/TransactionsToolbar";
 import { EditTransactionDialog } from "@/modules/finance/ui/components/EditTransactionDialog";
 import { EditAccountDialog } from "@/modules/finance/ui/components/EditAccountDialog";
 import { EditCategoryDialog } from "@/modules/finance/ui/components/EditCategoryDialog";
 import { EditBudgetDialog } from "@/modules/finance/ui/components/EditBudgetDialog";
 import { DeleteConfirmDialog } from "@/modules/finance/ui/components/DeleteConfirmDialog";
 import { BudgetListSection } from "@/modules/finance/ui/components/BudgetListSection";
+import { InsightsSection } from "@/modules/finance/ui/components/InsightsSection";
 import { TodaySection } from "@/modules/finance/ui/components/TodaySection";
 import {
   CreateRecurringDialog,
@@ -50,6 +63,12 @@ import {
   RecurringSection,
 } from "@/modules/finance/ui/components/RecurringSection";
 import { PendingRemindersBanner } from "@/modules/finance/ui/components/PendingRemindersBanner";
+import {
+  CreateDebtDialog,
+  DebtsSection,
+  EditDebtDialog,
+} from "@/modules/finance/ui/components/DebtsSection";
+import { RegisterDebtPaymentDialog } from "@/modules/finance/ui/components/RegisterDebtPaymentDialog";
 
 const FinanceCharts = dynamic(
   () =>
@@ -74,6 +93,7 @@ type DialogKind =
   | "transaction"
   | "budget"
   | "recurring"
+  | "debt"
   | null;
 
 type EditTarget =
@@ -82,6 +102,7 @@ type EditTarget =
   | { type: "category"; item: Category }
   | { type: "budget"; item: BudgetListItem }
   | { type: "recurring"; item: RecurringItem }
+  | { type: "debt"; item: Debt }
   | null;
 
 type DeleteTarget =
@@ -89,15 +110,22 @@ type DeleteTarget =
   | { type: "account"; item: Account }
   | { type: "category"; item: Category }
   | { type: "budget"; item: BudgetListItem }
+  | { type: "debt"; item: Debt }
   | null;
 
-type FinanceTab = "resumen" | "movimientos" | "cuentas" | "planificacion";
+type FinanceTab =
+  | "resumen"
+  | "movimientos"
+  | "cuentas"
+  | "planificacion"
+  | "deudas";
 
 const FINANCE_TABS: { id: FinanceTab; label: string }[] = [
   { id: "resumen", label: "Resumen" },
   { id: "movimientos", label: "Movimientos" },
   { id: "cuentas", label: "Cuentas y categorías" },
   { id: "planificacion", label: "Planificación" },
+  { id: "deudas", label: "Deudas" },
 ];
 
 export function FinanceView({
@@ -114,8 +142,12 @@ export function FinanceView({
   const {
     overview,
     summaries,
+    previousSummaries,
     budgets,
     recurringItems,
+    recurringCandidates,
+    debts,
+    debtsSummary,
     pendingReminders,
     setPendingReminders,
     todayTransactions,
@@ -125,6 +157,15 @@ export function FinanceView({
   } = useFinanceData(activeRepository, month, year);
 
   const [tab, setTab] = useState<FinanceTab>("resumen");
+  const [search, setSearch] = useState("");
+  const [filterKind, setFilterKind] = useState<TransactionKindFilter>("ALL");
+  const [filterAccountId, setFilterAccountId] = useState("");
+  const [filterCategoryId, setFilterCategoryId] = useState("");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [recurringCandidate, setRecurringCandidate] =
+    useState<RecurringCandidate | null>(null);
+  const [payDebtTarget, setPayDebtTarget] = useState<Debt | null>(null);
   const [openDialog, setOpenDialog] = useState<DialogKind>(null);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
@@ -134,11 +175,63 @@ export function FinanceView({
   const closeDialog = () => {
     setOpenDialog(null);
     setSubmitError(null);
+    setRecurringCandidate(null);
   };
 
   const handlePeriodChange = (m: number, y: number) => {
     setMonth(m);
     setYear(y);
+  };
+
+  const filteredTransactions = useMemo(() => {
+    if (!overview) return [];
+    const term = search.trim().toLowerCase();
+    return overview.transactions.filter((t) => {
+      if (filterKind !== "ALL" && t.kind !== filterKind) return false;
+      if (filterAccountId && t.accountId !== filterAccountId) return false;
+      if (filterCategoryId && t.categoryId !== filterCategoryId) return false;
+      if (!term) return true;
+      const account = overview.accounts.find((a) => a.id === t.accountId);
+      const category = overview.categories.find((c) => c.id === t.categoryId);
+      const haystack = [
+        t.description ?? "",
+        category?.name ?? "",
+        account?.name ?? "",
+        String(t.amount),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [overview, search, filterKind, filterAccountId, filterCategoryId]);
+
+  const toggleSelect = (t: Transaction) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(t.id)) next.delete(t.id);
+      else next.add(t.id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      await Promise.all(
+        [...selectedIds].map((id) => activeRepository.deleteTransaction(id)),
+      );
+      setSelectedIds(new Set());
+      setSelectMode(false);
+      reload();
+    } catch (err) {
+      setSubmitError(
+        err instanceof Error ? err.message : "No se pudo eliminar",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -181,6 +274,13 @@ export function FinanceView({
   const canCreateTransaction =
     accounts.length > 0 && categories.length > 0;
 
+  const today = new Date();
+  const debtsDueCount = debts.filter(
+    (d) => isOverdue(d, today) || isDueSoon(d, today),
+  ).length;
+  const totalDebtOwedPen =
+    debtsSummary.find((s) => s.currency === "PEN")?.totalOwed ?? 0;
+
   return (
     <main className="min-h-screen bg-background p-6 pb-32 text-text-1 md:p-10 md:pb-10">
       <div className="mx-auto flex max-w-app flex-col gap-5">
@@ -212,7 +312,11 @@ export function FinanceView({
         <div className="sticky top-0 z-30 -mx-1 flex gap-2 overflow-x-auto bg-background/95 px-1 py-2 no-scrollbar">
           {FINANCE_TABS.map((item) => {
             const pendingCount =
-              item.id === "planificacion" ? pendingReminders.length : 0;
+              item.id === "planificacion"
+                ? pendingReminders.length
+                : item.id === "deudas"
+                  ? debtsDueCount
+                  : 0;
             const active = tab === item.id;
             return (
               <button
@@ -265,7 +369,7 @@ export function FinanceView({
               }
             />
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
               <KpiCard
                 label="Patrimonio PEN"
                 value={formatMoney(penTotal, "PEN")}
@@ -297,6 +401,13 @@ export function FinanceView({
                 tone={net >= 0 ? "success" : "error"}
                 sparklinePoints="0,6 20,8 40,10 60,14 80,18 100,24"
               />
+              <KpiCard
+                label="Deuda total"
+                value={formatMoney(totalDebtOwedPen, "PEN")}
+                tone="error"
+                delta={debtsDueCount > 0 ? `${debtsDueCount} por pagar` : undefined}
+                sparklinePoints="0,10 20,12 40,14 60,16 80,18 100,20"
+              />
             </div>
 
             <FinanceCharts
@@ -304,6 +415,15 @@ export function FinanceView({
               transactions={transactions}
               categories={categories}
               accounts={accounts}
+              month={month}
+              year={year}
+            />
+
+            <InsightsSection
+              summaries={summaries}
+              previousSummaries={previousSummaries}
+              budgets={budgets}
+              categories={categories}
               month={month}
               year={year}
             />
@@ -330,26 +450,75 @@ export function FinanceView({
                     Todos los movimientos del período seleccionado
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={!canCreateTransaction}
-                  onClick={() => setOpenDialog("transaction")}
-                >
-                  <Plus />
-                  Nueva
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant={selectMode ? "secondary" : "ghost"}
+                    size="sm"
+                    onClick={() => {
+                      setSelectMode((prev) => !prev);
+                      setSelectedIds(new Set());
+                    }}
+                  >
+                    {selectMode ? "Cancelar" : "Seleccionar"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!canCreateTransaction}
+                    onClick={() => setOpenDialog("transaction")}
+                  >
+                    <Plus />
+                    Nueva
+                  </Button>
+                </div>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-4">
+              <TransactionsToolbar
+                search={search}
+                onSearchChange={setSearch}
+                kind={filterKind}
+                onKindChange={setFilterKind}
+                accountId={filterAccountId}
+                onAccountChange={setFilterAccountId}
+                categoryId={filterCategoryId}
+                onCategoryChange={setFilterCategoryId}
+                accounts={accounts}
+                categories={categories}
+              />
+
+              {selectMode && selectedIds.size > 0 && (
+                <div className="flex items-center justify-between rounded-lg border border-border bg-surface-2 px-4 py-2.5">
+                  <p className="font-label text-label-md text-text-3">
+                    {selectedIds.size} seleccionada
+                    {selectedIds.size === 1 ? "" : "s"}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-error"
+                    disabled={submitting}
+                    onClick={handleBulkDelete}
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              )}
+
               <TransactionList
-                transactions={transactions}
+                transactions={filteredTransactions}
                 accounts={accounts}
                 categories={categories}
                 onEdit={(t) => setEditTarget({ type: "transaction", item: t })}
                 onDelete={(t) =>
                   setDeleteTarget({ type: "transaction", item: t })
                 }
+                selectable={selectMode}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
+                emptyMessage="No se encontraron transacciones. Probá cambiando los filtros."
               />
             </CardContent>
           </Card>
@@ -410,12 +579,29 @@ export function FinanceView({
               <RecurringSection
                 items={recurringItems}
                 accounts={accounts}
+                categories={categories}
+                candidates={recurringCandidates}
                 pendingIds={pendingReminders.map((r) => r.recurringItemId)}
                 onCreate={() => setOpenDialog("recurring")}
                 onEdit={(item) => setEditTarget({ type: "recurring", item })}
+                onAddCandidate={(candidate) => {
+                  setRecurringCandidate(candidate);
+                  setOpenDialog("recurring");
+                }}
               />
             </div>
           </div>
+        )}
+
+        {tab === "deudas" && (
+          <DebtsSection
+            debts={debts}
+            accounts={accounts}
+            onCreate={() => setOpenDialog("debt")}
+            onEdit={(debt) => setEditTarget({ type: "debt", item: debt })}
+            onDelete={(debt) => setDeleteTarget({ type: "debt", item: debt })}
+            onRegisterPayment={(debt) => setPayDebtTarget(debt)}
+          />
         )}
       </div>
 
@@ -527,6 +713,18 @@ export function FinanceView({
           onClose={closeDialog}
           submitting={submitting}
           error={submitError}
+          initial={
+            recurringCandidate
+              ? {
+                  name: recurringCandidate.suggestedName || undefined,
+                  amount: recurringCandidate.amount,
+                  kind: recurringCandidate.kind,
+                  accountId: recurringCandidate.accountId,
+                  categoryId: recurringCandidate.categoryId,
+                  dayOfMonth: recurringCandidate.dayOfMonth,
+                }
+              : undefined
+          }
           onSubmit={async (input) => {
             setSubmitting(true);
             setSubmitError(null);
@@ -537,6 +735,33 @@ export function FinanceView({
             } catch (err) {
               setSubmitError(
                 err instanceof Error ? err.message : "No se pudo crear el recurrente",
+              );
+              return false;
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        />
+      )}
+
+      {openDialog === "debt" && (
+        <CreateDebtDialog
+          open
+          onOpenChange={(open) => !open && closeDialog()}
+          accounts={accounts}
+          categories={categories}
+          submitting={submitting}
+          error={submitError}
+          onSubmit={async (input: CreateDebtInput) => {
+            setSubmitting(true);
+            setSubmitError(null);
+            try {
+              await activeRepository.createDebt(input);
+              reload();
+              return true;
+            } catch (err) {
+              setSubmitError(
+                err instanceof Error ? err.message : "No se pudo crear la deuda",
               );
               return false;
             } finally {
@@ -703,6 +928,85 @@ export function FinanceView({
         />
       )}
 
+      {editTarget?.type === "debt" && (
+        <EditDebtDialog
+          debt={editTarget.item}
+          open
+          onOpenChange={(open) => !open && setEditTarget(null)}
+          accounts={accounts}
+          categories={categories}
+          submitting={submitting}
+          error={submitError}
+          onSubmit={async (input: UpdateDebtInput) => {
+            setSubmitting(true);
+            setSubmitError(null);
+            try {
+              await activeRepository.updateDebt(editTarget.item.debtId, input);
+              reload();
+              return true;
+            } catch (err) {
+              setSubmitError(
+                err instanceof Error ? err.message : "No se pudo actualizar",
+              );
+              return false;
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+          onArchive={async () => {
+            setSubmitting(true);
+            setSubmitError(null);
+            try {
+              await activeRepository.deleteDebt(editTarget.item.debtId);
+              reload();
+              return true;
+            } catch (err) {
+              setSubmitError(
+                err instanceof Error ? err.message : "No se pudo archivar",
+              );
+              return false;
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        />
+      )}
+
+      {payDebtTarget && (
+        <RegisterDebtPaymentDialog
+          debt={payDebtTarget}
+          open
+          onOpenChange={(open) => {
+            if (!open) {
+              setPayDebtTarget(null);
+              setSubmitError(null);
+            }
+          }}
+          accounts={accounts}
+          submitting={submitting}
+          error={submitError}
+          onSubmit={async (input: RegisterDebtPaymentInput) => {
+            setSubmitting(true);
+            setSubmitError(null);
+            try {
+              await activeRepository.registerDebtPayment(
+                payDebtTarget.debtId,
+                input,
+              );
+              reload();
+              return true;
+            } catch (err) {
+              setSubmitError(
+                err instanceof Error ? err.message : "No se pudo registrar el pago",
+              );
+              return false;
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        />
+      )}
+
       <DeleteConfirmDialog
         open={deleteTarget !== null}
         title={
@@ -712,14 +1016,21 @@ export function FinanceView({
               ? "Eliminar cuenta"
               : deleteTarget?.type === "category"
                 ? "Eliminar categoría"
-                : "Eliminar presupuesto"
+                : deleteTarget?.type === "debt"
+                  ? "Eliminar deuda"
+                  : "Eliminar presupuesto"
         }
         description="Esta acción no se puede deshacer."
         loading={submitting}
-        onClose={() => setDeleteTarget(null)}
+        error={submitError}
+        onClose={() => {
+          setDeleteTarget(null);
+          setSubmitError(null);
+        }}
         onConfirm={async () => {
           if (!deleteTarget) return;
           setSubmitting(true);
+          setSubmitError(null);
           try {
             if (deleteTarget.type === "transaction") {
               await activeRepository.deleteTransaction(deleteTarget.item.id);
@@ -727,6 +1038,8 @@ export function FinanceView({
               await activeRepository.deleteAccount(deleteTarget.item.id);
             } else if (deleteTarget.type === "category") {
               await activeRepository.deleteCategory(deleteTarget.item.id);
+            } else if (deleteTarget.type === "debt") {
+              await activeRepository.deleteDebt(deleteTarget.item.debtId);
             } else {
               await activeRepository.deleteBudget(deleteTarget.item.budgetId);
             }

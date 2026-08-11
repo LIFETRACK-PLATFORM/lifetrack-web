@@ -30,3 +30,10 @@ export function getCurrentPeriod(): { month: number; year: number } {
   const now = new Date();
   return { month: now.getMonth() + 1, year: now.getFullYear() };
 }
+
+export function getPreviousPeriod(
+  month: number,
+  year: number,
+): { month: number; year: number } {
+  return month === 1 ? { month: 12, year: year - 1 } : { month: month - 1, year };
+}

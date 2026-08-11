@@ -4,6 +4,7 @@ import { MoreHorizontal } from "lucide-react";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import {
   Button,
+  Checkbox,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -31,12 +32,20 @@ export function TransactionList({
   categories,
   onEdit,
   onDelete,
+  selectable = false,
+  selectedIds,
+  onToggleSelect,
+  emptyMessage = "No hay transacciones en este período.",
 }: {
   transactions: Transaction[];
   accounts: Account[];
   categories: Category[];
   onEdit: (transaction: Transaction) => void;
   onDelete: (transaction: Transaction) => void;
+  selectable?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (transaction: Transaction) => void;
+  emptyMessage?: string;
 }) {
   const categoryName = (id: string) =>
     categories.find((c) => c.id === id)?.name ?? "—";
@@ -57,11 +66,7 @@ export function TransactionList({
     accounts.find((a) => a.id === id)?.currency ?? "PEN";
 
   if (transactions.length === 0) {
-    return (
-      <p className="text-body-md text-text-3">
-        No hay transacciones en este período.
-      </p>
-    );
+    return <p className="text-body-md text-text-3">{emptyMessage}</p>;
   }
 
   return (
@@ -71,6 +76,13 @@ export function TransactionList({
         const isIncome = t.kind === "INCOME";
         return (
           <div key={t.id} className="flex items-center gap-3">
+            {selectable && (
+              <Checkbox
+                checked={selectedIds?.has(t.id) ?? false}
+                onCheckedChange={() => onToggleSelect?.(t)}
+                aria-label={`Seleccionar transacción ${t.description || categoryName(t.categoryId)}`}
+              />
+            )}
             <div
               className="flex size-8 shrink-0 items-center justify-center rounded-[9px]"
               style={{
