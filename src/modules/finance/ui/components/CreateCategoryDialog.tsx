@@ -10,7 +10,20 @@ import {
   DEFAULT_COLOR_BY_KIND,
   DEFAULT_ICON_BY_KIND,
 } from "@/modules/finance/domain/categoryIcons";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@lifetrack/system-design";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@lifetrack/system-design";
 
 export function CreateCategoryDialog({
   onClose,
@@ -51,31 +64,20 @@ export function CreateCategoryDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 p-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-surface-1 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-headline-md font-semibold text-text-1">
-            Nueva categoría
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-3"
-          >
-            <Icon name="close" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nueva categoría</DialogTitle>
+        </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">
               Nombre
             </label>
-            <input
-              type="text"
+            <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
               placeholder="Ej. Comida"
             />
           </div>
@@ -124,11 +126,13 @@ export function CreateCategoryDialog({
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Elegí un ícono" />
               </SelectTrigger>
-              <SelectContent className="z-[110]">
+              <SelectContent className="!z-[60]">
                 {CATEGORY_ICON_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
-                    <Icon name={option.value} className="text-[16px]" />
-                    {option.label}
+                    <span className="flex items-center gap-2">
+                      <Icon name={option.value} className="text-[16px]" />
+                      {option.label}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -168,24 +172,16 @@ export function CreateCategoryDialog({
             <p className="text-body-md text-error">{clientError ?? error}</p>
           )}
 
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg px-4 py-2 font-label text-label-md text-text-3 hover:bg-surface-3"
-            >
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={onClose}>
               Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
-            >
+            </Button>
+            <Button type="submit" disabled={submitting}>
               {submitting ? "Guardando…" : "Crear categoría"}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

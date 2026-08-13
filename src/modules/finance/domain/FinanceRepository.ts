@@ -128,6 +128,8 @@ export interface CreateDebtInput {
   originalAmount?: number;
   minimumPayment?: number;
   dueDay?: number;
+  installmentCount?: number;
+  startingInstallment?: number;
   accountId?: string;
   categoryId: string;
 }
@@ -140,6 +142,8 @@ export interface UpdateDebtInput {
   originalAmount?: number;
   minimumPayment?: number;
   dueDay?: number;
+  installmentCount?: number;
+  startingInstallment?: number;
   accountId?: string;
   categoryId: string;
 }
@@ -149,6 +153,7 @@ export interface RegisterDebtPaymentInput {
   amount: number;
   description?: string;
   occurredAt: string;
+  interestAmount?: number;
 }
 
 export interface RegisterDebtPaymentResult {

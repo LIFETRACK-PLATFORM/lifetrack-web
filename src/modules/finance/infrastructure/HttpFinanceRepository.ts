@@ -103,6 +103,10 @@ interface DebtDto {
   originalAmount?: number;
   minimumPayment?: number;
   dueDay?: number;
+  installmentCount?: number;
+  startingInstallment?: number;
+  currentInstallment?: number;
+  totalInterestPaid?: number;
   accountId?: string;
   categoryId: string;
   status: string;
@@ -205,6 +209,10 @@ function toDebt(dto: DebtDto): Debt {
     originalAmount: dto.originalAmount,
     minimumPayment: dto.minimumPayment,
     dueDay: dto.dueDay,
+    installmentCount: dto.installmentCount,
+    startingInstallment: dto.startingInstallment,
+    currentInstallment: dto.currentInstallment,
+    totalInterestPaid: dto.totalInterestPaid,
     accountId: dto.accountId,
     categoryId: dto.categoryId,
     status: dto.status as DebtStatus,

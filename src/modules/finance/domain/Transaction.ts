@@ -12,6 +12,7 @@ interface TransactionProps {
   accountBalanceAfter: number;
   budgetExceeded: boolean;
   debtId?: string;
+  interestAmount?: number;
 }
 
 export class Transaction extends Entity<TransactionProps> {
@@ -53,5 +54,9 @@ export class Transaction extends Entity<TransactionProps> {
 
   get debtId(): string | undefined {
     return this.props.debtId;
+  }
+
+  get interestAmount(): number | undefined {
+    return this.props.interestAmount;
   }
 }

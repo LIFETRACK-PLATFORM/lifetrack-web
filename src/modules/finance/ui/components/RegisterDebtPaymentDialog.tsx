@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   Button,
   Combobox,
+  DatePicker,
   Dialog,
   DialogContent,
   DialogFooter,
@@ -44,9 +45,8 @@ export function RegisterDebtPaymentDialog({
       ? debt.accountId
       : eligibleAccounts[0]?.id ?? "",
   );
-  const [occurredAt, setOccurredAt] = useState(
-    new Date().toISOString().slice(0, 10),
-  );
+  const [occurredAt, setOccurredAt] = useState<Date | undefined>(new Date());
+  const [interestAmount, setInterestAmount] = useState("");
   const [clientError, setClientError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
@@ -60,10 +60,16 @@ export function RegisterDebtPaymentDialog({
       setClientError(`No tenés una cuenta en ${debt.currency} para pagar.`);
       return;
     }
+    const interest = interestAmount ? Number(interestAmount) : undefined;
+    if (interest !== undefined && (Number.isNaN(interest) || interest > value)) {
+      setClientError("El interés no puede ser mayor al monto pagado.");
+      return;
+    }
     const success = await onSubmit({
       accountId,
       amount: value,
-      occurredAt: new Date(occurredAt).toISOString(),
+      occurredAt: (occurredAt ?? new Date()).toISOString(),
+      interestAmount: interest,
     });
     if (success) onOpenChange(false);
   };
@@ -95,11 +101,7 @@ export function RegisterDebtPaymentDialog({
               <label className="mb-1 block font-label text-label-md text-text-3">
                 Fecha
               </label>
-              <Input
-                type="date"
-                value={occurredAt}
-                onChange={(e) => setOccurredAt(e.target.value)}
-              />
+              <DatePicker value={occurredAt} onValueChange={setOccurredAt} />
             </div>
           </div>
           <div>
@@ -115,6 +117,18 @@ export function RegisterDebtPaymentDialog({
               onValueChange={setAccountId}
               placeholder="Elegí una cuenta"
               emptyText={`No tenés cuentas en ${debt.currency}.`}
+            />
+          </div>
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">
+              ¿Cuánto de este pago fue interés? (opcional)
+            </label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={interestAmount}
+              onChange={(e) => setInterestAmount(e.target.value)}
             />
           </div>
           {(clientError || error) && (

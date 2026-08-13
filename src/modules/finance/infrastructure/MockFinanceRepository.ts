@@ -160,6 +160,21 @@ const debts: Debt[] = [
     categoryId: "mock-category-1",
     status: "ACTIVE",
   },
+  {
+    debtId: "mock-debt-2",
+    name: "Préstamo personal",
+    type: "LOAN",
+    currency: "PEN",
+    totalOwed: 3040,
+    originalAmount: 5095,
+    minimumPayment: 608,
+    installmentCount: 8,
+    startingInstallment: 4,
+    dueDay: 10,
+    accountId: "mock-account-1",
+    categoryId: "mock-category-1",
+    status: "ACTIVE",
+  },
 ];
 
 function inDateRange(iso: string, fromDate?: string, toDate?: string): boolean {
@@ -172,6 +187,22 @@ function inDateRange(iso: string, fromDate?: string, toDate?: string): boolean {
 function inPeriod(iso: string, month: number, year: number): boolean {
   const d = new Date(iso);
   return d.getMonth() + 1 === month && d.getFullYear() === year;
+}
+
+function withInstallmentStats(debt: Debt): Debt {
+  const debtTransactions = transactions.filter((t) => t.debtId === debt.debtId);
+  const totalInterestPaid = debtTransactions.reduce(
+    (sum, t) => sum + (t.interestAmount ?? 0),
+    0,
+  );
+  const currentInstallment =
+    debt.installmentCount === undefined
+      ? undefined
+      : Math.min(
+          debt.installmentCount,
+          (debt.startingInstallment ?? 0) + debtTransactions.length,
+        );
+  return { ...debt, currentInstallment, totalInterestPaid };
 }
 
 function updateAccountBalance(accountId: string, delta: number) {
@@ -581,7 +612,7 @@ export class MockFinanceRepository implements FinanceRepository {
   }
 
   async getDebts(): Promise<Debt[]> {
-    return [...debts];
+    return debts.map(withInstallmentStats);
   }
 
   async createDebt(input: CreateDebtInput): Promise<Debt> {
@@ -595,6 +626,8 @@ export class MockFinanceRepository implements FinanceRepository {
       originalAmount: input.originalAmount,
       minimumPayment: input.minimumPayment,
       dueDay: input.dueDay,
+      installmentCount: input.installmentCount,
+      startingInstallment: input.startingInstallment,
       accountId: input.accountId,
       categoryId: input.categoryId,
       status: "ACTIVE",
@@ -616,6 +649,8 @@ export class MockFinanceRepository implements FinanceRepository {
       originalAmount: input.originalAmount,
       minimumPayment: input.minimumPayment,
       dueDay: input.dueDay,
+      installmentCount: input.installmentCount,
+      startingInstallment: input.startingInstallment,
       accountId: input.accountId,
       categoryId: input.categoryId,
     };
@@ -662,6 +697,7 @@ export class MockFinanceRepository implements FinanceRepository {
         accountBalanceAfter: newBalance,
         budgetExceeded: false,
         debtId: debt.debtId,
+        interestAmount: input.interestAmount,
       },
       crypto.randomUUID(),
     );
