@@ -26,6 +26,7 @@ import { Icon } from "@/shared/ui/Icon";
 import { ExerciseCard } from "@/modules/rehab/ui/components/ExerciseCard";
 import { ExerciseFormDialog } from "@/modules/rehab/ui/components/ExerciseFormDialog";
 import { AddAppointmentDialog } from "@/modules/rehab/ui/components/AddAppointmentDialog";
+import { RescheduleAppointmentDialog } from "@/modules/rehab/ui/components/RescheduleAppointmentDialog";
 import { WeeklyDaysNavigator } from "@/modules/rehab/ui/components/WeeklyDaysNavigator";
 import { MeasurementDialog } from "@/modules/rehab/ui/components/MeasurementDialog";
 import { MeasurementTrendChart } from "@/modules/rehab/ui/components/MeasurementTrendChart";
@@ -85,6 +86,8 @@ export function PlanDetailView({
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [isAddAppointmentOpen, setIsAddAppointmentOpen] = useState(false);
   const [editingAppointment, setEditingAppointment] =
+    useState<Appointment | null>(null);
+  const [reschedulingAppointment, setReschedulingAppointment] =
     useState<Appointment | null>(null);
   const [painLevel, setPainLevel] = useState("3");
   const [painNote, setPainNote] = useState("");
@@ -279,12 +282,13 @@ export function PlanDetailView({
     const pendingToday = appointments.filter(
       (a) => isSameCalendarDay(a.date) && a.attended === null,
     ).length;
-    // El dominio aún no modela "llegó tarde"; se muestra 0 para alinear el copy del design.
-    const late = 0;
-    return { attended, late, rescheduled, pendingToday, missed };
+    const unconfirmed = appointments.filter(
+      (a) => getAppointmentStatus(a) === "pending",
+    ).length;
+    return { attended, unconfirmed, rescheduled, pendingToday, missed };
   }, [plan?.appointments]);
 
-  const appointmentSubtitle = `${appointmentSummary.attended} asistidas · ${appointmentSummary.late} tarde · ${appointmentSummary.rescheduled} reprogramadas · ${appointmentSummary.pendingToday} pendientes hoy`;
+  const appointmentSubtitle = `${appointmentSummary.attended} asistidas · ${appointmentSummary.unconfirmed} sin confirmar · ${appointmentSummary.rescheduled} reprogramadas · ${appointmentSummary.pendingToday} pendientes hoy`;
 
   const extensionValues = useMemo(() => {
     const fromMeasurements = (plan?.measurements ?? [])
@@ -647,8 +651,8 @@ export function PlanDetailView({
                   <Badge variant="success" showDot>
                     Asistió
                   </Badge>
-                  <Badge variant="warning" showDot>
-                    Llegó tarde
+                  <Badge variant="secondary" showDot>
+                    Sin confirmar
                   </Badge>
                   <Badge variant="destructive" showDot>
                     No asistió
@@ -673,6 +677,7 @@ export function PlanDetailView({
                     void markAppointmentAttendance(apt.id, attended)
                   }
                   onEdit={() => setEditingAppointment(apt)}
+                  onReschedule={() => setReschedulingAppointment(apt)}
                   onDelete={() => void deleteAppointment(apt.id)}
                 />
               ))}
@@ -1053,8 +1058,8 @@ export function PlanDetailView({
                         <Badge variant="success" showDot>
                           Asistió
                         </Badge>
-                        <Badge variant="warning" showDot>
-                          Llegó tarde
+                        <Badge variant="secondary" showDot>
+                          Sin confirmar
                         </Badge>
                         <Badge variant="destructive" showDot>
                           No asistió
@@ -1079,6 +1084,7 @@ export function PlanDetailView({
                         void markAppointmentAttendance(apt.id, attended)
                       }
                       onEdit={() => setEditingAppointment(apt)}
+                      onReschedule={() => setReschedulingAppointment(apt)}
                       onDelete={() => void deleteAppointment(apt.id)}
                     />
                   ))}
@@ -1308,6 +1314,19 @@ export function PlanDetailView({
         />
       )}
 
+      {reschedulingAppointment && (
+        <RescheduleAppointmentDialog
+          key={`reschedule-${reschedulingAppointment.id}`}
+          appointment={reschedulingAppointment}
+          onClose={() => setReschedulingAppointment(null)}
+          onSubmit={(input) =>
+            updateAppointment(reschedulingAppointment.id, input)
+          }
+          submitting={updatingAppointment}
+          error={updateAppointmentError}
+        />
+      )}
+
       {isAddMeasurementOpen && (
         <MeasurementDialog
           defaultType="EXTENSION_DEGREES"
@@ -1508,6 +1527,7 @@ function AppointmentListItem({
   deleting,
   onMarkAttendance,
   onEdit,
+  onReschedule,
   onDelete,
 }: {
   apt: Appointment;
@@ -1515,6 +1535,7 @@ function AppointmentListItem({
   deleting: boolean;
   onMarkAttendance: (attended: boolean) => void;
   onEdit: () => void;
+  onReschedule: () => void;
   onDelete: () => void;
 }) {
   const status = getAppointmentStatus(apt);
@@ -1576,7 +1597,7 @@ function AppointmentListItem({
               attended={apt.attended}
               pending={pendingAttendance}
               onMark={onMarkAttendance}
-              onReschedule={onEdit}
+              onReschedule={onReschedule}
             />
           </div>
         </div>

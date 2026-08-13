@@ -625,7 +625,7 @@ export class MockRehabRepository implements RehabRepository {
           notes: input.notes ?? null,
           type: input.type,
           date: date.toISOString(),
-          attended: current.attended,
+          attended: dateChanged ? null : current.attended,
           rescheduledFrom: dateChanged ? current.date : current.rescheduledFrom,
         },
         current.id,
