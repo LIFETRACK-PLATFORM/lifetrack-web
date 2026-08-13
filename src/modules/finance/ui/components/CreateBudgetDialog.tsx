@@ -1,8 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Icon } from "@/shared/ui/Icon";
 import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
   Select,
   SelectContent,
   SelectItem,
@@ -68,27 +74,25 @@ export function CreateBudgetDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 p-4">
-      <div className="w-full max-w-md rounded-xl border border-border bg-surface-1 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-headline-md font-semibold text-text-1">
-            Nuevo presupuesto
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-3"
-          >
-            <Icon name="close" />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nuevo presupuesto</DialogTitle>
+        </DialogHeader>
 
         {expenseCategories.length === 0 ? (
-          <p className="text-body-md text-text-3">
-            Primero creá una categoría de gasto para poder presupuestarla.
-          </p>
+          <>
+            <p className="text-body-md text-text-3">
+              Primero creá una categoría de gasto para poder presupuestarla.
+            </p>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={onClose}>
+                Cerrar
+              </Button>
+            </DialogFooter>
+          </>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">
                 Categoría de gasto
@@ -97,7 +101,7 @@ export function CreateBudgetDialog({
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="!z-[60]">
                   {expenseCategories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
@@ -111,13 +115,12 @@ export function CreateBudgetDialog({
               <label className="mb-1 block font-label text-label-md text-text-3">
                 Monto límite
               </label>
-              <input
+              <Input
                 type="number"
                 min={0.01}
                 step="0.01"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none"
               />
             </div>
 
@@ -129,25 +132,17 @@ export function CreateBudgetDialog({
               <p className="text-body-md text-error">{clientError ?? error}</p>
             )}
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-lg px-4 py-2 font-label text-label-md text-text-3 hover:bg-surface-3"
-              >
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={onClose}>
                 Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground transition-all active:scale-95 disabled:opacity-60"
-              >
+              </Button>
+              <Button type="submit" disabled={submitting}>
                 {submitting ? "Guardando…" : "Crear presupuesto"}
-              </button>
-            </div>
+              </Button>
+            </DialogFooter>
           </form>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

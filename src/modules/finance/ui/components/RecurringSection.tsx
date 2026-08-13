@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Plus, TrendingUp } from "lucide-react";
-import { Icon } from "@/shared/ui/Icon";
 import {
   Badge,
   Button,
@@ -10,6 +9,12 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
   Select,
   SelectContent,
   SelectItem,
@@ -98,34 +103,31 @@ export function CreateRecurringDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 p-4">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface-1 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-headline-md font-semibold text-text-1">Nuevo recurrente</h3>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-3">
-            <Icon name="close" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nuevo recurrente</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">Nombre</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none" placeholder="Ej. Alquiler" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej. Alquiler" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Monto</label>
-              <input type="number" min={0.01} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none" />
+              <Input type="number" min={0.01} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </div>
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Día del mes</label>
-              <input type="number" min={1} max={28} value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none" />
+              <Input type="number" min={1} max={28} value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} />
             </div>
           </div>
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">Modo</label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setMode("AUTO")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${mode === "AUTO" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Automático</button>
-              <button type="button" onClick={() => setMode("REMIND")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${mode === "REMIND" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Recordatorio</button>
+              <Button type="button" variant={mode === "AUTO" ? "default" : "secondary"} className="flex-1" onClick={() => setMode("AUTO")}>Automático</Button>
+              <Button type="button" variant={mode === "REMIND" ? "default" : "secondary"} className="flex-1" onClick={() => setMode("REMIND")}>Recordatorio</Button>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -135,7 +137,7 @@ export function CreateRecurringDialog({
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="!z-[60]">
                   {accounts.map((a) => (
                     <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                   ))}
@@ -148,7 +150,7 @@ export function CreateRecurringDialog({
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="!z-[60]">
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -159,18 +161,18 @@ export function CreateRecurringDialog({
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">Tipo</label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setKind("EXPENSE")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${kind === "EXPENSE" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Gasto</button>
-              <button type="button" onClick={() => setKind("INCOME")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${kind === "INCOME" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Ingreso</button>
+              <Button type="button" variant={kind === "EXPENSE" ? "default" : "secondary"} className="flex-1" onClick={() => setKind("EXPENSE")}>Gasto</Button>
+              <Button type="button" variant={kind === "INCOME" ? "default" : "secondary"} className="flex-1" onClick={() => setKind("INCOME")}>Ingreso</Button>
             </div>
           </div>
           {(clientError || error) && <p className="text-body-md text-error">{clientError ?? error}</p>}
-          <div className="flex justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 font-label text-label-md text-text-3 hover:bg-surface-3">Cancelar</button>
-            <button type="submit" disabled={submitting} className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground disabled:opacity-60">{submitting ? "Guardando…" : "Crear"}</button>
-          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+            <Button type="submit" disabled={submitting}>{submitting ? "Guardando…" : "Crear"}</Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -225,34 +227,31 @@ export function EditRecurringDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/70 p-4">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-surface-1 p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-headline-md font-semibold text-text-1">Editar recurrente</h3>
-          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-3">
-            <Icon name="close" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Dialog open onOpenChange={(next) => !next && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar recurrente</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">Nombre</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none" />
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Monto</label>
-              <input type="number" min={0.01} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none" />
+              <Input type="number" min={0.01} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} />
             </div>
             <div>
               <label className="mb-1 block font-label text-label-md text-text-3">Día</label>
-              <input type="number" min={1} max={28} value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} className="w-full rounded-lg border border-border bg-surface-1 px-3 py-2 text-body-md text-text-1 focus:border-primary focus:outline-none" />
+              <Input type="number" min={1} max={28} value={dayOfMonth} onChange={(e) => setDayOfMonth(e.target.value)} />
             </div>
           </div>
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">Modo</label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setMode("AUTO")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${mode === "AUTO" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Automático</button>
-              <button type="button" onClick={() => setMode("REMIND")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${mode === "REMIND" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Recordatorio</button>
+              <Button type="button" variant={mode === "AUTO" ? "default" : "secondary"} className="flex-1" onClick={() => setMode("AUTO")}>Automático</Button>
+              <Button type="button" variant={mode === "REMIND" ? "default" : "secondary"} className="flex-1" onClick={() => setMode("REMIND")}>Recordatorio</Button>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -262,7 +261,7 @@ export function EditRecurringDialog({
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="!z-[60]">
                   {accounts.map((a) => (
                     <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                   ))}
@@ -275,7 +274,7 @@ export function EditRecurringDialog({
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="!z-[60]">
                   {categories.map((c) => (
                     <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                   ))}
@@ -286,19 +285,19 @@ export function EditRecurringDialog({
           <div>
             <label className="mb-1 block font-label text-label-md text-text-3">Tipo</label>
             <div className="flex gap-2">
-              <button type="button" onClick={() => setKind("EXPENSE")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${kind === "EXPENSE" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Gasto</button>
-              <button type="button" onClick={() => setKind("INCOME")} className={`flex-1 rounded-lg py-2 font-label text-label-md ${kind === "INCOME" ? "bg-primary text-primary-foreground" : "bg-surface-3 text-text-3"}`}>Ingreso</button>
+              <Button type="button" variant={kind === "EXPENSE" ? "default" : "secondary"} className="flex-1" onClick={() => setKind("EXPENSE")}>Gasto</Button>
+              <Button type="button" variant={kind === "INCOME" ? "default" : "secondary"} className="flex-1" onClick={() => setKind("INCOME")}>Ingreso</Button>
             </div>
           </div>
           {(clientError || error) && <p className="text-body-md text-error">{clientError ?? error}</p>}
-          <div className="flex flex-wrap justify-end gap-2 pt-2">
-            <button type="button" onClick={async () => { if (await onDeactivate()) onClose(); }} disabled={submitting} className="rounded-lg px-4 py-2 font-label text-label-md text-error hover:bg-surface-3">Desactivar</button>
-            <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 font-label text-label-md text-text-3 hover:bg-surface-3">Cancelar</button>
-            <button type="submit" disabled={submitting} className="rounded-lg bg-primary px-4 py-2 font-label text-label-md text-primary-foreground disabled:opacity-60">{submitting ? "Guardando…" : "Guardar"}</button>
-          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" className="text-error hover:bg-error/10" disabled={submitting} onClick={async () => { if (await onDeactivate()) onClose(); }}>Desactivar</Button>
+            <Button type="button" variant="ghost" onClick={onClose}>Cancelar</Button>
+            <Button type="submit" disabled={submitting}>{submitting ? "Guardando…" : "Guardar"}</Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
