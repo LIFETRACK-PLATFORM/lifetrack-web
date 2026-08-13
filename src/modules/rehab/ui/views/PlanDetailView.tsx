@@ -1304,6 +1304,7 @@ export function PlanDetailView({
             provider: editingAppointment.provider,
             type: editingAppointment.type,
             notes: editingAppointment.notes ?? undefined,
+            location: editingAppointment.location ?? undefined,
           }}
           onClose={() => setEditingAppointment(null)}
           onSubmit={(input) =>
@@ -1576,10 +1577,10 @@ function AppointmentListItem({
             <Icon name="stethoscope" className="text-[14px]" />
             {apt.provider}
           </p>
-          {apt.detail && (
+          {apt.location && (
             <p className="flex items-center gap-1.5 font-label text-label-md text-text-3">
               <Icon name="map_pin" className="text-[14px]" />
-              {apt.detail}
+              {apt.location}
             </p>
           )}
           {apt.notes && (

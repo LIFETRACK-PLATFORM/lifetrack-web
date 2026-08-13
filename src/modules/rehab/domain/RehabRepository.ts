@@ -31,6 +31,7 @@ export interface AddAppointmentInput {
   provider: string;
   type: AppointmentType;
   notes?: string;
+  location?: string;
   repeatWeeks?: number;
 }
 

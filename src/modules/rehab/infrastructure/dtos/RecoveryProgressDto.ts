@@ -44,6 +44,7 @@ export interface AppointmentDto {
   provider: string;
   type: AppointmentTypeDto;
   notes?: string;
+  location?: string;
   attended?: boolean;
   rescheduledFromDate?: string;
 }
