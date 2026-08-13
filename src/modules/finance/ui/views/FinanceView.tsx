@@ -64,6 +64,7 @@ import {
 } from "@/modules/finance/ui/components/RecurringSection";
 import { PendingRemindersBanner } from "@/modules/finance/ui/components/PendingRemindersBanner";
 import {
+  AdjustDebtBalanceDialog,
   CreateDebtDialog,
   DebtsSection,
   EditDebtDialog,
@@ -166,6 +167,8 @@ export function FinanceView({
   const [recurringCandidate, setRecurringCandidate] =
     useState<RecurringCandidate | null>(null);
   const [payDebtTarget, setPayDebtTarget] = useState<Debt | null>(null);
+  const [adjustBalanceTarget, setAdjustBalanceTarget] =
+    useState<Debt | null>(null);
   const [openDialog, setOpenDialog] = useState<DialogKind>(null);
   const [editTarget, setEditTarget] = useState<EditTarget>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
@@ -601,6 +604,7 @@ export function FinanceView({
             onEdit={(debt) => setEditTarget({ type: "debt", item: debt })}
             onDelete={(debt) => setDeleteTarget({ type: "debt", item: debt })}
             onRegisterPayment={(debt) => setPayDebtTarget(debt)}
+            onAdjustBalance={(debt) => setAdjustBalanceTarget(debt)}
           />
         )}
       </div>
@@ -998,6 +1002,40 @@ export function FinanceView({
             } catch (err) {
               setSubmitError(
                 err instanceof Error ? err.message : "No se pudo registrar el pago",
+              );
+              return false;
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+        />
+      )}
+
+      {adjustBalanceTarget && (
+        <AdjustDebtBalanceDialog
+          debt={adjustBalanceTarget}
+          open
+          onOpenChange={(open) => {
+            if (!open) {
+              setAdjustBalanceTarget(null);
+              setSubmitError(null);
+            }
+          }}
+          submitting={submitting}
+          error={submitError}
+          onSubmit={async (newTotalOwed: number) => {
+            setSubmitting(true);
+            setSubmitError(null);
+            try {
+              await activeRepository.adjustDebtBalance(
+                adjustBalanceTarget.debtId,
+                newTotalOwed,
+              );
+              reload();
+              return true;
+            } catch (err) {
+              setSubmitError(
+                err instanceof Error ? err.message : "No se pudo ajustar el saldo",
               );
               return false;
             } finally {

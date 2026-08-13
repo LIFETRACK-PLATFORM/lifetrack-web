@@ -11,6 +11,10 @@ export interface Debt {
   originalAmount?: number;
   minimumPayment?: number;
   dueDay?: number;
+  installmentCount?: number;
+  startingInstallment?: number;
+  currentInstallment?: number;
+  totalInterestPaid?: number;
   accountId?: string;
   categoryId: string;
   status: DebtStatus;

@@ -57,6 +57,10 @@ function DebtFormFields({
   setMinimumPayment,
   dueDay,
   setDueDay,
+  installmentCount,
+  setInstallmentCount,
+  startingInstallment,
+  setStartingInstallment,
   accountId,
   setAccountId,
   categoryId,
@@ -78,6 +82,10 @@ function DebtFormFields({
   setMinimumPayment: (v: string) => void;
   dueDay: string;
   setDueDay: (v: string) => void;
+  installmentCount: string;
+  setInstallmentCount: (v: string) => void;
+  startingInstallment: string;
+  setStartingInstallment: (v: string) => void;
   accountId: string;
   setAccountId: (v: string) => void;
   categoryId: string;
@@ -170,7 +178,7 @@ function DebtFormFields({
         </div>
         <div>
           <label className="mb-1 block font-label text-label-md text-text-3">
-            Pago mínimo (opcional)
+            Pago mínimo / cuota fija (opcional)
           </label>
           <Input
             type="number"
@@ -178,6 +186,33 @@ function DebtFormFields({
             step="0.01"
             value={minimumPayment}
             onChange={(e) => setMinimumPayment(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="mb-1 block font-label text-label-md text-text-3">
+            Número de cuotas (opcional)
+          </label>
+          <Input
+            type="number"
+            min={1}
+            value={installmentCount}
+            onChange={(e) => setInstallmentCount(e.target.value)}
+            placeholder="Ej. 8"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block font-label text-label-md text-text-3">
+            Empezás en la cuota (opcional)
+          </label>
+          <Input
+            type="number"
+            min={0}
+            disabled={!installmentCount}
+            value={startingInstallment}
+            onChange={(e) => setStartingInstallment(e.target.value)}
+            placeholder="0 si es nueva"
           />
         </div>
       </div>
@@ -236,6 +271,8 @@ export function CreateDebtDialog({
   const [originalAmount, setOriginalAmount] = useState("");
   const [minimumPayment, setMinimumPayment] = useState("");
   const [dueDay, setDueDay] = useState("");
+  const [installmentCount, setInstallmentCount] = useState("");
+  const [startingInstallment, setStartingInstallment] = useState("");
   const [accountId, setAccountId] = useState("");
   const [categoryId, setCategoryId] = useState(defaultCategory?.id ?? "");
   const [clientError, setClientError] = useState<string | null>(null);
@@ -255,6 +292,12 @@ export function CreateDebtDialog({
       setClientError("Elegí una categoría.");
       return;
     }
+    const installments = installmentCount ? Number(installmentCount) : undefined;
+    const starting = startingInstallment ? Number(startingInstallment) : undefined;
+    if (installments !== undefined && starting !== undefined && starting > installments) {
+      setClientError("No podés empezar en una cuota mayor al total de cuotas.");
+      return;
+    }
     const success = await onSubmit({
       name: name.trim(),
       lender: lender.trim() || undefined,
@@ -264,6 +307,8 @@ export function CreateDebtDialog({
       originalAmount: originalAmount ? Number(originalAmount) : undefined,
       minimumPayment: minimumPayment ? Number(minimumPayment) : undefined,
       dueDay: dueDay ? Number(dueDay) : undefined,
+      installmentCount: installments,
+      startingInstallment: starting,
       accountId: accountId || undefined,
       categoryId,
     });
@@ -305,6 +350,10 @@ export function CreateDebtDialog({
             setMinimumPayment={setMinimumPayment}
             dueDay={dueDay}
             setDueDay={setDueDay}
+            installmentCount={installmentCount}
+            setInstallmentCount={setInstallmentCount}
+            startingInstallment={startingInstallment}
+            setStartingInstallment={setStartingInstallment}
             accountId={accountId}
             setAccountId={setAccountId}
             categoryId={categoryId}
@@ -367,6 +416,14 @@ export function EditDebtDialog({
   const [dueDay, setDueDay] = useState(
     debt.dueDay !== undefined ? String(debt.dueDay) : "",
   );
+  const [installmentCount, setInstallmentCount] = useState(
+    debt.installmentCount !== undefined ? String(debt.installmentCount) : "",
+  );
+  const [startingInstallment, setStartingInstallment] = useState(
+    debt.startingInstallment !== undefined
+      ? String(debt.startingInstallment)
+      : "",
+  );
   const [accountId, setAccountId] = useState(debt.accountId ?? "");
   const [categoryId, setCategoryId] = useState(debt.categoryId);
   const [clientError, setClientError] = useState<string | null>(null);
@@ -381,6 +438,12 @@ export function EditDebtDialog({
       setClientError("Elegí una categoría.");
       return;
     }
+    const installments = installmentCount ? Number(installmentCount) : undefined;
+    const starting = startingInstallment ? Number(startingInstallment) : undefined;
+    if (installments !== undefined && starting !== undefined && starting > installments) {
+      setClientError("No podés empezar en una cuota mayor al total de cuotas.");
+      return;
+    }
     const success = await onSubmit({
       name: name.trim(),
       lender: lender.trim() || undefined,
@@ -389,6 +452,8 @@ export function EditDebtDialog({
       originalAmount: originalAmount ? Number(originalAmount) : undefined,
       minimumPayment: minimumPayment ? Number(minimumPayment) : undefined,
       dueDay: dueDay ? Number(dueDay) : undefined,
+      installmentCount: installments,
+      startingInstallment: starting,
       accountId: accountId || undefined,
       categoryId,
     });
@@ -417,6 +482,10 @@ export function EditDebtDialog({
             setMinimumPayment={setMinimumPayment}
             dueDay={dueDay}
             setDueDay={setDueDay}
+            installmentCount={installmentCount}
+            setInstallmentCount={setInstallmentCount}
+            startingInstallment={startingInstallment}
+            setStartingInstallment={setStartingInstallment}
             accountId={accountId}
             setAccountId={setAccountId}
             categoryId={categoryId}
@@ -456,6 +525,80 @@ export function EditDebtDialog({
   );
 }
 
+export function AdjustDebtBalanceDialog({
+  debt,
+  open,
+  onOpenChange,
+  onSubmit,
+  submitting,
+  error,
+}: {
+  debt: Debt;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (newTotalOwed: number) => Promise<boolean>;
+  submitting: boolean;
+  error: string | null;
+}) {
+  const [totalOwed, setTotalOwed] = useState(String(debt.totalOwed));
+  const [clientError, setClientError] = useState<string | null>(null);
+
+  const handleSubmit = async () => {
+    setClientError(null);
+    const value = Number(totalOwed);
+    if (Number.isNaN(value) || value < 0) {
+      setClientError("Ingresá un monto válido.");
+      return;
+    }
+    const success = await onSubmit(value);
+    if (success) onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Ajustar saldo — {debt.name}</DialogTitle>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <p className="text-body-md text-text-3">
+            Corregí cuánto debés sin registrar un pago ni una cuenta. Usalo si
+            ya pagaste por otro medio (ej. tarjeta) o si la deuda subió por
+            intereses o nuevos consumos.
+          </p>
+          <div>
+            <label className="mb-1 block font-label text-label-md text-text-3">
+              Nuevo saldo total ({debt.currency})
+            </label>
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              value={totalOwed}
+              onChange={(e) => setTotalOwed(e.target.value)}
+            />
+          </div>
+          {(clientError || error) && (
+            <p className="text-body-md text-error">{clientError ?? error}</p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancelar
+          </Button>
+          <Button type="button" disabled={submitting} onClick={handleSubmit}>
+            {submitting ? "Guardando…" : "Guardar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function DebtsSection({
   debts,
   accounts,
@@ -463,6 +606,7 @@ export function DebtsSection({
   onEdit,
   onDelete,
   onRegisterPayment,
+  onAdjustBalance,
 }: {
   debts: Debt[];
   accounts: Account[];
@@ -470,6 +614,7 @@ export function DebtsSection({
   onEdit: (debt: Debt) => void;
   onDelete: (debt: Debt) => void;
   onRegisterPayment: (debt: Debt) => void;
+  onAdjustBalance: (debt: Debt) => void;
 }) {
   const today = new Date();
   const active = debts.filter((d) => d.status === "ACTIVE");
@@ -510,6 +655,12 @@ export function DebtsSection({
                 <p className="truncate font-label text-label-md text-text-3">
                   {debt.dueDay ? `Día ${debt.dueDay}` : "Sin fecha de pago"} ·{" "}
                   {accountName(debt.accountId)}
+                  {debt.installmentCount
+                    ? ` · Cuota ${debt.currentInstallment ?? 0}/${debt.installmentCount}`
+                    : ""}
+                  {debt.totalInterestPaid
+                    ? ` · Interés pagado ${formatMoney(debt.totalInterestPaid, debt.currency)}`
+                    : ""}
                 </p>
               </div>
               {overdue ? (
@@ -542,6 +693,9 @@ export function DebtsSection({
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onEdit(debt)}>
                     Editar
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onAdjustBalance(debt)}>
+                    Ajustar saldo
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="text-error"
