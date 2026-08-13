@@ -62,6 +62,7 @@ export function AddAppointmentDialog({
     provider: string;
     type: AppointmentType;
     notes?: string;
+    location?: string;
   };
 }) {
   const isEdit = Boolean(appointmentId);
@@ -78,6 +79,7 @@ export function AddAppointmentDialog({
   const [provider, setProvider] = useState(initial?.provider ?? "");
   const [type, setType] = useState<AppointmentType>(initial?.type ?? "THERAPY");
   const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [location, setLocation] = useState(initial?.location ?? "");
   const [repeatWeeks, setRepeatWeeks] = useState("0");
   const [clientError, setClientError] = useState<string | null>(null);
 
@@ -122,6 +124,7 @@ export function AddAppointmentDialog({
       provider: provider.trim(),
       type,
       notes: notes.trim() || undefined,
+      location: location.trim() || undefined,
       repeatWeeks: isEdit ? undefined : repeats,
     });
     if (success) onClose();
@@ -257,6 +260,21 @@ export function AddAppointmentDialog({
                     value={provider}
                     onChange={(e) => setProvider(e.target.value)}
                     placeholder="Ej. Centro Médico Apex"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="appointment-location"
+                    className="font-label text-label-md text-text-3"
+                  >
+                    Lugar (opcional)
+                  </label>
+                  <Input
+                    id="appointment-location"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="Ej. Av. Siempre Viva 123, piso 4"
                   />
                 </div>
 
